@@ -1,7 +1,8 @@
 import Feather from '@expo/vector-icons/Feather';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { Tabs } from 'expo-router';
+import { Tabs, router } from 'expo-router';
+import { TouchableOpacity } from 'react-native';
 
 
 export default function TabLayout() {
@@ -11,13 +12,21 @@ export default function TabLayout() {
             tabBarActiveTintColor: '#625ff0',
             tabBarInactiveTintColor: '#fff',
             headerStyle: {
-            backgroundColor: '#25292e',
+              backgroundColor: '#25292e',
             },
             headerShadowVisible: false,
             headerTintColor: '#fff',
             tabBarStyle: {
-            backgroundColor: '#25292e',
+              backgroundColor: '#25292e',
             },
+            headerLeft: () => (
+            <TouchableOpacity
+              onPress={() => router.replace('/')}
+              style={{ marginLeft: 15 }}
+            >
+              <Feather name="arrow-left" size={24} color="#fff" />
+            </TouchableOpacity>
+          ),
         }}
     >
       <Tabs.Screen
@@ -39,9 +48,9 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="presensi"
+        name="sesi"
         options={{
-          title: 'Presensi',
+          title: 'Sesi',
           tabBarIcon: ({ color, focused }) => (
             <Feather name="user-check" size={24} color={color} />
           ),
