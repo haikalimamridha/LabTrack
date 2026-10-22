@@ -1,4 +1,5 @@
 import Feather from '@expo/vector-icons/Feather';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Tabs, router } from 'expo-router';
@@ -52,7 +53,7 @@ export default function TabLayout() {
         options={{
           title: 'Sesi',
           tabBarIcon: ({ color, focused }) => (
-            <Feather name="user-check" size={24} color={color} />
+            <FontAwesome name="check-square-o" size={24} color={color} />
           ),
         }}
       />
