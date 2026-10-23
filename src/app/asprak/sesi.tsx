@@ -1,9 +1,9 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-export default function PresensiScreen() {
+export default function SesiScreen() {
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>Presensi screen</Text>
+      <Text style={styles.text}>Sesi screen</Text>
     </View>
   );
 }
