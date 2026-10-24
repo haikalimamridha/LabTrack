@@ -1,5 +1,6 @@
 
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { jadwalDummy } from '../../data/jadwalDummy';
 import {
   ScrollView,
   StyleSheet,
@@ -8,24 +9,9 @@ import {
   View,
 } from 'react-native';
 
-const jadwalTerdekat = [
-  {
-    id: 1,
-    kode: 'IF204',
-    nama: 'Praktikum Pemrograman Web',
-    hari: 'Kamis, 22 Oktober 2026',
-    waktu: '09.00 - 11.00',
-    ruangan: 'Lab Komputer 1',
-  },
-  {
-    id: 2,
-    kode: 'IF206',
-    nama: 'Praktikum Basis Data',
-    hari: 'Jumat, 23 Oktober 2026',
-    waktu: '13.00 - 15.00',
-    ruangan: 'Lab Komputer 2',
-  },
-];
+const jadwalTerdekat = jadwalDummy
+  .filter((item) => item.status === 'Akan Datang')
+  .slice(0, 2);
 
 export default function Index() {
   const router = useRouter();
@@ -122,23 +108,31 @@ export default function Index() {
           </TouchableOpacity>
         </View>
 
-        {jadwalTerdekat.map((item) => (
-          <View key={item.id} style={styles.scheduleCard}>
-            <View style={styles.scheduleHeader}>
-              <View style={styles.codeBadge}>
-                <Text style={styles.codeText}>{item.kode}</Text>
+        {jadwalTerdekat.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyTitle}>Belum Ada Jadwal</Text>
+            <Text style={styles.emptyText}>
+              Kamu belum memiliki jadwal praktikum mendatang.
+            </Text>
+          </View>
+        ) : (
+          jadwalTerdekat.map((item) => (
+            <View key={item.id} style={styles.scheduleCard}>
+              <View style={styles.scheduleHeader}>
+                <View style={styles.codeBadge}>
+                  <Text style={styles.codeText}>{item.kode}</Text>
+                </View>
+              
+                <Text style={styles.scheduleStatus}>Terjadwal</Text>
               </View>
 
-              <Text style={styles.scheduleStatus}>Terjadwal</Text>
-            </View>
-
-            <Text style={styles.scheduleName}>{item.nama}</Text>
+              <Text style={styles.scheduleName}>{item.mataPraktikum}</Text>
 
             <View style={styles.divider} />
-
+          
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Tanggal</Text>
-              <Text style={styles.infoValue}>{item.hari}</Text>
+              <Text style={styles.infoValue}>{item.hari}, {item.tanggal}</Text>
             </View>
 
             <View style={styles.infoRow}>
@@ -151,7 +145,8 @@ export default function Index() {
               <Text style={styles.infoValue}>{item.ruangan}</Text>
             </View>
           </View>
-        ))}
+        ))
+      )}
       </ScrollView>
     </View>
   );
@@ -361,6 +356,29 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: 'right',
     flex: 2,
+  },
+  
+  emptyContainer: {
+    alignItems: 'center',
+    backgroundColor: '#343941',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#454B55',
+    padding: 24,
+    marginBottom: 12,
+  },
+  emptyTitle: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  emptyText: {
+    color: '#B8BCC4',
+    fontSize: 13,
+    lineHeight: 20,
+    textAlign: 'center',
   },
   quickActions: {
     gap: 10,
