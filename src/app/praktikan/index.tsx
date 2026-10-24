@@ -1,5 +1,5 @@
 
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
   ScrollView,
   StyleSheet,
@@ -29,6 +29,14 @@ const jadwalTerdekat = [
 
 export default function Index() {
   const router = useRouter();
+  const { nama, nim, email, angkatan, jurusan } =
+  useLocalSearchParams<{
+    nama?: string;
+    nim?: string;
+    email?: string;
+    angkatan?: string;
+    jurusan?: string;
+  }>();
 
   return (
     <View style={styles.container}>
@@ -40,30 +48,37 @@ export default function Index() {
         <View style={styles.header}>
           <View>
             <Text style={styles.brand}>LABTRACK</Text>
-            <Text style={styles.greeting}>Halo, Amelia!</Text>
+            <Text style={styles.greeting}>Halo, {nama ?? 'Praktikan'}!</Text>
             <Text style={styles.subtitle}>
               Siap untuk praktikum hari ini?
             </Text>
           </View>
 
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>A</Text>
+            <Text style={styles.avatarText}>{(nama ?? 'P').charAt(0).toUpperCase()}</Text>
           </View>
         </View>
 
         {/* Identitas pengguna */}
         <View style={styles.profileCard}>
           <View style={styles.profileIcon}>
-            <Text style={styles.profileIconText}>AP</Text>
+            <Text style={styles.profileIconText}>
+              {(nama ?? 'Pengguna')
+              .split(' ')
+              .filter(Boolean)
+              .map((kata) => kata.charAt(0))
+              .join('')
+              .toUpperCase()}
+            </Text>
           </View>
 
           <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>Amelia Putri</Text>
-            <Text style={styles.profileNim}>
-              26060124140001
-            </Text>
+            <Text style={styles.profileName}>{nama ?? 'Pengguna Praktikan'}</Text>
+            <Text style={styles.profileNim}>{nim ?? '-'}</Text>
             <Text style={styles.profileMajor}>
-              Informatika · Angkatan 2024
+              {jurusan ?? 'Jurusan belum tersedia'}
+              {' · Angkatan '}
+              {angkatan ?? '-'}
             </Text>
           </View>
 
