@@ -18,7 +18,7 @@ const filters = [
 ];
 
 export default function SesiScreen() {
-  const { daftarSesi: daftarSemuaSesi, bukaSesi } = useSesi();
+  const { daftarSesi: daftarSemuaSesi, bukaSesi, tutupSesi} = useSesi();
 
   const [filterAktif, setFilterAktif] = useState('Semua');
 
@@ -170,14 +170,42 @@ export default function SesiScreen() {
               </TouchableOpacity>
             )}
 
-
-            {/* Informasi sesi yang sudah berjalan */}
+            {/* Tombol Tutup Sesi */}
             {item.status === 'Sedang Berlangsung' && (
-              <View style={styles.activeSessionInfo}>
-                <Text style={styles.activeSessionText}>
-                  Sesi praktikum sedang berlangsung.
-                </Text>
-              </View>
+              <>
+                <TouchableOpacity
+                  style={styles.closeSessionButton}
+                  activeOpacity={0.8}
+                  onPress={() => {
+                    Alert.alert(
+                      'Tutup Sesi Praktikum',
+                      `Apakah kamu yakin ingin menutup sesi ${item.mataPraktikum}? Presensi sesi ini akan diakhiri.`,
+                      [
+                        {
+                          text: 'Batal',
+                          style: 'cancel',
+                        },
+                        {
+                          text: 'Tutup Sesi',
+                          style: 'destructive',
+                          onPress: () => {
+                            tutupSesi(item.id);
+
+                            Alert.alert(
+                              'Berhasil',
+                              'Sesi praktikum berhasil ditutup.',
+                            );
+                          },
+                        },
+                      ],
+                    );
+                  }}
+                >
+                  <Text style={styles.closeSessionButtonText}>
+                    Tutup Sesi
+                  </Text>
+                </TouchableOpacity>
+              </>
             )}
           </View>
         ))
@@ -380,5 +408,18 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: 'center',
     lineHeight: 18,
+  },
+  closeSessionButton: {
+  backgroundColor: '#DC2626',
+  borderRadius: 10,
+  paddingVertical: 12,
+  alignItems: 'center',
+  marginTop: 10,
+  },
+
+  closeSessionButtonText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: 'bold',
   },
 });
