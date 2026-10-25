@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "my-app",
-    "slug": "my-app",
+    "name": "LabTrack",
+    "slug": "LabTrack",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
+    "scheme": "labtrack",
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon"
