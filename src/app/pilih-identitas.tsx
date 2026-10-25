@@ -94,9 +94,25 @@ export default function PilihIdentitasScreen() {
   const pilihUser = () => {
     if (!selectedId || !roleValid) return;
 
-    router.replace(
-      role === 'praktikan' ? '/praktikan' : '/asprak'
+    const selectedUser = usersDummy.find(
+      (user) => user.id === selectedId
     );
+
+    if (!selectedUser) return;
+
+    router.replace({
+      pathname:
+        role === 'praktikan' ? '/praktikan' : '/asprak',
+      params: {
+        userId: selectedUser.id,
+        nama: selectedUser.nama,
+        nim: selectedUser.nim,
+        email: selectedUser.email,
+        angkatan: selectedUser.angkatan,
+        jurusan: selectedUser.jurusan,
+        role: selectedUser.role,
+      },
+    });
   };
 
   if (!roleValid) {
