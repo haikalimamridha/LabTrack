@@ -1,11 +1,14 @@
 import Feather from "@expo/vector-icons/Feather";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { Tabs, router } from "expo-router";
+import { Tabs, router, useLocalSearchParams, usePathname } from 'expo-router';
 import { TouchableOpacity } from "react-native";
 import { PresensiProvider } from "../../context/PresensiContext";
 
+
 export default function TabLayout() {
+  const pathname = usePathname();
+  const params = useLocalSearchParams();
   return (
     <PresensiProvider>
       <Tabs
@@ -22,7 +25,16 @@ export default function TabLayout() {
           },
           headerLeft: () => (
             <TouchableOpacity
-              onPress={() => router.replace("/")}
+              onPress={() => {
+                if (pathname === '/praktikan') {
+                  router.replace({
+                    pathname: '/pilih-identitas',
+                    params: { role: 'praktikan' },
+                  });
+                } else {
+                  router.back();
+                }
+              }}
               style={{ marginLeft: 15 }}
             >
               <Feather name="arrow-left" size={24} color="#fff" />
@@ -35,7 +47,7 @@ export default function TabLayout() {
           options={{
             title: "Dashboard",
             tabBarIcon: ({ color }) => (
-              <MaterialIcons name="dashboard" size={24} color={color} />
+              <MaterialIcons name="dashboard" size={24} color={typeof color === 'string' ? color : undefined} />
             ),
           }}
         />
@@ -53,7 +65,7 @@ export default function TabLayout() {
           options={{
             title: "Presensi",
             tabBarIcon: ({ color }) => (
-              <Feather name="user-check" size={24} color={color} />
+              <Feather name="user-check" size={24} color={typeof color === 'string' ? color : undefined} />
             ),
           }}
         />

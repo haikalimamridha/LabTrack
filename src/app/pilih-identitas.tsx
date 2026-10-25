@@ -100,7 +100,7 @@ export default function PilihIdentitasScreen() {
 
     if (!selectedUser) return;
 
-    router.replace({
+    router.push({
       pathname:
         role === 'praktikan' ? '/praktikan' : '/asprak',
       params: {
