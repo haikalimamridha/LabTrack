@@ -70,6 +70,15 @@ export default function TabLayout() {
             ),
           }}
         />
+        <Tabs.Screen
+          name="rekap"
+          options={{
+            title: 'Rekap',
+            tabBarIcon: ({ color, focused }) => (
+              <Feather name="user-check" size={24} color={typeof color === 'string' ? color : undefined} />
+            ),
+          }}
+        />
       </Tabs>
     </SesiProvider>
   );
