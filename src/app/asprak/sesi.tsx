@@ -33,15 +33,6 @@ export default function SesiScreen() {
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.brand}>LABTRACK</Text>
-        <Text style={styles.title}>Daftar Sesi</Text>
-        <Text style={styles.subtitle}>
-          Lihat informasi sesi praktikum yang kamu dampingi.
-        </Text>
-      </View>
-
       {/* Filter Status */}
       <Text style={styles.sectionTitle}>Status Sesi</Text>
 
