@@ -1,9 +1,9 @@
 import { useRouter } from 'expo-router';
 import {
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 export default function Index() {
@@ -17,7 +17,7 @@ export default function Index() {
         <TouchableOpacity
             style={styles.button}
             activeOpacity={0.8}
-            onPress={() => router.replace('/praktikan' as any)}
+            onPress={() => router.push({ pathname: '/pilih-identitas' as any, params: { role: 'praktikan' }, })}
         >
             <Text style={styles.buttonTitle}>Praktikan</Text>
         </TouchableOpacity>
@@ -25,7 +25,7 @@ export default function Index() {
         <TouchableOpacity
             style={styles.button}
             activeOpacity={0.8}
-            onPress={() => router.replace('/asprak' as any)}
+            onPress={() => router.push({ pathname: '/pilih-identitas' as any, params: { role: 'asprak' }, })}
         >
             <Text style={styles.buttonTitle}>Asisten Praktikum</Text>
         </TouchableOpacity>
