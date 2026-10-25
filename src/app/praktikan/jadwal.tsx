@@ -1,5 +1,3 @@
-
-import { useState } from 'react';
 import { jadwalDummy } from '../../data/jadwalDummy';
 import {
   ScrollView,
@@ -10,12 +8,7 @@ import {
 } from 'react-native';
 
 export default function JadwalScreen() {
-  const [filter, setFilter] = useState('Semua');
-
-  const jadwalTampil = jadwalDummy.filter((item) => {
-    if (filter === 'Semua') return true;
-    return item.status === filter;
-  });
+  const jadwalTampil = jadwalDummy;
 
   return (
     <View style={styles.container}>
@@ -23,29 +16,6 @@ export default function JadwalScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-
-        {/* Filter jadwal */}
-        <View style={styles.filterContainer}>
-          {['Semua', 'Akan Datang', 'Selesai'].map((item) => (
-            <TouchableOpacity
-              key={item}
-              style={[
-                styles.filterButton,
-                filter === item && styles.filterActive,
-              ]}
-              onPress={() => setFilter(item)}
-            >
-              <Text
-                style={[
-                  styles.filterText,
-                  filter === item && styles.filterTextActive,
-                ]}
-              >
-                {item}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
 
         {/* Jumlah jadwal */}
         <Text style={styles.totalText}>
@@ -59,17 +29,6 @@ export default function JadwalScreen() {
               <View style={styles.codeBadge}>
                 <Text style={styles.codeText}>{item.kode}</Text>
               </View>
-
-              <View
-                style={[
-                  styles.statusBadge,
-                  item.status === 'Selesai'
-                    ? styles.statusSelesai
-                    : styles.statusAkanDatang,
-                ]}
-              >
-                <Text style={styles.statusText}>{item.status}</Text>
-              </View>
             </View>
 
             <Text style={styles.subject}>{item.mataPraktikum}</Text>
@@ -77,10 +36,8 @@ export default function JadwalScreen() {
             <View style={styles.divider} />
 
             <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Tanggal</Text>
-              <Text style={styles.infoValue}>
-                {item.hari}, {item.tanggal}
-              </Text>
+              <Text style={styles.infoLabel}>Hari</Text>
+              <Text style={styles.infoValue}>{item.hari}</Text>
             </View>
 
             <View style={styles.infoRow}>
@@ -104,7 +61,7 @@ export default function JadwalScreen() {
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyTitle}>Tidak ada jadwal</Text>
             <Text style={styles.emptyText}>
-              Belum ada jadwal untuk kategori ini.
+              Belum ada jadwal.
             </Text>
           </View>
         )}
@@ -241,4 +198,5 @@ const styles = StyleSheet.create({
     fontSize: 13,
     textAlign: 'center',
   },
+  
 });

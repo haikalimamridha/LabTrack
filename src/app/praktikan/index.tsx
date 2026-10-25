@@ -1,6 +1,6 @@
 
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { jadwalDummy } from '../../data/jadwalDummy';
+import { usePresensi } from '../../context/PresensiContext';
 import {
   ScrollView,
   StyleSheet,
@@ -9,12 +9,22 @@ import {
   View,
 } from 'react-native';
 
-const jadwalTerdekat = jadwalDummy
-  .filter((item) => item.status === 'Akan Datang')
-  .slice(0, 2);
-
 export default function Index() {
   const router = useRouter();
+  const { daftarSesi, riwayat, sudahPresensi } = usePresensi();
+
+  const totalSesi = daftarSesi.length;
+
+  const sudahHadir = daftarSesi.filter(
+    (item) => sudahPresensi(item.id),
+  ).length;
+
+  const belumHadir = totalSesi - sudahHadir;
+
+  const sesiTerdekat = daftarSesi
+    .filter((item) => item.status !== 'Selesai')
+    .slice(0, 2);
+
   const { nama, nim, email, angkatan, jurusan } =
   useLocalSearchParams<{
     nama?: string;
@@ -79,36 +89,36 @@ export default function Index() {
         <View style={styles.statsContainer}>
           <View style={styles.statCard}>
             <Text style={styles.statIcon}>▦</Text>
-            <Text style={styles.statNumber}>3</Text>
-            <Text style={styles.statLabel}>Total Jadwal</Text>
+            <Text style={styles.statNumber}>{totalSesi}</Text>
+            <Text style={styles.statLabel}>Total Sesi</Text>
           </View>
 
           <View style={styles.statCard}>
             <Text style={styles.statIcon}>✓</Text>
-            <Text style={styles.statNumber}>1</Text>
+            <Text style={styles.statNumber}>{sudahHadir}</Text>
             <Text style={styles.statLabel}>Sudah Hadir</Text>
           </View>
 
           <View style={styles.statCard}>
             <Text style={styles.statIcon}>◷</Text>
-            <Text style={styles.statNumber}>2</Text>
+            <Text style={styles.statNumber}>{belumHadir}</Text>
             <Text style={styles.statLabel}>Belum Hadir</Text>
           </View>
         </View>
 
-        {/* Jadwal terdekat */}
+        {/* Sesi terdekat */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Jadwal Terdekat</Text>
+          <Text style={styles.sectionTitle}>Sesi Terdekat</Text>
 
           <TouchableOpacity
             activeOpacity={0.7}
-            onPress={() => router.push('/praktikan/jadwal')}
+            onPress={() => router.push('/praktikan/presensi')}
           >
             <Text style={styles.seeAll}>Lihat semua →</Text>
           </TouchableOpacity>
         </View>
 
-        {jadwalTerdekat.length === 0 ? (
+        {sesiTerdekat.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyTitle}>Belum Ada Jadwal</Text>
             <Text style={styles.emptyText}>
@@ -116,14 +126,26 @@ export default function Index() {
             </Text>
           </View>
         ) : (
-          jadwalTerdekat.map((item) => (
+          sesiTerdekat.map((item) => (
             <View key={item.id} style={styles.scheduleCard}>
               <View style={styles.scheduleHeader}>
                 <View style={styles.codeBadge}>
                   <Text style={styles.codeText}>{item.kode}</Text>
                 </View>
               
-                <Text style={styles.scheduleStatus}>Terjadwal</Text>
+                <Text
+                style={[
+                  styles.scheduleStatus,
+                  item.status === 'Sedang Berlangsung' && {
+                    color: '#67E8F9',
+                  },
+                  item.status === 'Belum Dibuka' && {
+                    color: '#FCD34D',
+                  },
+                ]}
+                >
+                  {item.status === 'Belum Dibuka' ? 'Akan Datang' : item.status}
+                </Text>
               </View>
 
               <Text style={styles.scheduleName}>{item.mataPraktikum}</Text>
