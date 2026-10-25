@@ -3,7 +3,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
 
@@ -32,6 +31,10 @@ export default function JadwalScreen() {
             </View>
 
             <Text style={styles.subject}>{item.mataPraktikum}</Text>
+
+            <Text style={styles.classText}>
+              Kelas {item.kelas}
+            </Text>
 
             <View style={styles.divider} />
 
@@ -79,33 +82,6 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 30,
   },
-  filterContainer: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 18,
-  },
-  filterButton: {
-    flex: 1,
-    paddingVertical: 10,
-    paddingHorizontal: 4,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#555B65',
-    alignItems: 'center',
-  },
-  filterActive: {
-    backgroundColor: '#625ff0',
-    borderColor: '#625ff0',
-  },
-  filterText: {
-    color: '#D1D5DB',
-    fontSize: 12,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  filterTextActive: {
-    color: '#FFFFFF',
-  },
   totalText: {
     color: '#B8BCC4',
     fontSize: 13,
@@ -137,27 +113,16 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
   },
-  statusBadge: {
-    paddingHorizontal: 9,
-    paddingVertical: 5,
-    borderRadius: 6,
-  },
-  statusAkanDatang: {
-    backgroundColor: '#164E63',
-  },
-  statusSelesai: {
-    backgroundColor: '#166534',
-  },
-  statusText: {
-    color: '#FFFFFF',
-    fontSize: 11,
-    fontWeight: '600',
-  },
   subject: {
     color: '#FFFFFF',
     fontSize: 17,
     fontWeight: 'bold',
     lineHeight: 24,
+  },
+  classText: {
+    color: '#C7C5FF',
+    fontSize: 12,
+    marginTop: 6,
   },
   divider: {
     height: 1,

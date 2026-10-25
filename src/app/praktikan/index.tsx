@@ -136,15 +136,18 @@ export default function Index() {
                 <Text
                 style={[
                   styles.scheduleStatus,
-                  item.status === 'Sedang Berlangsung' && {
-                    color: '#67E8F9',
-                  },
                   item.status === 'Belum Dibuka' && {
-                    color: '#FCD34D',
+                    backgroundColor: '#854D0E',
                   },
-                ]}
+                  item.status === 'Sedang Berlangsung' && {
+                    backgroundColor: '#164E63',
+                  },
+                  item.status === 'Selesai' && {
+                    backgroundColor: '#4B5563',
+                  },
+                  ]}
                 >
-                  {item.status === 'Belum Dibuka' ? 'Akan Datang' : item.status}
+                  {item.status}
                 </Text>
               </View>
 
@@ -347,9 +350,13 @@ const styles = StyleSheet.create({
     fontSize: 11,
   },
   scheduleStatus: {
-    color: '#FCD34D',
+    color: '#FFFFFF',
     fontSize: 11,
     fontWeight: '600',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    overflow: 'hidden',
   },
   scheduleName: {
     color: '#FFFFFF',

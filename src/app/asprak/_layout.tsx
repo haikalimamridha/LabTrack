@@ -68,15 +68,6 @@ export default function TabLayout() {
           ),
         }}
       />
-      <Tabs.Screen
-        name="riwayat"
-        options={{
-          title: 'Riwayat',
-          tabBarIcon: ({ color, focused }) => (
-            <FontAwesome5 name="history" size={24} color={color} />
-          ),
-        }}
-      />
     </Tabs>
   );
 }

@@ -1,20 +1,26 @@
-
 import { useState } from 'react';
 import {
   ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
-import { jadwalAsprakDummy } from '../../data/jadwalAsprakDummy';
+import { sesiDummy } from '../../data/sesi';
 
-const filters = ['Semua', 'Berlangsung', 'Akan Datang', 'Selesai'];
+const filters = [
+  'Semua',
+  'Sedang Berlangsung',
+  'Belum Dibuka',
+  'Selesai',
+];
 
 export default function SesiScreen() {
   const [filterAktif, setFilterAktif] = useState('Semua');
 
-  const daftarSesi = jadwalAsprakDummy.filter(
-    (item) => filterAktif === 'Semua' || item.status === filterAktif
+  const daftarSesi = sesiDummy.filter(
+    (item) =>
+      filterAktif === 'Semua' || item.status === filterAktif,
   );
 
   return (
@@ -44,13 +50,14 @@ export default function SesiScreen() {
           const aktif = filterAktif === filter;
 
           return (
-            <View
+            <TouchableOpacity
               key={filter}
+              activeOpacity={0.7}
               style={[
                 styles.filterButton,
                 aktif && styles.filterButtonActive,
               ]}
-              onTouchEnd={() => setFilterAktif(filter)}
+              onPress={() => setFilterAktif(filter)}
             >
               <Text
                 style={[
@@ -60,7 +67,7 @@ export default function SesiScreen() {
               >
                 {filter}
               </Text>
-            </View>
+            </TouchableOpacity>
           );
         })}
       </ScrollView>
@@ -71,25 +78,29 @@ export default function SesiScreen() {
           <View key={item.id} style={styles.sessionCard}>
             <View style={styles.cardTop}>
               <View style={styles.codeBadge}>
-                <Text style={styles.codeText}>{item.kode}</Text>
+                <Text style={styles.codeText}>
+                  {item.kode}
+                </Text>
               </View>
 
               <View
                 style={[
                   styles.statusBadge,
-                  item.status === 'Berlangsung' &&
-                    styles.statusOngoing,
-                  item.status === 'Akan Datang' &&
-                    styles.statusUpcoming,
+                  item.status === 'Belum Dibuka' &&
+                    styles.statusBelum,
+                  item.status === 'Sedang Berlangsung' &&
+                    styles.statusBerlangsung,
                   item.status === 'Selesai' &&
-                    styles.statusDone,
+                    styles.statusSelesai,
                 ]}
               >
-                <Text style={styles.statusText}>{item.status}</Text>
+                <Text style={styles.statusText}>
+                  {item.status}
+                </Text>
               </View>
             </View>
 
-            <Text style={styles.sessionName}>
+            <Text style={styles.subject}>
               {item.mataPraktikum}
             </Text>
 
@@ -108,20 +119,27 @@ export default function SesiScreen() {
 
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Waktu</Text>
-              <Text style={styles.detailValue}>{item.waktu}</Text>
+              <Text style={styles.detailValue}>
+                {item.waktu}
+              </Text>
             </View>
 
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Ruangan</Text>
-              <Text style={styles.detailValue}>{item.ruangan}</Text>
+              <Text style={styles.detailValue}>
+                {item.ruangan}
+              </Text>
             </View>
           </View>
         ))
       ) : (
         <View style={styles.emptyCard}>
-          <Text style={styles.emptyTitle}>Tidak ada sesi</Text>
+          <Text style={styles.emptyTitle}>
+            Tidak ada sesi
+          </Text>
           <Text style={styles.emptyDescription}>
-            Belum ada sesi dengan status {filterAktif.toLowerCase()}.
+            Belum ada sesi dengan status{' '}
+            {filterAktif.toLowerCase()}.
           </Text>
         </View>
       )}
@@ -220,35 +238,32 @@ const styles = StyleSheet.create({
     borderRadius: 7,
     paddingHorizontal: 9,
     paddingVertical: 6,
-    backgroundColor: '#454B55',
   },
-  statusOngoing: {
-    backgroundColor: '#45416F',
+  statusBelum: {
+    backgroundColor: '#854D0E',
   },
-  statusUpcoming: {
-    backgroundColor: '#343941',
-    borderWidth: 1,
-    borderColor: '#A5A2FF',
+  statusBerlangsung: {
+    backgroundColor: '#164E63',
   },
-  statusDone: {
-    backgroundColor: '#454B55',
+  statusSelesai: {
+    backgroundColor: '#4B5563',
   },
   statusText: {
     color: '#FFFFFF',
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '600',
   },
-  sessionName: {
+  subject: {
     color: '#FFFFFF',
-    fontSize: 15,
+    fontSize: 17,
     fontWeight: 'bold',
-    lineHeight: 22,
-    marginBottom: 6,
+    lineHeight: 24,
   },
   classText: {
     color: '#A5A2FF',
     fontSize: 12,
     fontWeight: '600',
+    marginTop: 6,
   },
   divider: {
     height: 1,

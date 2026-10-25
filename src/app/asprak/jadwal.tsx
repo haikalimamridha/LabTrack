@@ -1,36 +1,13 @@
-
-import { useState } from 'react';
 import { jadwalAsprakDummy } from '../../data/jadwalAsprakDummy';
 import {
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
 
-const filterJadwal = [
-  'Semua',
-  'Akan Datang',
-  'Selesai',
-];
-
 export default function JadwalScreen() {
-  const [filter, setFilter] = useState('Semua');
-
-  const jadwalTampil = jadwalAsprakDummy
-  .filter((item) => {
-    if (filter === 'Semua') return true;
-    return item.status === filter;
-  })
-  .sort((a, b) => {
-    if (filter === 'Semua') {
-      if (a.status === 'Berlangsung') return -1;
-      if (b.status === 'Berlangsung') return 1;
-    }
-
-    return 0;
-  });
+  const jadwalTampil = jadwalAsprakDummy;
 
   return (
     <View style={styles.container}>
@@ -38,29 +15,6 @@ export default function JadwalScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Filter jadwal */}
-        <View style={styles.filterContainer}>
-          {filterJadwal.map((item) => (
-            <TouchableOpacity
-              key={item}
-              activeOpacity={0.7}
-              style={[
-                styles.filterButton,
-                filter === item && styles.filterActive,
-              ]}
-              onPress={() => setFilter(item)}
-            >
-              <Text
-                style={[
-                  styles.filterText,
-                  filter === item && styles.filterTextActive,
-                ]}
-              >
-                {item}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
 
         {/* Jumlah jadwal */}
         <Text style={styles.totalText}>
@@ -73,19 +27,6 @@ export default function JadwalScreen() {
             <View style={styles.cardHeader}>
               <View style={styles.codeBadge}>
                 <Text style={styles.codeText}>{item.kode}</Text>
-              </View>
-
-              <View
-                style={[
-                  styles.statusBadge,
-                  item.status === 'Berlangsung'
-                    ? styles.statusBerlangsung
-                    : item.status === 'Selesai'
-                      ? styles.statusSelesai
-                      : styles.statusBelumDibuka,
-                ]}
-              >
-                <Text style={styles.statusText}>{item.status}</Text>
               </View>
             </View>
 
@@ -100,10 +41,8 @@ export default function JadwalScreen() {
             <View style={styles.divider} />
 
             <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Tanggal</Text>
-              <Text style={styles.infoValue}>
-                {item.hari}, {item.tanggal}
-              </Text>
+              <Text style={styles.infoLabel}>Hari</Text>
+              <Text style={styles.infoValue}>{item.hari}</Text>
             </View>
 
             <View style={styles.infoRow}>
@@ -141,33 +80,6 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 30,
   },
-  filterContainer: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 18,
-  },
-  filterButton: {
-    flex: 1,
-    paddingVertical: 10,
-    paddingHorizontal: 4,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#555B65',
-    alignItems: 'center',
-  },
-  filterActive: {
-    backgroundColor: '#625ff0',
-    borderColor: '#625ff0',
-  },
-  filterText: {
-    color: '#D1D5DB',
-    fontSize: 12,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  filterTextActive: {
-    color: '#FFFFFF',
-  },
   totalText: {
     color: '#B8BCC4',
     fontSize: 13,
@@ -198,25 +110,6 @@ const styles = StyleSheet.create({
     color: '#C7C5FF',
     fontSize: 12,
     fontWeight: 'bold',
-  },
-  statusBadge: {
-    paddingHorizontal: 9,
-    paddingVertical: 5,
-    borderRadius: 6,
-  },
-  statusBelumDibuka: {
-    backgroundColor: '#4B5563',
-  },
-  statusBerlangsung: {
-    backgroundColor: '#164E63',
-  },
-  statusSelesai: {
-    backgroundColor: '#166534',
-  },
-  statusText: {
-    color: '#FFFFFF',
-    fontSize: 11,
-    fontWeight: '600',
   },
   subject: {
     color: '#FFFFFF',
