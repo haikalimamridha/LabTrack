@@ -1,12 +1,14 @@
+
+import { useSesi } from '@/context/SesiContext';
 import { useState } from 'react';
 import {
+  Alert,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
-import { sesiDummy } from '../../data/sesi';
 
 const filters = [
   'Semua',
@@ -16,9 +18,11 @@ const filters = [
 ];
 
 export default function SesiScreen() {
+  const { daftarSesi: daftarSemuaSesi, bukaSesi } = useSesi();
+
   const [filterAktif, setFilterAktif] = useState('Semua');
 
-  const daftarSesi = sesiDummy.filter(
+  const daftarSesi = daftarSemuaSesi.filter(
     (item) =>
       filterAktif === 'Semua' || item.status === filterAktif,
   );
@@ -130,6 +134,51 @@ export default function SesiScreen() {
                 {item.ruangan}
               </Text>
             </View>
+
+            {/* Tombol Buka Sesi */}
+            {item.status === 'Belum Dibuka' && (
+              <TouchableOpacity
+                style={styles.openSessionButton}
+                activeOpacity={0.8}
+                onPress={() => {
+                  Alert.alert(
+                    'Buka Sesi Praktikum',
+                    `Apakah kamu yakin ingin membuka sesi ${item.mataPraktikum}?`,
+                    [
+                      {
+                        text: 'Batal',
+                        style: 'cancel',
+                      },
+                      {
+                        text: 'Buka Sesi',
+                        onPress: () => {
+                          bukaSesi(item.id);
+
+                          Alert.alert(
+                            'Berhasil',
+                            'Sesi praktikum berhasil dibuka.',
+                          );
+                        },
+                      },
+                    ],
+                  );
+                }}
+              >
+                <Text style={styles.openSessionButtonText}>
+                  Buka Sesi
+                </Text>
+              </TouchableOpacity>
+            )}
+
+
+            {/* Informasi sesi yang sudah berjalan */}
+            {item.status === 'Sedang Berlangsung' && (
+              <View style={styles.activeSessionInfo}>
+                <Text style={styles.activeSessionText}>
+                  Sesi praktikum sedang berlangsung.
+                </Text>
+              </View>
+            )}
           </View>
         ))
       ) : (
@@ -287,6 +336,30 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     textAlign: 'right',
     flexShrink: 1,
+  },
+  openSessionButton: {
+    backgroundColor: '#625ff0',
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  openSessionButtonText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: 'bold',
+  },
+  activeSessionInfo: {
+    backgroundColor: '#164E63',
+    borderRadius: 10,
+    padding: 12,
+    marginTop: 8,
+  },
+  activeSessionText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '600',
+    textAlign: 'center',
   },
   emptyCard: {
     alignItems: 'center',

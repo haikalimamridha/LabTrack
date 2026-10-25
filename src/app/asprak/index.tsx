@@ -1,3 +1,4 @@
+import { useSesi } from '@/context/SesiContext';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
   ScrollView,
@@ -71,8 +72,6 @@ export default function AsistenDashboard() {
 
   const sekarang = Date.now();
 
-  const totalSesi = sesiDummy.length;
-
   const sesiMendatang = sesiDummy
     .filter(
       (item) =>
@@ -80,8 +79,6 @@ export default function AsistenDashboard() {
         waktuSesi(item) >= sekarang,
     )
     .sort((a, b) => waktuSesi(a) - waktuSesi(b));
-
-  const totalSesiMendatang = sesiMendatang.length;
 
   const sesiTerdekat = [...sesiDummy]
     .filter(
@@ -92,6 +89,14 @@ export default function AsistenDashboard() {
     )
     .sort((a, b) => waktuSesi(a) - waktuSesi(b))
     .slice(0, 2);
+
+  const { daftarSesi } = useSesi();
+
+  const totalSesi = daftarSesi.length;
+
+  const totalSesiMendatang = daftarSesi.filter(
+    (item) => item.status === 'Belum Dibuka',
+  ).length;
 
   return (
     <View style={styles.container}>
