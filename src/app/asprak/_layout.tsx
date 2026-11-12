@@ -3,8 +3,7 @@ import Feather from '@expo/vector-icons/Feather';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { Tabs, router, useLocalSearchParams, usePathname } from 'expo-router';
-import { TouchableOpacity } from 'react-native';
+import { Tabs, useLocalSearchParams, usePathname } from 'expo-router';
 
 
 export default function TabLayout() {
@@ -24,23 +23,6 @@ export default function TabLayout() {
               tabBarStyle: {
                 backgroundColor: '#25292e',
               },
-              headerLeft: () => (
-              <TouchableOpacity
-                onPress={() => {
-                  if (pathname === '/asprak') {
-                    router.replace({
-                      pathname: '/pilih-identitas',
-                      params: { role: 'asprak' },
-                    });
-                  } else {
-                    router.back();
-                  }
-                }}
-                style={{ marginLeft: 15 }}
-              >
-                <Feather name="arrow-left" size={24} color="#fff" />
-              </TouchableOpacity>
-            ),
           }}
       >
         <Tabs.Screen

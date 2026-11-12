@@ -36,7 +36,7 @@ export default function LoginScreen() {
 
       Alert.alert('Berhasil', 'Login berhasil.');
 
-      router.replace('/pilih-identitas');
+      router.replace('/');
     } catch (error: any) {
       let message = 'Terjadi kesalahan. Silakan coba lagi.';
 

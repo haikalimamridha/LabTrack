@@ -81,7 +81,7 @@ export default function RegisterScreen() {
         [
           {
             text: 'Lanjutkan',
-            onPress: () => router.replace('/pilih-identitas'),
+            onPress: () => router.replace('/'),
           },
         ]
       );
