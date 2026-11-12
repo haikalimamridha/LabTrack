@@ -1,6 +1,5 @@
-
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { usePresensi } from '../../context/PresensiContext';
+import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'expo-router';
 import {
   ScrollView,
   StyleSheet,
@@ -8,10 +7,22 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { usePresensi } from '../../context/PresensiContext';
 
 export default function Index() {
   const router = useRouter();
+  const { profile } = useAuth();
   const { daftarSesi, riwayat, sudahPresensi } = usePresensi();
+  const { logout } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.replace('/login');
+    } catch (error) {
+      console.error('Gagal logout:', error);
+    }
+  };
 
   const totalSesi = daftarSesi.length;
 
@@ -25,15 +36,6 @@ export default function Index() {
     .filter((item) => item.status !== 'Selesai')
     .slice(0, 2);
 
-  const { nama, nim, email, angkatan, jurusan } =
-  useLocalSearchParams<{
-    nama?: string;
-    nim?: string;
-    email?: string;
-    angkatan?: string;
-    jurusan?: string;
-  }>();
-
   return (
     <View style={styles.container}>
       <ScrollView
@@ -44,14 +46,20 @@ export default function Index() {
         <View style={styles.header}>
           <View>
             <Text style={styles.brand}>LABTRACK</Text>
-            <Text style={styles.greeting}>Halo, {nama ?? 'Praktikan'}!</Text>
+            <Text style={styles.greeting}>Halo, {profile?.nama ?? 'Praktikan'}!</Text>
             <Text style={styles.subtitle}>
               Siap untuk praktikum hari ini?
             </Text>
           </View>
+          <TouchableOpacity
+            style={styles.logoutButton}
+            onPress={handleLogout}
+          >
+            <Text style={styles.logoutText}>Logout</Text>
+          </TouchableOpacity>
 
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{(nama ?? 'P').charAt(0).toUpperCase()}</Text>
+            <Text style={styles.avatarText}>{(profile?.nama ?? 'P').charAt(0).toUpperCase()}</Text>
           </View>
         </View>
 
@@ -59,7 +67,7 @@ export default function Index() {
         <View style={styles.profileCard}>
           <View style={styles.profileIcon}>
             <Text style={styles.profileIconText}>
-              {(nama ?? 'Pengguna')
+              {(profile?.nama ?? 'Pengguna')
               .split(' ')
               .filter(Boolean)
               .map((kata) => kata.charAt(0))
@@ -69,12 +77,12 @@ export default function Index() {
           </View>
 
           <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>{nama ?? 'Pengguna Praktikan'}</Text>
-            <Text style={styles.profileNim}>{nim ?? '-'}</Text>
+            <Text style={styles.profileName}>{profile?.nama ?? 'Pengguna Praktikan'}</Text>
+            <Text style={styles.profileNim}>{profile?.nim ?? '-'}</Text>
             <Text style={styles.profileMajor}>
-              {jurusan ?? 'Jurusan belum tersedia'}
+              {profile?.jurusan ?? 'Jurusan belum tersedia'}
               {' · Angkatan '}
-              {angkatan ?? '-'}
+              {profile?.angkatan ?? '-'}
             </Text>
           </View>
 
@@ -449,5 +457,18 @@ const styles = StyleSheet.create({
     color: '#777E89',
     fontSize: 11,
     marginTop: 26,
+  },
+  logoutButton: {
+  backgroundColor: '#EF4444',
+  padding: 12,
+  borderRadius: 10,
+  alignItems: 'center',
+  marginTop: 16,
+  },
+
+  logoutText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 14,
   },
 });

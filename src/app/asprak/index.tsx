@@ -1,5 +1,6 @@
+import { useAuth } from '@/context/AuthContext';
 import { useSesi } from '@/context/SesiContext';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import {
   ScrollView,
   StyleSheet,
@@ -48,19 +49,22 @@ function waktuSesi(item: (typeof sesiDummy)[number]): number {
 
 export default function AsistenDashboard() {
   const router = useRouter();
+  const { profile } = useAuth();
+  const { logout } = useAuth();
 
-  const { nama, nim, angkatan, jurusan } =
-    useLocalSearchParams<{
-      nama?: string;
-      nim?: string;
-      angkatan?: string;
-      jurusan?: string;
-    }>();
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.replace('/login');
+    } catch (error) {
+      console.error('Gagal logout:', error);
+    }
+  };
 
-  const namaAsisten = nama ?? 'Asisten';
-  const nimAsisten = nim ?? '-';
-  const angkatanAsisten = angkatan ?? '-';
-  const jurusanAsisten = jurusan ?? '-';
+  const namaAsisten = profile?.nama ?? 'Asisten';
+  const nimAsisten = profile?.nim ?? '-';
+  const angkatanAsisten = profile?.angkatan ?? '-';
+  const jurusanAsisten = profile?.jurusan ?? '-';
 
   const inisial = namaAsisten
     .split(' ')
@@ -115,6 +119,13 @@ export default function AsistenDashboard() {
               Siap mendampingi praktikum hari ini?
             </Text>
           </View>
+
+          <TouchableOpacity
+            style={styles.logoutButton}
+            onPress={handleLogout}
+          >
+            <Text style={styles.logoutText}>Logout</Text>
+          </TouchableOpacity>
 
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>
@@ -538,5 +549,18 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: 'center',
     lineHeight: 18,
+  },
+  logoutButton: {
+  backgroundColor: '#EF4444',
+  padding: 12,
+  borderRadius: 10,
+  alignItems: 'center',
+  marginTop: 16,
+  },
+
+  logoutText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 14,
   },
 });
