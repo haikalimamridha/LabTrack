@@ -1,76 +1,74 @@
+
+import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'expo-router';
+import { useEffect } from 'react';
 import {
+  ActivityIndicator,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
 
 export default function Index() {
   const router = useRouter();
+  const { user, profile, loading } = useAuth();
 
-    return (
+  useEffect(() => {
+    if (loading) return;
+
+    if (!user) {
+      router.replace('/login');
+      return;
+    }
+
+    if (profile) {
+      const params = {
+        userId: profile.uid,
+        nama: profile.nama,
+        nim: profile.nim,
+        email: profile.email,
+        angkatan: profile.angkatan,
+        jurusan: profile.jurusan,
+        role: profile.role,
+      };
+
+      if (profile.role === 'praktikan') {
+        router.replace({
+          pathname: '/praktikan',
+          params,
+        } as any);
+      } else if (profile.role === 'asprak') {
+        router.replace({
+          pathname: '/asprak',
+          params,
+        } as any);
+      }
+    }
+  }, [user, profile, loading]);
+
+  return (
     <View style={styles.container}>
-        <Text style={styles.title}>Pilih Peran</Text>
+      <ActivityIndicator size="large" color="#625FF0" />
 
-        <View style={styles.buttonContainer}>
-        <TouchableOpacity
-            style={styles.button}
-            activeOpacity={0.8}
-            onPress={() => router.push({ pathname: '/pilih-identitas' as any, params: { role: 'praktikan' }, })}
-        >
-            <Text style={styles.buttonTitle}>Praktikan</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-            style={styles.button}
-            activeOpacity={0.8}
-            onPress={() => router.push({ pathname: '/pilih-identitas' as any, params: { role: 'asprak' }, })}
-        >
-            <Text style={styles.buttonTitle}>Asisten Praktikum</Text>
-        </TouchableOpacity>
-        </View>
+      <Text style={styles.text}>
+        {loading
+          ? 'Memeriksa sesi login...'
+          : 'Menyiapkan dashboard...'}
+      </Text>
     </View>
-    );
+  );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
     backgroundColor: '#25292e',
-    paddingHorizontal: 24,
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'stretch',
-    width: '100%',
-    gap: 12,
-  },
-  button: {
-    flex: 1,
-    padding: 12,
-    borderRadius: 16,
-    minHeight: 50,
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 3,
-    borderWidth: 1,
-    borderColor: '#fff'
   },
-  buttonTitle: {
+  text: {
     color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    marginTop: 16,
+    fontSize: 14,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#ffffff',
-    textAlign: 'center',
-    marginBottom: 24,
-    },
 });
