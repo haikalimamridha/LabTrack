@@ -1,16 +1,17 @@
 import { useAuth } from '@/context/AuthContext';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    KeyboardAvoidingView,
-    Platform,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 export default function LoginScreen() {
@@ -71,16 +72,12 @@ export default function LoginScreen() {
     >
       <View style={styles.content}>
         <View style={styles.logoContainer}>
-          <View style={styles.logoIcon}>
-            <Text style={styles.logoIconText}>L</Text>
-          </View>
-
           <Text style={styles.logo}>LABTRACK</Text>
         </View>
 
         <View style={styles.formContainer}>
           <Text style={styles.subtitle}>
-            Masuk ke akun LabTrack kamu untuk melanjutkan.
+            Masuk ke akun kamu untuk melanjutkan.
           </Text>
 
           <Text style={styles.label}>Email</Text>
@@ -110,9 +107,11 @@ export default function LoginScreen() {
             <TouchableOpacity
               onPress={() => setShowPassword(!showPassword)}
             >
-              <Text style={styles.showPassword}>
-                {showPassword ? 'Sembunyikan' : 'Lihat'}
-              </Text>
+              <Ionicons
+                name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                size={22}
+                color="#888"
+              />
             </TouchableOpacity>
           </View>
 
@@ -165,20 +164,6 @@ const styles = StyleSheet.create({
   logoContainer: {
     alignItems: 'center',
     marginBottom: 42,
-  },
-  logoIcon: {
-    width: 62,
-    height: 62,
-    borderRadius: 18,
-    backgroundColor: '#625ff0',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 14,
-  },
-  logoIconText: {
-    color: '#FFFFFF',
-    fontSize: 32,
-    fontWeight: '800',
   },
   logo: {
     color: '#FFFFFF',
