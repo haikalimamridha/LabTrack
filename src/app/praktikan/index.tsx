@@ -1,5 +1,7 @@
 import { useAuth } from '@/context/AuthContext';
+import Feather from '@expo/vector-icons/Feather';
 import { useRouter } from 'expo-router';
+import { useState } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -24,6 +26,19 @@ export default function Index() {
     }
   };
 
+  const nama = profile?.nama ?? 'Praktikan';
+  const nim = profile?.nim ?? '-';
+  const angkatan = profile?.angkatan ?? '-';
+  const jurusan = profile?.jurusan ?? '-';
+
+  const inisial = nama
+  .split(' ')
+  .filter(Boolean)
+  .slice(0, 2)
+  .map((kata) => kata[0])
+  .join('')
+  .toUpperCase();
+
   const totalSesi = daftarSesi.length;
 
   const sudahHadir = daftarSesi.filter(
@@ -36,6 +51,8 @@ export default function Index() {
     .filter((item) => item.status !== 'Selesai')
     .slice(0, 2);
 
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+
   return (
     <View style={styles.container}>
       <ScrollView
@@ -44,22 +61,37 @@ export default function Index() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <View>
-            <Text style={styles.brand}>LABTRACK</Text>
-            <Text style={styles.greeting}>Halo, {profile?.nama ?? 'Praktikan'}!</Text>
-            <Text style={styles.subtitle}>
-              Siap untuk praktikum hari ini?
+          <View style={styles.headerInfo}>
+            <Text style={styles.greeting}>
+              Halo {nama}!
             </Text>
           </View>
-          <TouchableOpacity
-            style={styles.logoutButton}
-            onPress={handleLogout}
-          >
-            <Text style={styles.logoutText}>Logout</Text>
-          </TouchableOpacity>
 
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{(profile?.nama ?? 'P').charAt(0).toUpperCase()}</Text>
+          <View style={{ position: 'relative' }}>
+            <TouchableOpacity
+              style={styles.avatar}
+              onPress={() => setShowProfileMenu(!showProfileMenu)}
+            >
+              <Text style={styles.avatarText}>
+                {inisial || 'A'}
+              </Text>
+            </TouchableOpacity>
+
+            {showProfileMenu && (
+              <View style={styles.profileMenu}>
+                <TouchableOpacity
+                  style={styles.logoutButton}
+                  onPress={handleLogout}
+                >
+                  <Feather
+                    name="log-out"
+                    size={17}
+                    color="#EF6464"
+                  />
+                  <Text style={styles.logoutText}>  Logout</Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
         </View>
 
@@ -459,16 +491,31 @@ const styles = StyleSheet.create({
     marginTop: 26,
   },
   logoutButton: {
-  backgroundColor: '#EF4444',
-  padding: 12,
-  borderRadius: 10,
-  alignItems: 'center',
-  marginTop: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 11,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: 'transparent',
   },
 
   logoutText: {
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-    fontSize: 14,
+    color: '#EF6464',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  headerInfo: {
+    flex: 1,
+  },
+  profileMenu: {
+    position: 'absolute',
+    top: 55,
+    right: 0,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 8,
+    minWidth: 120,
+    elevation: 5,
+    zIndex: 100,
   },
 });

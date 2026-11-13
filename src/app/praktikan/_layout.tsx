@@ -14,11 +14,7 @@ export default function TabLayout() {
         screenOptions={{
           tabBarActiveTintColor: "#625ff0",
           tabBarInactiveTintColor: "#fff",
-          headerStyle: {
-            backgroundColor: "#25292e",
-          },
-          headerShadowVisible: false,
-          headerTintColor: "#fff",
+          headerShown: false,
           tabBarStyle: {
             backgroundColor: "#25292e",
           },
@@ -28,6 +24,7 @@ export default function TabLayout() {
           name="index"
           options={{
             title: "Dashboard",
+            headerTitleAlign: 'center',
             tabBarIcon: ({ color }) => (
               <MaterialIcons name="dashboard" size={24} color={typeof color === 'string' ? color : undefined} />
             ),
@@ -37,6 +34,7 @@ export default function TabLayout() {
           name="jadwal"
           options={{
             title: "Jadwal",
+            headerTitleAlign: 'center',
             tabBarIcon: ({ color }) => (
               <FontAwesome5 name="calendar-alt" size={24} color={color} />
             ),
@@ -46,6 +44,7 @@ export default function TabLayout() {
           name="presensi"
           options={{
             title: "Presensi",
+            headerTitleAlign: 'center',
             tabBarIcon: ({ color }) => (
               <Feather name="user-check" size={24} color={typeof color === 'string' ? color : undefined} />
             ),
@@ -55,6 +54,7 @@ export default function TabLayout() {
           name="riwayat"
           options={{
             title: "Riwayat",
+            headerTitleAlign: 'center',
             tabBarIcon: ({ color }) => (
               <FontAwesome5 name="history" size={24} color={color} />
             ),
