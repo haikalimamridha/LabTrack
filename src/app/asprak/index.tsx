@@ -1,6 +1,8 @@
 import { useAuth } from '@/context/AuthContext';
 import { useSesi } from '@/context/SesiContext';
+import Feather from '@expo/vector-icons/Feather';
 import { useRouter } from 'expo-router';
+import { useState } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -102,37 +104,51 @@ export default function AsistenDashboard() {
     (item) => item.status === 'Belum Dibuka',
   ).length;
 
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  
   return (
     <View style={styles.container}>
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerInfo}>
-            <Text style={styles.logo}>LABTRACK</Text>
             <Text style={styles.greeting}>
-              Halo, {namaAsisten}!
-            </Text>
-            <Text style={styles.subtitle}>
-              Siap mendampingi praktikum hari ini?
+              Halo {namaAsisten}!
             </Text>
           </View>
 
-          <TouchableOpacity
-            style={styles.logoutButton}
-            onPress={handleLogout}
-          >
-            <Text style={styles.logoutText}>Logout</Text>
-          </TouchableOpacity>
+          <View style={{ position: 'relative' }}>
+            <TouchableOpacity
+              style={styles.avatar}
+              onPress={() => setShowProfileMenu(!showProfileMenu)}
+            >
+              <Text style={styles.avatarText}>
+                {inisial || 'A'}
+              </Text>
+            </TouchableOpacity>
 
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>
-              {inisial || 'A'}
-            </Text>
+            {showProfileMenu && (
+              <View style={styles.profileMenu}>
+                <TouchableOpacity
+                  style={styles.logoutButton}
+                  onPress={handleLogout}
+                >
+                  <Feather
+                    name="log-out"
+                    size={17}
+                    color="#EF6464"
+                  />
+                  <Text style={styles.logoutText}>  Logout</Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
         </View>
+
 
         {/* Identitas pengguna */}
         <View style={styles.profileCard}>
@@ -151,7 +167,7 @@ export default function AsistenDashboard() {
             </Text>
             <Text style={styles.profileMajor}>
               {jurusanAsisten}
-              {' · Angkatan '}
+              {' · '}
               {angkatanAsisten}
             </Text>
           </View>
@@ -312,22 +328,11 @@ const styles = StyleSheet.create({
   headerInfo: {
     flex: 1,
   },
-  logo: {
-    color: '#A5A2FF',
-    fontSize: 13,
-    fontWeight: '800',
-    letterSpacing: 2,
-    marginBottom: 10,
-  },
   greeting: {
     color: '#FFFFFF',
     fontSize: 27,
     fontWeight: '700',
     marginBottom: 6,
-  },
-  subtitle: {
-    color: '#A6ABB5',
-    fontSize: 13,
   },
   avatar: {
     width: 46,
@@ -550,17 +555,29 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 18,
   },
+  profileMenu: {
+    position: 'absolute',
+    top: 55,
+    right: 0,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 8,
+    minWidth: 120,
+    elevation: 5,
+    zIndex: 100,
+  },
+
   logoutButton: {
-  backgroundColor: '#EF4444',
-  padding: 12,
-  borderRadius: 10,
-  alignItems: 'center',
-  marginTop: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 8,
   },
 
   logoutText: {
-    color: '#FFFFFF',
-    fontWeight: 'bold',
+    color: '#EF4444',
     fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
   },
+
 });
