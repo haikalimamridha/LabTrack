@@ -1,7 +1,8 @@
 import { useAuth } from '@/context/AuthContext';
+import { getKelasAktif, type Kelas } from '@/services/kelasService';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -18,11 +19,15 @@ import {
 export default function RegisterScreen() {
   const router = useRouter();
   const { register } = useAuth();
+  const [showKelasDropdown, setShowKelasDropdown] = useState(false);
 
   const [nama, setNama] = useState('');
   const [nim, setNim] = useState('');
   const [angkatan, setAngkatan] = useState('');
   const [jurusan, setJurusan] = useState('');
+  const [daftarKelas, setDaftarKelas] = useState<Kelas[]>([]);
+  const [kelasId, setKelasId] = useState('');
+  const [loadingKelas, setLoadingKelas] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [konfirmasiPassword, setKonfirmasiPassword] = useState('');
@@ -30,6 +35,22 @@ export default function RegisterScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const loadKelas = async () => {
+      try {
+        const data = await getKelasAktif();
+        setDaftarKelas(data);
+      } catch (error) {
+        console.error('Gagal mengambil daftar kelas:', error);
+        Alert.alert('Gagal', 'Tidak dapat mengambil daftar kelas.');
+      } finally {
+        setLoadingKelas(false);
+      }
+    };
+
+    void loadKelas();
+  }, []);
 
   const handleRegister = async () => {
     if (
@@ -63,7 +84,6 @@ export default function RegisterScreen() {
 
     try {
       setLoading(true);
-
       await register(
         {
           nama,
@@ -71,6 +91,7 @@ export default function RegisterScreen() {
           nim,
           angkatan,
           jurusan,
+          kelasId
         },
         password
       );
@@ -140,7 +161,7 @@ export default function RegisterScreen() {
     value: string,
     onChangeText: (value: string) => void,
     visible: boolean,
-    toggleVisible: () => void
+    toggleVisible: () => void // Parameter ini sudah ada, tinggal dipakai!
   ) => (
     <>
       <Text style={styles.label}>{label}</Text>
@@ -152,16 +173,14 @@ export default function RegisterScreen() {
           placeholderTextColor="#858B96"
           value={value}
           onChangeText={onChangeText}
-          secureTextEntry={!visible}
+          secureTextEntry={!visible} // Menggunakan parameter visible
           autoCapitalize="none"
           autoCorrect={false}
         />
 
-        <TouchableOpacity
-          onPress={() => setShowPassword(!showPassword)}
-        >
+        <TouchableOpacity onPress={toggleVisible}> {/* Menggunakan fungsi dari parameter */}
           <Ionicons
-            name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+            name={visible ? 'eye-off-outline' : 'eye-outline'} // Menggunakan status visible yang dinamis
             size={22}
             color="#888"
           />
@@ -217,6 +236,83 @@ export default function RegisterScreen() {
             jurusan,
             setJurusan
           )}
+
+          <Text style={styles.label}>Kelas Praktikum</Text>
+
+          {loadingKelas ? (
+            <View style={styles.classLoading}>
+              <ActivityIndicator color="#A5A2FF" />
+              <Text style={styles.classLoadingText}>
+                Memuat daftar kelas...
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.dropdownContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.dropdownButton,
+                  showKelasDropdown && styles.dropdownButtonActive,
+                ]}
+                onPress={() => setShowKelasDropdown(!showKelasDropdown)}
+                disabled={daftarKelas.length === 0}
+                activeOpacity={0.8}
+              >
+                <Text
+                  style={[
+                    styles.dropdownText,
+                    !kelasId && styles.dropdownPlaceholder,
+                  ]}
+                >
+                  {daftarKelas.find((item) => item.id === kelasId)?.nama ??
+                    'Pilih kelas praktikum'}
+                </Text>
+
+                <Ionicons
+                  name={showKelasDropdown ? 'chevron-up' : 'chevron-down'}
+                  size={20}
+                  color="#A6ABB5"
+                />
+              </TouchableOpacity>
+
+              {showKelasDropdown && (
+                <View style={styles.dropdownList}>
+                  {daftarKelas.map((item) => (
+                    <TouchableOpacity
+                      key={item.id}
+                      style={[
+                        styles.dropdownItem,
+                        kelasId === item.id && styles.dropdownItemActive,
+                      ]}
+                      onPress={() => {
+                        setKelasId(item.id);
+                        setShowKelasDropdown(false);
+                      }}
+                      activeOpacity={0.8}
+                    >
+                      <Text
+                        style={[
+                          styles.dropdownItemText,
+                          kelasId === item.id &&
+                            styles.dropdownItemTextActive,
+                        ]}
+                      >
+                        {item.nama}
+                      </Text>
+
+                      {kelasId === item.id && (
+                        <Ionicons
+                          name="checkmark"
+                          size={20}
+                          color="#A5A2FF"
+                        />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </View>
+          )}
+
 
           <View style={styles.divider} />
 
@@ -435,4 +531,121 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 25,
   },
+
+  classOptions: {
+    gap: 9,
+    marginBottom: 17,
+  },
+
+  classOption: {
+    minHeight: 46,
+    backgroundColor: '#25292e',
+    borderWidth: 1,
+    borderColor: '#454B55',
+    borderRadius: 9,
+    paddingHorizontal: 13,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+
+  classOptionActive: {
+    borderColor: '#625ff0',
+    backgroundColor: '#45416F',
+  },
+
+  classOptionText: {
+    color: '#A6ABB5',
+    fontSize: 13,
+    fontWeight: '500',
+  },
+
+  classOptionTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+  },
+
+  classLoading: {
+    height: 48,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 17,
+  },
+
+  classLoadingText: {
+    color: '#A6ABB5',
+    fontSize: 12,
+  },
+
+  classError: {
+    color: '#EF6464',
+    fontSize: 12,
+    marginBottom: 17,
+  },
+
+  dropdownContainer: {
+    marginBottom: 17,
+    zIndex: 10,
+  },
+
+  dropdownButton: {
+    height: 48,
+    backgroundColor: '#25292e',
+    borderWidth: 1,
+    borderColor: '#454B55',
+    borderRadius: 9,
+    paddingHorizontal: 13,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+
+  dropdownButtonActive: {
+    borderColor: '#625ff0',
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+  },
+
+  dropdownText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+  },
+
+  dropdownPlaceholder: {
+    color: '#858B96',
+  },
+
+  dropdownList: {
+    backgroundColor: '#25292e',
+    borderWidth: 1,
+    borderTopWidth: 0,
+    borderColor: '#625ff0',
+    borderBottomLeftRadius: 9,
+    borderBottomRightRadius: 9,
+    overflow: 'hidden',
+  },
+
+  dropdownItem: {
+    minHeight: 46,
+    paddingHorizontal: 13,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+
+  dropdownItemActive: {
+    backgroundColor: '#45416F',
+  },
+
+  dropdownItemText: {
+    color: '#A6ABB5',
+    fontSize: 13,
+  },
+
+  dropdownItemTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+  },
+
 });

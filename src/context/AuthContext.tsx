@@ -1,33 +1,31 @@
 
 import React, {
-    createContext,
-    useContext,
-    useEffect,
-    useState,
+  createContext,
+  useContext,
+  useEffect,
+  useState,
 } from 'react';
 
 import type { User } from '@react-native-firebase/auth';
 
 import {
-    createUserWithEmailAndPassword,
-    onAuthStateChanged,
-    signInWithEmailAndPassword,
-    signOut,
+  createUserWithEmailAndPassword,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signOut,
 } from '@react-native-firebase/auth';
 
 import {
-    doc,
-    getDoc,
-    serverTimestamp,
-    setDoc,
+  doc,
+  getDoc,
+  serverTimestamp,
+  setDoc,
 } from '@react-native-firebase/firestore';
 
 import { auth, firestore } from '@/config/firebase';
 
-// Tipe role pengguna
 export type UserRole = 'praktikan' | 'asprak';
 
-// Struktur profil pengguna
 export interface UserProfile {
   uid: string;
   nama: string;
@@ -36,53 +34,34 @@ export interface UserProfile {
   angkatan: string;
   jurusan: string;
   role: UserRole;
+  kelasId: string | null;
 }
 
-// Data yang dibutuhkan saat registrasi
 export interface RegisterData {
   nama: string;
   email: string;
   nim: string;
   angkatan: string;
   jurusan: string;
+  kelasId: string;
 }
 
-// Struktur Auth Context
 interface AuthContextType {
   user: User | null;
   profile: UserProfile | null;
   loading: boolean;
-  register: (
-    data: RegisterData,
-    password: string
-  ) => Promise<void>;
-  login: (
-    email: string,
-    password: string
-  ) => Promise<void>;
+  register: (data: RegisterData, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
-// Membuat context
-const AuthContext = createContext<AuthContextType | undefined>(
-  undefined
-);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Auth Provider
-export function AuthProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-
-  const [profile, setProfile] = useState<UserProfile | null>(
-    null
-  );
-
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Memantau status autentikasi Firebase
   useEffect(() => {
     let mounted = true;
 
@@ -101,12 +80,7 @@ export function AuthProvider({
 
       const loadProfile = async () => {
         try {
-          const userRef = doc(
-            firestore,
-            'users',
-            firebaseUser.uid
-          );
-
+          const userRef = doc(firestore, 'users', firebaseUser.uid);
           const snapshot = await getDoc(userRef);
 
           if (!mounted) return;
@@ -119,13 +93,9 @@ export function AuthProvider({
         } catch (error) {
           console.error('Gagal mengambil profil:', error);
 
-          if (mounted) {
-            setProfile(null);
-          }
+          if (mounted) setProfile(null);
         } finally {
-          if (mounted) {
-            setLoading(false);
-          }
+          if (mounted) setLoading(false);
         }
       };
 
@@ -138,13 +108,23 @@ export function AuthProvider({
     };
   }, []);
 
-  // Registrasi pengguna
-  const register = async (
-    data: RegisterData,
-    password: string
-  ) => {
+  const register = async (data: RegisterData, password: string) => {
     const email = data.email.trim().toLowerCase();
+    const kelasId = data.kelasId.trim();
 
+    if (!kelasId) {
+      throw new Error('Silakan pilih kelas terlebih dahulu.');
+    }
+
+    // Pastikan kelas masih tersedia dan aktif.
+    const kelasRef = doc(firestore, 'kelas', kelasId);
+    const kelasSnapshot = await getDoc(kelasRef);
+
+    if (!kelasSnapshot.exists() || kelasSnapshot.data().aktif !== true) {
+      throw new Error('Kelas tidak tersedia atau sudah tidak aktif.');
+    }
+
+    // Membuat akun Firebase Authentication.
     const credential = await createUserWithEmailAndPassword(
       auth,
       email,
@@ -161,8 +141,10 @@ export function AuthProvider({
       angkatan: data.angkatan.trim(),
       jurusan: data.jurusan.trim(),
       role: 'praktikan',
+      kelasId,
     };
 
+    // Menyimpan profil praktikan ke Firestore.
     const userRef = doc(firestore, 'users', uid);
 
     await setDoc(userRef, {
@@ -174,11 +156,7 @@ export function AuthProvider({
     setProfile(newProfile);
   };
 
-  // Login pengguna
-  const login = async (
-    email: string,
-    password: string
-  ) => {
+  const login = async (email: string, password: string) => {
     await signInWithEmailAndPassword(
       auth,
       email.trim().toLowerCase(),
@@ -186,7 +164,6 @@ export function AuthProvider({
     );
   };
 
-  // Logout pengguna
   const logout = async () => {
     await signOut(auth);
   };
@@ -207,14 +184,11 @@ export function AuthProvider({
   );
 }
 
-// Custom hook
 export function useAuth() {
   const context = useContext(AuthContext);
 
   if (!context) {
-    throw new Error(
-      'useAuth harus digunakan di dalam AuthProvider'
-    );
+    throw new Error('useAuth harus digunakan di dalam AuthProvider');
   }
 
   return context;
