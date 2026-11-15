@@ -1,4 +1,5 @@
 import {
+  ActivityIndicator,
   FlatList,
   StyleSheet,
   Text,
@@ -7,15 +8,16 @@ import {
 } from "react-native";
 import { usePresensi } from "../../context/PresensiContext";
 import { formatJam } from "../../data/sesi";
+import { formatTanggal } from "../../services/sessionService";
 
 export default function RiwayatScreen() {
-  const { riwayat, daftarSesi } = usePresensi();
+  const { riwayat, daftarSesi, loading, error } = usePresensi();
   const { width } = useWindowDimensions();
   const isWide = width >= 768;
 
   // Gabungkan catatan presensi dengan detail sesi, terbaru di atas
   const data = [...riwayat]
-    .reverse()
+    .sort((a, b) => b.waktuHadir.localeCompare(a.waktuHadir))
     .map((r) => ({
       ...r,
       sesi: daftarSesi.find((s) => s.id === r.sesiId)!,
@@ -36,21 +38,33 @@ export default function RiwayatScreen() {
           <Text style={styles.totalText}>{data.length} kehadiran tercatat</Text>
         }
         ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyIcon}>🗒️</Text>
-            <Text style={styles.emptyTitle}>Belum ada riwayat kehadiran</Text>
-            <Text style={styles.emptyText}>
-              Lakukan presensi pada sesi yang sedang berlangsung, lalu
-              catatannya akan muncul di sini.
-            </Text>
-          </View>
+          loading ? (
+            <View style={styles.emptyContainer}>
+              <ActivityIndicator color="#A5A2FF" />
+            </View>
+          ) : error ? (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyTitle}>Gagal memuat riwayat</Text>
+              <Text style={styles.emptyText}>{error}</Text>
+            </View>
+          ) : (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyIcon}>🗒️</Text>
+              <Text style={styles.emptyTitle}>Belum ada riwayat kehadiran</Text>
+              <Text style={styles.emptyText}>
+                Lakukan presensi pada sesi yang sedang berlangsung, lalu
+                catatannya akan muncul di sini.
+              </Text>
+            </View>
+          )
         }
         renderItem={({ item }) => (
           <View style={[styles.card, isWide && styles.cardWide]}>
             <View style={styles.cardHeader}>
               <View style={styles.codeBadge}>
                 <Text style={styles.codeText}>
-                  {item.sesi.kode} · Kelas {item.sesi.kelas}
+                  {item.sesi.kode ? `${item.sesi.kode} · ` : ""}Kelas{" "}
+                  {item.sesi.kelas}
                 </Text>
               </View>
               <View style={styles.statusBadge}>
@@ -64,7 +78,7 @@ export default function RiwayatScreen() {
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Tanggal</Text>
               <Text style={styles.infoValue}>
-                {item.sesi.hari}, {item.sesi.tanggal}
+                {item.sesi.hari}, {formatTanggal(item.sesi.tanggal)}
               </Text>
             </View>
             <View style={styles.infoRow}>
