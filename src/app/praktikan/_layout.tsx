@@ -51,6 +51,16 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
+          name="izin"
+          options={{
+            title: "Izin",
+            headerTitleAlign: "center",
+            tabBarIcon: ({ color }) => (
+              <Feather name="file-text" size={24} color={typeof color === "string" ? color : undefined} />
+            ),
+          }}
+        />
+        <Tabs.Screen
           name="riwayat"
           options={{
             title: "Riwayat",
