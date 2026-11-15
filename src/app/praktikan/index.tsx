@@ -1,54 +1,55 @@
-import { useAuth } from '@/context/AuthContext';
-import Feather from '@expo/vector-icons/Feather';
-import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useAuth } from "@/context/AuthContext";
+import Feather from "@expo/vector-icons/Feather";
+import { useRouter } from "expo-router";
+import { useState } from "react";
 import {
+  ActivityIndicator,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
-} from 'react-native';
-import { usePresensi } from '../../context/PresensiContext';
+} from "react-native";
+import { usePresensi } from "../../context/PresensiContext";
+import { formatTanggal, waktuMulaiSesi } from "../../services/sessionService";
 
 export default function Index() {
   const router = useRouter();
   const { profile } = useAuth();
-  const { daftarSesi, riwayat, sudahPresensi } = usePresensi();
+  const { daftarSesi, loading, error, sudahPresensi } = usePresensi();
   const { logout } = useAuth();
 
   const handleLogout = async () => {
     try {
       await logout();
-      router.replace('/login');
+      router.replace("/login");
     } catch (error) {
-      console.error('Gagal logout:', error);
+      console.error("Gagal logout:", error);
     }
   };
 
-  const nama = profile?.nama ?? 'Praktikan';
-  const nim = profile?.nim ?? '-';
-  const angkatan = profile?.angkatan ?? '-';
-  const jurusan = profile?.jurusan ?? '-';
+  const nama = profile?.nama ?? "Praktikan";
+  const nim = profile?.nim ?? "-";
+  const angkatan = profile?.angkatan ?? "-";
+  const jurusan = profile?.jurusan ?? "-";
 
   const inisial = nama
-  .split(' ')
-  .filter(Boolean)
-  .slice(0, 2)
-  .map((kata) => kata[0])
-  .join('')
-  .toUpperCase();
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((kata) => kata[0])
+    .join("")
+    .toUpperCase();
 
   const totalSesi = daftarSesi.length;
 
-  const sudahHadir = daftarSesi.filter(
-    (item) => sudahPresensi(item.id),
-  ).length;
+  const sudahHadir = daftarSesi.filter((item) => sudahPresensi(item.id)).length;
 
   const belumHadir = totalSesi - sudahHadir;
 
   const sesiTerdekat = daftarSesi
-    .filter((item) => item.status !== 'Selesai')
+    .filter((item) => item.status !== "Selesai")
+    .sort((a, b) => waktuMulaiSesi(a) - waktuMulaiSesi(b))
     .slice(0, 2);
 
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -62,19 +63,15 @@ export default function Index() {
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerInfo}>
-            <Text style={styles.greeting}>
-              Halo {nama}!
-            </Text>
+            <Text style={styles.greeting}>Halo {nama}!</Text>
           </View>
 
-          <View style={{ position: 'relative' }}>
+          <View style={{ position: "relative" }}>
             <TouchableOpacity
               style={styles.avatar}
               onPress={() => setShowProfileMenu(!showProfileMenu)}
             >
-              <Text style={styles.avatarText}>
-                {inisial || 'A'}
-              </Text>
+              <Text style={styles.avatarText}>{inisial || "A"}</Text>
             </TouchableOpacity>
 
             {showProfileMenu && (
@@ -83,12 +80,8 @@ export default function Index() {
                   style={styles.logoutButton}
                   onPress={handleLogout}
                 >
-                  <Feather
-                    name="log-out"
-                    size={17}
-                    color="#EF6464"
-                  />
-                  <Text style={styles.logoutText}>  Logout</Text>
+                  <Feather name="log-out" size={17} color="#EF6464" />
+                  <Text style={styles.logoutText}> Logout</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -99,22 +92,24 @@ export default function Index() {
         <View style={styles.profileCard}>
           <View style={styles.profileIcon}>
             <Text style={styles.profileIconText}>
-              {(profile?.nama ?? 'Pengguna')
-              .split(' ')
-              .filter(Boolean)
-              .map((kata) => kata.charAt(0))
-              .join('')
-              .toUpperCase()}
+              {(profile?.nama ?? "Pengguna")
+                .split(" ")
+                .filter(Boolean)
+                .map((kata) => kata.charAt(0))
+                .join("")
+                .toUpperCase()}
             </Text>
           </View>
 
           <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>{profile?.nama ?? 'Pengguna Praktikan'}</Text>
-            <Text style={styles.profileNim}>{profile?.nim ?? '-'}</Text>
+            <Text style={styles.profileName}>
+              {profile?.nama ?? "Pengguna Praktikan"}
+            </Text>
+            <Text style={styles.profileNim}>{profile?.nim ?? "-"}</Text>
             <Text style={styles.profileMajor}>
-              {profile?.jurusan ?? 'Jurusan belum tersedia'}
-              {' · Angkatan '}
-              {profile?.angkatan ?? '-'}
+              {profile?.jurusan ?? "Jurusan belum tersedia"}
+              {" · Angkatan "}
+              {profile?.angkatan ?? "-"}
             </Text>
           </View>
 
@@ -152,13 +147,22 @@ export default function Index() {
 
           <TouchableOpacity
             activeOpacity={0.7}
-            onPress={() => router.push('/praktikan/presensi')}
+            onPress={() => router.push("/praktikan/presensi")}
           >
             <Text style={styles.seeAll}>Lihat semua →</Text>
           </TouchableOpacity>
         </View>
 
-        {sesiTerdekat.length === 0 ? (
+        {loading ? (
+          <View style={styles.emptyContainer}>
+            <ActivityIndicator color="#A5A2FF" />
+          </View>
+        ) : error ? (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyTitle}>Gagal memuat sesi</Text>
+            <Text style={styles.emptyText}>{error}</Text>
+          </View>
+        ) : sesiTerdekat.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyTitle}>Belum Ada Jadwal</Text>
             <Text style={styles.emptyText}>
@@ -170,21 +174,23 @@ export default function Index() {
             <View key={item.id} style={styles.scheduleCard}>
               <View style={styles.scheduleHeader}>
                 <View style={styles.codeBadge}>
-                  <Text style={styles.codeText}>{item.kode}</Text>
+                  <Text style={styles.codeText}>
+                    {item.kode || `Kelas ${item.kelas}`}
+                  </Text>
                 </View>
-              
+
                 <Text
-                style={[
-                  styles.scheduleStatus,
-                  item.status === 'Belum Dibuka' && {
-                    backgroundColor: '#854D0E',
-                  },
-                  item.status === 'Sedang Berlangsung' && {
-                    backgroundColor: '#164E63',
-                  },
-                  item.status === 'Selesai' && {
-                    backgroundColor: '#4B5563',
-                  },
+                  style={[
+                    styles.scheduleStatus,
+                    item.status === "Belum Dibuka" && {
+                      backgroundColor: "#854D0E",
+                    },
+                    item.status === "Sedang Berlangsung" && {
+                      backgroundColor: "#164E63",
+                    },
+                    item.status === "Selesai" && {
+                      backgroundColor: "#4B5563",
+                    },
                   ]}
                 >
                   {item.status}
@@ -193,25 +199,27 @@ export default function Index() {
 
               <Text style={styles.scheduleName}>{item.mataPraktikum}</Text>
 
-            <View style={styles.divider} />
-          
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Tanggal</Text>
-              <Text style={styles.infoValue}>{item.hari}, {item.tanggal}</Text>
-            </View>
+              <View style={styles.divider} />
 
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Waktu</Text>
-              <Text style={styles.infoValue}>{item.waktu}</Text>
-            </View>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Tanggal</Text>
+                <Text style={styles.infoValue}>
+                  {item.hari}, {formatTanggal(item.tanggal)}
+                </Text>
+              </View>
 
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Ruangan</Text>
-              <Text style={styles.infoValue}>{item.ruangan}</Text>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Waktu</Text>
+                <Text style={styles.infoValue}>{item.waktu}</Text>
+              </View>
+
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Ruangan</Text>
+                <Text style={styles.infoValue}>{item.ruangan}</Text>
+              </View>
             </View>
-          </View>
-        ))
-      )}
+          ))
+        )}
       </ScrollView>
     </View>
   );
@@ -220,7 +228,7 @@ export default function Index() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#25292e',
+    backgroundColor: "#25292e",
   },
   scrollContent: {
     padding: 20,
@@ -228,25 +236,25 @@ const styles = StyleSheet.create({
     paddingBottom: 36,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 24,
   },
   brand: {
-    color: '#A5A2FF',
+    color: "#A5A2FF",
     fontSize: 12,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     letterSpacing: 2,
     marginBottom: 8,
   },
   greeting: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 27,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   subtitle: {
-    color: '#B8BCC4',
+    color: "#B8BCC4",
     fontSize: 13,
     marginTop: 6,
   },
@@ -254,22 +262,22 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#45416F',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#45416F",
+    alignItems: "center",
+    justifyContent: "center",
   },
   avatarText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   profileCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#343941',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#343941",
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#454B55',
+    borderColor: "#454B55",
     padding: 14,
     marginBottom: 28,
     gap: 12,
@@ -278,240 +286,240 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: '#45416F',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#45416F",
+    alignItems: "center",
+    justifyContent: "center",
   },
   profileIconText: {
-    color: '#C7C5FF',
-    fontWeight: 'bold',
+    color: "#C7C5FF",
+    fontWeight: "bold",
     fontSize: 14,
   },
   profileInfo: {
     flex: 1,
   },
   profileName: {
-    color: '#FFFFFF',
-    fontWeight: 'bold',
+    color: "#FFFFFF",
+    fontWeight: "bold",
     fontSize: 14,
     marginBottom: 4,
   },
   profileNim: {
-    color: '#C7C5FF',
+    color: "#C7C5FF",
     fontSize: 12,
     marginBottom: 4,
   },
   profileMajor: {
-    color: '#B8BCC4',
+    color: "#B8BCC4",
     fontSize: 11,
   },
   roleBadge: {
-    backgroundColor: '#45416F',
+    backgroundColor: "#45416F",
     paddingHorizontal: 8,
     paddingVertical: 5,
     borderRadius: 7,
   },
   roleText: {
-    color: '#C7C5FF',
+    color: "#C7C5FF",
     fontSize: 10,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   sectionTitle: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 14,
   },
   statsContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 10,
     marginBottom: 28,
   },
   statCard: {
     flex: 1,
-    backgroundColor: '#343941',
+    backgroundColor: "#343941",
     borderRadius: 13,
     paddingVertical: 16,
     paddingHorizontal: 5,
-    alignItems: 'center',
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: '#454B55',
+    borderColor: "#454B55",
   },
   statIcon: {
-    color: '#A5A2FF',
+    color: "#A5A2FF",
     fontSize: 23,
     marginBottom: 8,
   },
   statNumber: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 23,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   statLabel: {
-    color: '#B8BCC4',
+    color: "#B8BCC4",
     fontSize: 10,
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: 5,
   },
   sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 14,
   },
   seeAll: {
-    color: '#A5A2FF',
+    color: "#A5A2FF",
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   scheduleCard: {
-    backgroundColor: '#343941',
+    backgroundColor: "#343941",
     borderRadius: 14,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#454B55',
+    borderColor: "#454B55",
     marginBottom: 12,
   },
   scheduleHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 12,
   },
   codeBadge: {
-    backgroundColor: '#45416F',
+    backgroundColor: "#45416F",
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 6,
   },
   codeText: {
-    color: '#C7C5FF',
-    fontWeight: 'bold',
+    color: "#C7C5FF",
+    fontWeight: "bold",
     fontSize: 11,
   },
   scheduleStatus: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 11,
-    fontWeight: '600',
+    fontWeight: "600",
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   scheduleName: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     lineHeight: 23,
   },
   divider: {
     height: 1,
-    backgroundColor: '#505661',
+    backgroundColor: "#505661",
     marginVertical: 14,
   },
   infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     gap: 10,
     marginBottom: 9,
   },
   infoLabel: {
-    color: '#AEB4BE',
+    color: "#AEB4BE",
     fontSize: 12,
     flex: 1,
   },
   infoValue: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 12,
-    textAlign: 'right',
+    textAlign: "right",
     flex: 2,
   },
-  
+
   emptyContainer: {
-    alignItems: 'center',
-    backgroundColor: '#343941',
+    alignItems: "center",
+    backgroundColor: "#343941",
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#454B55',
+    borderColor: "#454B55",
     padding: 24,
     marginBottom: 12,
   },
   emptyTitle: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 8,
-    textAlign: 'center',
+    textAlign: "center",
   },
   emptyText: {
-    color: '#B8BCC4',
+    color: "#B8BCC4",
     fontSize: 13,
     lineHeight: 20,
-    textAlign: 'center',
+    textAlign: "center",
   },
   quickActions: {
     gap: 10,
   },
   quickAction: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#343941',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#343941",
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#454B55',
+    borderColor: "#454B55",
     padding: 14,
     gap: 12,
   },
   quickIcon: {
     width: 40,
     height: 40,
-    textAlign: 'center',
-    textAlignVertical: 'center',
-    overflow: 'hidden',
+    textAlign: "center",
+    textAlignVertical: "center",
+    overflow: "hidden",
     borderRadius: 10,
-    backgroundColor: '#45416F',
-    color: '#C7C5FF',
+    backgroundColor: "#45416F",
+    color: "#C7C5FF",
     fontSize: 20,
   },
   quickTitle: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     width: 75,
   },
   quickSubtitle: {
-    color: '#B8BCC4',
+    color: "#B8BCC4",
     fontSize: 11,
     flex: 1,
   },
   footer: {
-    textAlign: 'center',
-    color: '#777E89',
+    textAlign: "center",
+    color: "#777E89",
     fontSize: 11,
     marginTop: 26,
   },
   logoutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 11,
     paddingHorizontal: 12,
     borderRadius: 8,
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
   },
 
   logoutText: {
-    color: '#EF6464',
+    color: "#EF6464",
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   headerInfo: {
     flex: 1,
   },
   profileMenu: {
-    position: 'absolute',
+    position: "absolute",
     top: 55,
     right: 0,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 10,
     padding: 8,
     minWidth: 120,

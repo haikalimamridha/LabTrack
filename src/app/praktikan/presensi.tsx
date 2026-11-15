@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Modal,
   ScrollView,
   StyleSheet,
@@ -9,17 +10,26 @@ import {
   View,
 } from "react-native";
 import { usePresensi } from "../../context/PresensiContext";
-import { formatJam, Sesi } from "../../data/sesi";
+import { formatJam } from "../../data/sesi";
+import { formatTanggal, type Sesi } from "../../services/sessionService";
 
 type Toast = { pesan: string; ok: boolean } | null;
 
 export default function PresensiScreen() {
-  const { daftarSesi, riwayat, sudahPresensi, lakukanPresensi } = usePresensi();
+  const {
+    daftarSesi,
+    riwayat,
+    loading,
+    error,
+    sudahPresensi,
+    lakukanPresensi,
+  } = usePresensi();
   const { width } = useWindowDimensions();
   const isWide = width >= 768;
 
   const [sesiDipilih, setSesiDipilih] = useState<Sesi | null>(null);
   const [toast, setToast] = useState<Toast>(null);
+  const [mengirim, setMengirim] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -34,9 +44,12 @@ export default function PresensiScreen() {
     timerRef.current = setTimeout(() => setToast(null), 2500);
   };
 
-  const konfirmasi = () => {
-    if (!sesiDipilih) return;
-    const hasil = lakukanPresensi(sesiDipilih.id);
+  const konfirmasi = async () => {
+    if (!sesiDipilih || mengirim) return; // cegah tap ganda
+    const sesi = sesiDipilih;
+    setMengirim(true);
+    const hasil = await lakukanPresensi(sesi.id);
+    setMengirim(false);
     setSesiDipilih(null);
     tampilkanToast(hasil.pesan, hasil.ok);
   };
@@ -89,7 +102,16 @@ export default function PresensiScreen() {
 
           <Text style={styles.sectionTitle}>Daftar Presensi</Text>
 
-          {daftarSesi.length === 0 ? (
+          {loading ? (
+            <View style={styles.emptyContainer}>
+              <ActivityIndicator color="#A5A2FF" />
+            </View>
+          ) : error ? (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyTitle}>Gagal memuat sesi</Text>
+              <Text style={styles.emptyText}>{error}</Text>
+            </View>
+          ) : daftarSesi.length === 0 ? (
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyTitle}>Belum ada sesi</Text>
               <Text style={styles.emptyText}>
@@ -110,7 +132,7 @@ export default function PresensiScreen() {
                     <View style={styles.cardHeader}>
                       <View style={styles.codeBadge}>
                         <Text style={styles.codeText}>
-                          {item.kode} · Kelas {item.kelas}
+                          {item.kode ? `${item.kode} · ` : ""}Kelas {item.kelas}
                         </Text>
                       </View>
                       <View
@@ -129,7 +151,7 @@ export default function PresensiScreen() {
                     <View style={styles.infoRow}>
                       <Text style={styles.infoLabel}>Tanggal</Text>
                       <Text style={styles.infoValue}>
-                        {item.hari}, {item.tanggal}
+                        {item.hari}, {formatTanggal(item.tanggal)}
                       </Text>
                     </View>
                     <View style={styles.infoRow}>
@@ -216,8 +238,11 @@ export default function PresensiScreen() {
               <TouchableOpacity
                 style={[styles.modalButton, styles.modalConfirm]}
                 onPress={konfirmasi}
+                disabled={mengirim}
               >
-                <Text style={styles.modalConfirmText}>Konfirmasi</Text>
+                <Text style={styles.modalConfirmText}>
+                  {mengirim ? "Memproses..." : "Konfirmasi"}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
