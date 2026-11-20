@@ -1,19 +1,22 @@
 import { useJadwal } from "@/hooks/useJadwal";
-import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Feather, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 
 type FilterMode = "Semua" | "Hari Ini" | "Kelas";
 
 export default function JadwalScreen() {
+  const router = useRouter();
   const {
     jadwal: jadwalTampil,
     loading,
@@ -98,6 +101,18 @@ export default function JadwalScreen() {
         overScrollMode="always"
         decelerationRate="normal"
       >
+        <Pressable
+          style={styles.backButton}
+          onPress={() => {
+            if (router.canGoBack()) {
+              router.back();
+            } else {
+              router.replace("/praktikan");
+            }
+          }}
+        >
+          <Ionicons name="arrow-back" size={23} color="#FFFFFF" />
+        </Pressable>
         {/* HEADER */}
         <View style={styles.headerRow}>
           <View>
@@ -482,5 +497,14 @@ const styles = StyleSheet.create({
     textAlign: "center",
     lineHeight: 18,
     marginTop: 8,
+  },
+  backButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 13,
+    backgroundColor: "rgba(255,255,255,0.13)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 18,
   },
 });
