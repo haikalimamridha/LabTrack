@@ -113,6 +113,10 @@ export default function Index() {
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        bounces={true}
+        alwaysBounceVertical={true}
+        overScrollMode="always"
+        decelerationRate="normal"
       >
         {/* HEADER */}
         <View style={styles.headerBanner}>
@@ -361,7 +365,8 @@ const styles = StyleSheet.create({
   },
 
   scrollContent: {
-    paddingBottom: 110,
+    paddingTop: 20,
+    paddingBottom: 140,
   },
 
   // Header
