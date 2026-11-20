@@ -1,8 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import Feather from '@expo/vector-icons/Feather';
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { collection, onSnapshot, query, where } from '@react-native-firebase/firestore';
+import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -11,13 +17,9 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import Feather from '@expo/vector-icons/Feather';
-import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { collection, onSnapshot, query, where } from '@react-native-firebase/firestore';
 
-import { useAuth } from '@/context/AuthContext';
 import { firestore } from '@/config/firebase';
+import { useAuth } from '@/context/AuthContext';
 import {
   ajukanIzinPraktikum,
   batalkanIzin,
@@ -195,22 +197,22 @@ export default function IzinPraktikanScreen() {
       case 'disetujui':
         return {
           label: 'Disetujui',
-          bg: '#1C3829',
-          color: '#48BB78',
+          bg: '#193831',
+          color: '#6EE7B7',
           icon: 'check-circle',
         };
       case 'ditolak':
         return {
           label: 'Ditolak',
-          bg: '#3D1B1B',
-          color: '#F56565',
+          bg: '#441E28',
+          color: '#FDA4AF',
           icon: 'x-circle',
         };
       default:
         return {
           label: 'Menunggu Review',
-          bg: '#3D3314',
-          color: '#ECC94B',
+          bg: '#47351B',
+          color: '#FCD34D',
           icon: 'clock',
         };
     }
@@ -223,15 +225,17 @@ export default function IzinPraktikanScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Header Title */}
-        <View style={styles.header}>
-          <View style={styles.headerRow}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.title}>Pengajuan Izin</Text>
-              <Text style={styles.subtitle}>
-                Ajukan izin praktikum dan pantau status persetujuan secara real-time.
-              </Text>
-            </View>
+        <View style={styles.headerRow}>
+          <View style={styles.headerTextCol}>
+            <Text style={styles.title}>Pengajuan Izin</Text>
+            <Text style={styles.subtitle}>
+              Ajukan izin praktikum dan pantau status persetujuan
+            </Text>
+          </View>
 
+          <View style={styles.headerBadge}>
+            <Feather name="file-text" size={14} color="#D5C2FF" />
+            <Text style={styles.headerBadgeText}>{totalIzin} Izin</Text>
           </View>
         </View>
 
@@ -243,21 +247,21 @@ export default function IzinPraktikanScreen() {
           </View>
           <View style={styles.summaryDivider} />
           <View style={styles.summaryItem}>
-            <Text style={[styles.summaryNumber, { color: '#ECC94B' }]}>
+            <Text style={styles.summaryNumber}>
               {totalPending}
             </Text>
             <Text style={styles.summaryLabel}>Menunggu</Text>
           </View>
           <View style={styles.summaryDivider} />
           <View style={styles.summaryItem}>
-            <Text style={[styles.summaryNumber, { color: '#48BB78' }]}>
+            <Text style={styles.summaryNumber}>
               {totalDisetujui}
             </Text>
             <Text style={styles.summaryLabel}>Disetujui</Text>
           </View>
           <View style={styles.summaryDivider} />
           <View style={styles.summaryItem}>
-            <Text style={[styles.summaryNumber, { color: '#F56565' }]}>
+            <Text style={styles.summaryNumber}>
               {totalDitolak}
             </Text>
             <Text style={styles.summaryLabel}>Ditolak</Text>
@@ -270,21 +274,28 @@ export default function IzinPraktikanScreen() {
           activeOpacity={0.85}
           onPress={() => setModalBuka(true)}
         >
-          <Feather name="plus-circle" size={18} color="#ffffff" />
+          <Feather name="plus-circle" size={18} color="#FFFFFF" />
           <Text style={styles.btnAjukanText}>Ajukan Izin Baru</Text>
         </TouchableOpacity>
 
         {/* Section List Izin */}
-        <Text style={styles.sectionTitle}>Riwayat Pengajuan Izin</Text>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Riwayat Pengajuan</Text>
+          {!loading && (
+            <Text style={styles.sectionCount}>{totalIzin} pengajuan</Text>
+          )}
+        </View>
 
         {loading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#625ff0" />
-            <Text style={styles.loadingText}>Memuat data perizinan...</Text>
+          <View style={styles.stateCard}>
+            <ActivityIndicator size="large" color="#9623D6" />
+            <Text style={styles.stateText}>Memuat data perizinan...</Text>
           </View>
         ) : daftarIzin.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <MaterialIcons name="assignment-late" size={48} color="#6b7280" />
+          <View style={styles.stateCard}>
+            <View style={styles.stateIcon}>
+              <MaterialIcons name="assignment-late" size={28} color="#C4B5FD" />
+            </View>
             <Text style={styles.emptyTitle}>Belum Ada Pengajuan Izin</Text>
             <Text style={styles.emptyText}>
               Jika kamu berhalangan hadir pada salah satu sesi praktikum, tekan
@@ -318,7 +329,6 @@ export default function IzinPraktikanScreen() {
                         name={badge.icon as any}
                         size={12}
                         color={badge.color}
-                        style={{ marginRight: 4 }}
                       />
                       <Text
                         style={[styles.statusBadgeText, { color: badge.color }]}
@@ -331,34 +341,36 @@ export default function IzinPraktikanScreen() {
                   <Text style={styles.subjectText}>{item.mataPraktikum}</Text>
 
                   {/* Info Waktu */}
-                  <View style={styles.infoRow}>
-                    <Feather name="calendar" size={13} color="#a0a0a5" />
-                    <Text style={styles.infoText}>
-                      {formatTanggal(item.tanggalSesi)}
-                    </Text>
-                  </View>
-                  <View style={styles.infoRow}>
-                    <Feather name="clock" size={13} color="#a0a0a5" />
-                    <Text style={styles.infoText}>{item.waktuSesi}</Text>
+                  <View style={styles.metaList}>
+                    <View style={styles.infoRow}>
+                      <Feather name="calendar" size={14} color="#9C98B2" />
+                      <Text style={styles.infoText}>
+                        {formatTanggal(item.tanggalSesi)}
+                      </Text>
+                    </View>
+                    <View style={styles.infoRow}>
+                      <Feather name="clock" size={14} color="#9C98B2" />
+                      <Text style={styles.infoText}>{item.waktuSesi}</Text>
+                    </View>
                   </View>
 
                   <View style={styles.divider} />
 
                   {/* Alasan Praktikan */}
                   <View style={styles.reasonSection}>
-                    <Text style={styles.reasonLabel}>Alasan Ketidakhadiran:</Text>
+                    <Text style={styles.reasonLabel}>Alasan Ketidakhadiran</Text>
                     <Text style={styles.reasonText}>&ldquo;{item.alasan}&rdquo;</Text>
                   </View>
 
-                  {/* Hasil Klasifikasi AI (FR-08) */}
+                  {/* Hasil Klasifikasi AI */}
                   <View style={styles.aiBadgeContainer}>
                     <View style={styles.aiHeader}>
-                      <FontAwesome5 name="robot" size={12} color="#A5A2FF" />
-                      <Text style={styles.aiHeaderTitle}>
-                        Hasil Analisis Sentimen: 
-                      </Text>
+                      <FontAwesome5 name="robot" size={12} color="#D5C2FF" />
+                      <Text style={styles.aiHeaderTitle}>Analisis Sentimen:</Text>
                       <View style={styles.aiPill}>
-                        <Text style={styles.aiPillText}>{item.sentimenAi ? item.sentimenAi.toUpperCase() : 'Tidak tersedia'}</Text>
+                        <Text style={styles.aiPillText}>
+                          {item.sentimenAi ? item.sentimenAi.toUpperCase() : 'TIDAK TERSEDIA'}
+                        </Text>
                       </View>
                     </View>
                     {item.penjelasanAi ? (
@@ -372,7 +384,7 @@ export default function IzinPraktikanScreen() {
                   {item.catatanAsisten ? (
                     <View style={styles.noteSection}>
                       <Text style={styles.noteLabel}>
-                        Catatan Asisten ({item.reviewedByName || 'Asisten'}):
+                        Catatan Asisten ({item.reviewedByName || 'Asisten'})
                       </Text>
                       <Text style={styles.noteText}>{item.catatanAsisten}</Text>
                     </View>
@@ -382,14 +394,15 @@ export default function IzinPraktikanScreen() {
                   {item.status === 'pending' && (
                     <TouchableOpacity
                       style={styles.btnBatal}
+                      activeOpacity={0.8}
                       onPress={() => handleBatal(item)}
                       disabled={batalLoading === item.id}
                     >
                       {batalLoading === item.id ? (
-                        <ActivityIndicator size="small" color="#EF6464" />
+                        <ActivityIndicator size="small" color="#FDA4AF" />
                       ) : (
                         <>
-                          <Feather name="trash-2" size={13} color="#EF6464" />
+                          <Feather name="trash-2" size={14} color="#FDA4AF" />
                           <Text style={styles.btnBatalText}>
                             Batalkan Pengajuan
                           </Text>
@@ -409,21 +422,30 @@ export default function IzinPraktikanScreen() {
         visible={modalBuka}
         transparent
         animationType="slide"
-        onRequestClose={() => { if (!mengirim) setModalBuka(false); }}
+        onRequestClose={() => {
+          if (!mengirim) setModalBuka(false);
+        }}
       >
-        <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Form Pengajuan Izin</Text>
               <TouchableOpacity
                 onPress={() => !mengirim && setModalBuka(false)}
                 disabled={mengirim}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
-                <Feather name="x" size={22} color="#ffffff" />
+                <Feather name="x" size={22} color="#FFFFFF" />
               </TouchableOpacity>
             </View>
 
-            <ScrollView showsVerticalScrollIndicator={false}>
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
               {/* Pilih Sesi */}
               <Text style={styles.fieldLabel}>
                 Pilih Sesi Praktikum <Text style={styles.required}>*</Text>
@@ -440,10 +462,10 @@ export default function IzinPraktikanScreen() {
                     const isSelected = sesiDipilih?.id === s.id;
                     const statusColor =
                       s.statusDb === 'open'
-                        ? '#48BB78'
+                        ? '#6EE7B7'
                         : s.statusDb === 'closed'
-                        ? '#a0a0a5'
-                        : '#ECC94B';
+                        ? '#9C98B2'
+                        : '#FCD34D';
                     return (
                       <TouchableOpacity
                         key={s.id}
@@ -451,6 +473,7 @@ export default function IzinPraktikanScreen() {
                           styles.sessionOption,
                           isSelected && styles.sessionOptionSelected,
                         ]}
+                        activeOpacity={0.85}
                         onPress={() => setSesiDipilih(s)}
                       >
                         <View style={styles.sessionOptionHeader}>
@@ -462,17 +485,17 @@ export default function IzinPraktikanScreen() {
                           >
                             {s.mataPraktikum}
                           </Text>
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                            <Text style={{ fontSize: 10, color: statusColor, fontWeight: '600' }}>
+                          <View style={styles.sessionStatusRight}>
+                            <Text style={[styles.sessionStatusMini, { color: statusColor }]}>
                               {s.status}
                             </Text>
                             {isSelected && (
-                              <Feather name="check" size={16} color="#625ff0" />
+                              <Feather name="check" size={16} color="#B56DF0" />
                             )}
                           </View>
                         </View>
                         <Text style={styles.sessionOptionSub}>
-                          {s.hari}, {formatTanggal(s.tanggal)} ({s.waktu})
+                          {s.hari}, {formatTanggal(s.tanggal)} · {s.waktu}
                         </Text>
                       </TouchableOpacity>
                     );
@@ -486,8 +509,8 @@ export default function IzinPraktikanScreen() {
               </Text>
               <TextInput
                 style={styles.textArea}
-                placeholder="Contoh: Mengalami demam dan disarankan dokter istirahat selama 2 hari..."
-                placeholderTextColor="#71717a"
+                placeholder="Contoh: Mengalami demam dan disarankan dokter istirahat..."
+                placeholderTextColor="#8E8AA3"
                 multiline
                 numberOfLines={4}
                 value={alasan}
@@ -500,12 +523,11 @@ export default function IzinPraktikanScreen() {
 
               {/* Informasi analisis AI otomatis */}
               <View style={styles.aiNoticeBox}>
-                <FontAwesome5 name="robot" size={14} color="#A5A2FF" />
+                <FontAwesome5 name="robot" size={14} color="#D5C2FF" />
                 <Text style={styles.aiNoticeText}>
-                  Alasanmu akan dianalisis secara otomatis oleh model EDOM untuk
-                  mendeteksi sentimen (positif, netral, atau negatif). Hasilnya
-                  menjadi informasi pendukung bagi asisten praktikum, bukan
-                  penentu persetujuan izin.
+                  Alasanmu dianalisis otomatis oleh model sentimen sebagai
+                  informasi pendukung bagi asisten praktikum, bukan penentu
+                  persetujuan izin.
                 </Text>
               </View>
 
@@ -513,6 +535,7 @@ export default function IzinPraktikanScreen() {
               <View style={styles.modalActions}>
                 <TouchableOpacity
                   style={styles.btnModalBatal}
+                  activeOpacity={0.85}
                   onPress={() => setModalBuka(false)}
                   disabled={mengirim}
                 >
@@ -525,13 +548,14 @@ export default function IzinPraktikanScreen() {
                     (!sesiDipilih || alasan.trim().length < 5 || mengirim) &&
                       styles.btnDisabled,
                   ]}
+                  activeOpacity={0.85}
                   onPress={handleAjukan}
                   disabled={
                     !sesiDipilih || alasan.trim().length < 5 || mengirim
                   }
                 >
                   {mengirim ? (
-                    <ActivityIndicator size="small" color="#ffffff" />
+                    <ActivityIndicator size="small" color="#FFFFFF" />
                   ) : (
                     <Text style={styles.btnModalKirimText}>Kirim Pengajuan</Text>
                   )}
@@ -539,213 +563,329 @@ export default function IzinPraktikanScreen() {
               </View>
             </ScrollView>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
-
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#25292e' },
-  scrollContent: { padding: 20, paddingBottom: 40 },
-  header: { marginBottom: 18 },
+  container: {
+    flex: 1,
+    backgroundColor: '#1E1B3A',
+  },
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingTop: 48,
+    paddingBottom: 115,
+  },
+
+  /* Header */
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-  },
-  title: { fontSize: 24, fontWeight: '700', color: '#ffffff' },
-  subtitle: { fontSize: 13, color: '#a0a0a5', marginTop: 4 },
-
-  summaryCard: {
-    backgroundColor: '#1e2124',
-    borderRadius: 12,
-    padding: 16,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     marginBottom: 18,
-    borderWidth: 1,
-    borderColor: '#333740',
+    gap: 12,
   },
-  summaryItem: { flex: 1, alignItems: 'center' },
-  summaryNumber: { fontSize: 20, fontWeight: '700', color: '#ffffff' },
-  summaryLabel: { fontSize: 11, color: '#a0a0a5', marginTop: 4 },
-  summaryDivider: { width: 1, height: 28, backgroundColor: '#333740' },
+  headerTextCol: {
+    flex: 1,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: 0.2,
+  },
+  subtitle: {
+    fontSize: 12,
+    color: '#9C98B2',
+    marginTop: 3,
+  },
+  headerBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#2F2C44',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+  },
+  headerBadgeText: {
+    color: '#D5C2FF',
+    fontSize: 12,
+    fontWeight: '700',
+  },
 
+  /* Summary Card */
+  summaryCard: {
+    backgroundColor: '#2F2C44',
+    borderRadius: 18,
+    paddingVertical: 16,
+    paddingHorizontal: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  summaryItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  summaryNumber: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 3,
+  },
+  summaryLabel: {
+    fontSize: 11,
+    color: '#9C98B2',
+  },
+  summaryDivider: {
+    width: 1,
+    height: 32,
+    backgroundColor: '#423D5E',
+  },
+
+  /* Action Button */
   btnAjukan: {
-    backgroundColor: '#625ff0',
+    backgroundColor: '#9623D6',
+    height: 48,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 14,
-    borderRadius: 10,
-    marginBottom: 24,
+    borderRadius: 12,
+    marginBottom: 22,
     gap: 8,
   },
-  btnAjukanText: { color: '#ffffff', fontSize: 15, fontWeight: '600' },
-
-  sectionTitle: {
-    fontSize: 16,
+  btnAjukanText: {
+    color: '#FFFFFF',
+    fontSize: 14,
     fontWeight: '700',
-    color: '#ffffff',
+  },
+
+  /* Section */
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 12,
   },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  sectionCount: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#9C98B2',
+  },
 
-  loadingContainer: { padding: 40, alignItems: 'center' },
-  loadingText: { color: '#a0a0a5', marginTop: 12, fontSize: 13 },
-
-  emptyContainer: {
-    padding: 36,
+  /* States */
+  stateCard: {
+    backgroundColor: '#2F2C44',
+    borderRadius: 18,
+    padding: 28,
     alignItems: 'center',
-    backgroundColor: '#1e2124',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#333740',
+    justifyContent: 'center',
+    minHeight: 180,
+  },
+  stateIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: 16,
+    backgroundColor: '#3A3654',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
   },
   emptyTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#ffffff',
-    marginTop: 12,
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 6,
+    textAlign: 'center',
   },
   emptyText: {
-    fontSize: 13,
-    color: '#a0a0a5',
+    fontSize: 12,
+    color: '#9C98B2',
     textAlign: 'center',
-    marginTop: 6,
     lineHeight: 18,
   },
+  stateText: {
+    color: '#9C98B2',
+    marginTop: 10,
+    fontSize: 12,
+    textAlign: 'center',
+  },
 
+  /* Grid & Card */
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 16,
+    justifyContent: 'space-between',
   },
   card: {
-    backgroundColor: '#1e2124',
-    borderRadius: 12,
+    width: '100%',
+    backgroundColor: '#2F2C44',
+    borderRadius: 18,
     padding: 16,
     marginBottom: 14,
-    borderWidth: 1,
-    borderColor: '#333740',
   },
-  cardWide: { width: '48%' },
-
+  cardWide: {
+    width: '48.6%',
+  },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 10,
+    gap: 8,
   },
   sessionBadge: {
-    backgroundColor: '#2a2e36',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
+    backgroundColor: '#3A3654',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    flexShrink: 1,
   },
-  sessionBadgeText: { fontSize: 11, color: '#A5A2FF', fontWeight: '600' },
-
+  sessionBadgeText: {
+    fontSize: 11,
+    color: '#D5C2FF',
+    fontWeight: '700',
+  },
   statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
   },
-  statusBadgeText: { fontSize: 11, fontWeight: '600' },
-
+  statusBadgeText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
   subjectText: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#ffffff',
-    marginBottom: 8,
+    color: '#FFFFFF',
+    lineHeight: 22,
+    marginBottom: 10,
   },
-
+  metaList: {
+    gap: 6,
+  },
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    marginBottom: 4,
+    gap: 8,
   },
-  infoText: { fontSize: 12, color: '#a0a0a5' },
-
-  divider: { height: 1, backgroundColor: '#333740', marginVertical: 10 },
-
-  reasonSection: { marginBottom: 10 },
-  reasonLabel: { fontSize: 11, color: '#a0a0a5', fontWeight: '600' },
+  infoText: {
+    fontSize: 12,
+    color: '#D8D5E6',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#3F3A5C',
+    marginVertical: 13,
+  },
+  reasonSection: {
+    marginBottom: 12,
+  },
+  reasonLabel: {
+    fontSize: 11,
+    color: '#9C98B2',
+    fontWeight: '600',
+    marginBottom: 3,
+  },
   reasonText: {
     fontSize: 13,
-    color: '#e4e4e7',
+    color: '#F5F3FF',
     fontStyle: 'italic',
-    marginTop: 2,
-    lineHeight: 18,
+    lineHeight: 19,
   },
-
   aiBadgeContainer: {
-    backgroundColor: '#282745',
-    padding: 10,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#4338ca',
+    backgroundColor: '#3A3654',
+    padding: 12,
+    borderRadius: 12,
     marginBottom: 10,
   },
   aiHeader: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexWrap: 'wrap',
     gap: 6,
   },
   aiHeaderTitle: {
     fontSize: 11,
-    color: '#c7d2fe',
+    color: '#D8D5E6',
     fontWeight: '600',
   },
   aiPill: {
-    backgroundColor: '#4338ca',
-    paddingHorizontal: 7,
+    backgroundColor: '#9623D6',
+    paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 4,
+    borderRadius: 6,
   },
-  aiPillText: { fontSize: 11, color: '#ffffff', fontWeight: '700' },
+  aiPillText: {
+    fontSize: 10,
+    color: '#FFFFFF',
+    fontWeight: '700',
+  },
   aiExplanation: {
     fontSize: 11,
-    color: '#a5b4fc',
-    marginTop: 4,
-    lineHeight: 15,
+    color: '#B8B4C8',
+    marginTop: 6,
+    lineHeight: 16,
   },
-
   noteSection: {
-    backgroundColor: '#262930',
-    padding: 10,
-    borderRadius: 8,
+    backgroundColor: '#26233B',
+    padding: 12,
+    borderRadius: 12,
     marginBottom: 10,
     borderLeftWidth: 3,
-    borderLeftColor: '#625ff0',
+    borderLeftColor: '#9623D6',
   },
-  noteLabel: { fontSize: 11, color: '#a0a0a5', fontWeight: '600' },
-  noteText: { fontSize: 12, color: '#ffffff', marginTop: 2 },
-
+  noteLabel: {
+    fontSize: 11,
+    color: '#9C98B2',
+    fontWeight: '600',
+  },
+  noteText: {
+    fontSize: 12,
+    color: '#FFFFFF',
+    marginTop: 3,
+    lineHeight: 17,
+  },
   btnBatal: {
+    height: 40,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 8,
+    backgroundColor: '#3A2330',
+    borderRadius: 10,
     gap: 6,
     marginTop: 4,
   },
-  btnBatalText: { fontSize: 12, color: '#EF6464', fontWeight: '600' },
+  btnBatalText: {
+    fontSize: 12,
+    color: '#FDA4AF',
+    fontWeight: '700',
+  },
 
-  // Modal Styles
+  /* Modal Styles */
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#1e2124',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    backgroundColor: '#2A2545',
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
     padding: 20,
     maxHeight: '90%',
   },
@@ -753,107 +893,137 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 18,
+    marginBottom: 14,
   },
-  modalTitle: { fontSize: 18, fontWeight: '700', color: '#ffffff' },
-
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
   fieldLabel: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#e4e4e7',
+    color: '#E2DFEE',
     marginBottom: 8,
     marginTop: 8,
   },
-  required: { color: '#EF6464' },
-
+  required: {
+    color: '#FF5A6E',
+  },
   emptySesiText: {
     fontSize: 12,
-    color: '#a0a0a5',
+    color: '#9C98B2',
     fontStyle: 'italic',
     marginBottom: 12,
   },
-  sessionSelectContainer: { gap: 8, marginBottom: 14 },
+  sessionSelectContainer: {
+    gap: 8,
+    marginBottom: 12,
+  },
   sessionOption: {
-    backgroundColor: '#2a2e36',
-    borderRadius: 8,
+    backgroundColor: '#3A3654',
+    borderRadius: 12,
     padding: 12,
     borderWidth: 1,
-    borderColor: '#3f3f46',
+    borderColor: 'transparent',
   },
   sessionOptionSelected: {
-    borderColor: '#625ff0',
-    backgroundColor: '#2e2c56',
+    borderColor: '#9623D6',
+    backgroundColor: '#342B59',
   },
   sessionOptionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    gap: 8,
   },
-  sessionOptionTitle: { fontSize: 14, fontWeight: '600', color: '#ffffff' },
-  textSelected: { color: '#A5A2FF' },
-  sessionOptionSub: { fontSize: 12, color: '#a0a0a5', marginTop: 2 },
-
+  sessionOptionTitle: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  textSelected: {
+    color: '#E9D5FF',
+  },
+  sessionStatusRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  sessionStatusMini: {
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  sessionOptionSub: {
+    fontSize: 12,
+    color: '#B8B4C8',
+    marginTop: 3,
+  },
   textArea: {
-    backgroundColor: '#2a2e36',
-    borderRadius: 8,
-    padding: 12,
-    color: '#ffffff',
+    backgroundColor: '#3A3654',
+    borderRadius: 12,
+    padding: 14,
+    color: '#FFFFFF',
     fontSize: 13,
-    borderWidth: 1,
-    borderColor: '#3f3f46',
     textAlignVertical: 'top',
-    minHeight: 90,
+    minHeight: 96,
   },
   charCount: {
     fontSize: 11,
-    color: '#71717a',
-    marginTop: 4,
+    color: '#8E8AA3',
+    marginTop: 5,
     marginBottom: 12,
     textAlign: 'right',
   },
-
   aiNoticeBox: {
     flexDirection: 'row',
-    backgroundColor: '#282745',
+    backgroundColor: '#3A3654',
     padding: 12,
-    borderRadius: 8,
+    borderRadius: 12,
     gap: 10,
     alignItems: 'center',
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: '#4338ca',
+    marginBottom: 18,
   },
   aiNoticeText: {
     fontSize: 11,
-    color: '#c7d2fe',
+    color: '#D8D5E6',
     flex: 1,
     lineHeight: 16,
   },
-
   modalActions: {
     flexDirection: 'row',
-    gap: 12,
-    marginTop: 8,
+    gap: 10,
+    marginTop: 4,
     marginBottom: 12,
   },
   btnModalBatal: {
     flex: 1,
-    paddingVertical: 12,
+    height: 46,
     alignItems: 'center',
-    borderRadius: 8,
-    backgroundColor: '#2a2e36',
+    justifyContent: 'center',
+    borderRadius: 12,
+    backgroundColor: '#3A3654',
   },
-  btnModalBatalText: { color: '#ffffff', fontSize: 14, fontWeight: '600' },
+  btnModalBatalText: {
+    color: '#D8D5E6',
+    fontSize: 13,
+    fontWeight: '600',
+  },
   btnModalKirim: {
     flex: 2,
-    paddingVertical: 12,
+    height: 46,
     alignItems: 'center',
-    borderRadius: 8,
-    backgroundColor: '#625ff0',
+    justifyContent: 'center',
+    borderRadius: 12,
+    backgroundColor: '#9623D6',
   },
-  btnModalKirimText: { color: '#ffffff', fontSize: 14, fontWeight: '600' },
-  btnDisabled: { opacity: 0.5 },
-
-  // Live Test AI & Setting AI Styles
-
+  btnModalKirimText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  btnDisabled: {
+    opacity: 0.45,
+  },
 });
