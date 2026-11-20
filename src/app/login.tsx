@@ -74,7 +74,10 @@ export default function LoginScreen() {
         <Text style={styles.title}>Log In</Text>
 
         <View style={styles.formContainer}>
-          <Text style={styles.label}>Your Email</Text>
+          <View style={styles.labelRow}>
+            <Text style={styles.label}>Your Email</Text>
+            <Text style={styles.required}>*</Text>
+          </View>
           <TextInput
             style={styles.input}
             placeholder="Masukkan Email"
@@ -86,7 +89,10 @@ export default function LoginScreen() {
             autoCorrect={false}
           />
 
-          <Text style={styles.label}>Password</Text>
+          <View style={styles.labelRow}>
+            <Text style={styles.label}>Password</Text>
+            <Text style={styles.required}>*</Text>
+          </View>
           <View style={styles.passwordContainer}>
             <TextInput
               style={styles.passwordInput}
@@ -162,11 +168,21 @@ const styles = StyleSheet.create({
   formContainer: {
     width: '100%',
   },
+  labelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    gap: 3,
+  },
   label: {
     color: '#8E8AA3',
     fontSize: 13,
     fontWeight: '400',
-    marginBottom: 8,
+  },
+  required: {
+    color: '#FF5A6E',
+    fontSize: 13,
+    fontWeight: '600',
   },
   input: {
     height: 54,
