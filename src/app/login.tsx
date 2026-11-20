@@ -71,20 +71,14 @@ export default function LoginScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <View style={styles.content}>
-        <View style={styles.logoContainer}>
-          <Text style={styles.logo}>LABTRACK</Text>
-        </View>
+        <Text style={styles.title}>Log In</Text>
 
         <View style={styles.formContainer}>
-          <Text style={styles.subtitle}>
-            Masuk ke akun kamu untuk melanjutkan.
-          </Text>
-
-          <Text style={styles.label}>Email</Text>
+          <Text style={styles.label}>Your Email</Text>
           <TextInput
             style={styles.input}
-            placeholder="Masukkan email"
-            placeholderTextColor="#858B96"
+            placeholder="Masukkan Email"
+            placeholderTextColor="#B8B4C8"
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
@@ -96,8 +90,8 @@ export default function LoginScreen() {
           <View style={styles.passwordContainer}>
             <TextInput
               style={styles.passwordInput}
-              placeholder="Masukkan password"
-              placeholderTextColor="#858B96"
+              placeholder="Masukkan Password"
+              placeholderTextColor="#B8B4C8"
               value={password}
               onChangeText={setPassword}
               secureTextEntry={!showPassword}
@@ -106,46 +100,43 @@ export default function LoginScreen() {
 
             <TouchableOpacity
               onPress={() => setShowPassword(!showPassword)}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
               <Ionicons
-                name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-                size={22}
-                color="#888"
+                name={showPassword ? 'eye-outline' : 'eye-off-outline'}
+                size={20}
+                color="#A6A2BA"
               />
             </TouchableOpacity>
           </View>
 
           <TouchableOpacity
+            style={styles.forgotPasswordButton}
+            onPress={() => router.push('/forgot-password')}
+          >
+            <Text style={styles.forgotPasswordText}>Forgot password?</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
             style={[styles.loginButton, loading && styles.disabled]}
             onPress={handleLogin}
             disabled={loading}
-            activeOpacity={0.8}
+            activeOpacity={0.85}
           >
             {loading ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text style={styles.loginButtonText}>Masuk</Text>
+              <Text style={styles.loginButtonText}>Log In</Text>
             )}
           </TouchableOpacity>
 
           <View style={styles.registerContainer}>
-            <Text style={styles.registerText}>
-              Belum punya akun?
-            </Text>
-
-            <TouchableOpacity
-              onPress={() => router.push('/register')}
-            >
-              <Text style={styles.registerLink}>
-                Daftar sekarang
-              </Text>
+            <Text style={styles.registerText}>Belum punya akun?</Text>
+            <TouchableOpacity onPress={() => router.push('/register')}>
+              <Text style={styles.registerLink}>Daftar sekarang</Text>
             </TouchableOpacity>
           </View>
         </View>
-
-        <Text style={styles.footer}>
-          © 2026 LabTrack. All rights reserved.
-        </Text>
       </View>
     </KeyboardAvoidingView>
   );
@@ -154,78 +145,65 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#25292e',
+    backgroundColor: '#1E1B3A',
   },
   content: {
     flex: 1,
     justifyContent: 'center',
-    paddingHorizontal: 26,
+    paddingHorizontal: 24,
   },
-  logoContainer: {
-    alignItems: 'center',
-    marginBottom: 42,
-  },
-  logo: {
+  title: {
     color: '#FFFFFF',
-    fontSize: 25,
-    fontWeight: '800',
-    letterSpacing: 4,
+    fontSize: 32,
+    fontWeight: '700',
+    marginBottom: 32,
+    letterSpacing: 0.2,
   },
   formContainer: {
-    backgroundColor: '#343941',
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#454B55',
-    padding: 22,
-  },
-  subtitle: {
-    color: '#A6ABB5',
-    fontSize: 13,
-    lineHeight: 20,
-    marginBottom: 26,
+    width: '100%',
   },
   label: {
-    color: '#FFFFFF',
+    color: '#8E8AA3',
     fontSize: 13,
-    fontWeight: '600',
-    marginBottom: 9,
+    fontWeight: '400',
+    marginBottom: 8,
   },
   input: {
-    height: 50,
-    backgroundColor: '#25292e',
-    borderWidth: 1,
-    borderColor: '#454B55',
-    borderRadius: 10,
-    paddingHorizontal: 14,
+    height: 54,
+    backgroundColor: '#3A3654',
+    borderRadius: 12,
+    paddingHorizontal: 18,
     color: '#FFFFFF',
     fontSize: 14,
     marginBottom: 20,
   },
   passwordContainer: {
-    height: 50,
+    height: 54,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#25292e',
-    borderWidth: 1,
-    borderColor: '#454B55',
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    marginBottom: 26,
+    backgroundColor: '#3A3654',
+    borderRadius: 12,
+    paddingHorizontal: 18,
+    marginBottom: 12,
   },
   passwordInput: {
     flex: 1,
     color: '#FFFFFF',
     fontSize: 14,
+    paddingRight: 10,
   },
-  showPassword: {
-    color: '#A5A2FF',
-    fontSize: 12,
-    fontWeight: '600',
+  forgotPasswordButton: {
+    alignSelf: 'flex-end',
+    marginBottom: 26,
+  },
+  forgotPasswordText: {
+    color: '#B56DF0',
+    fontSize: 13,
   },
   loginButton: {
-    height: 50,
-    backgroundColor: '#625ff0',
-    borderRadius: 10,
+    height: 54,
+    backgroundColor: '#9623D6',
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -234,28 +212,22 @@ const styles = StyleSheet.create({
   },
   loginButtonText: {
     color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '700',
+    fontSize: 16,
+    fontWeight: '600',
   },
   registerContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 22,
+    marginTop: 24,
     gap: 5,
   },
   registerText: {
-    color: '#A6ABB5',
-    fontSize: 12,
+    color: '#8E8AA3',
+    fontSize: 13,
   },
   registerLink: {
-    color: '#A5A2FF',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  footer: {
-    color: '#707782',
-    fontSize: 11,
-    textAlign: 'center',
-    marginTop: 28,
+    color: '#B56DF0',
+    fontSize: 13,
+    fontWeight: '600',
   },
 });
