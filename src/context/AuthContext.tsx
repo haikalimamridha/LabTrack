@@ -1,4 +1,3 @@
-
 import React, {
   createContext,
   useContext,
@@ -11,6 +10,7 @@ import type { User } from '@react-native-firebase/auth';
 import {
   createUserWithEmailAndPassword,
   onAuthStateChanged,
+  sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signOut,
 } from '@react-native-firebase/auth';
@@ -53,6 +53,7 @@ interface AuthContextType {
   register: (data: RegisterData, password: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -120,7 +121,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const kelasRef = doc(firestore, 'kelas', kelasId);
     const kelasSnapshot = await getDoc(kelasRef);
 
-    if (!kelasSnapshot.exists() || kelasSnapshot.data().aktif !== true) {
+    if (!kelasSnapshot.exists() || kelasSnapshot.data()?.aktif !== true) {
       throw new Error('Kelas tidak tersedia atau sudah tidak aktif.');
     }
 
@@ -168,6 +169,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await signOut(auth);
   };
 
+  const resetPassword = async (email: string) => {
+    await sendPasswordResetEmail(auth, email.trim().toLowerCase());
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -177,6 +182,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         register,
         login,
         logout,
+        resetPassword,
       }}
     >
       {children}
