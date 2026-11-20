@@ -1,14 +1,14 @@
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Modal,
-  ScrollView,
+  Modal, Pressable, ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   useWindowDimensions,
-  View,
+  View
 } from "react-native";
 
 import { usePresensi } from "../../context/PresensiContext";
@@ -19,6 +19,7 @@ type Toast = { pesan: string; ok: boolean } | null;
 type StatusFilter = "Semua" | "Sedang Berlangsung" | "Belum Dibuka" | "Selesai";
 
 export default function PresensiScreen() {
+  const router = useRouter();
   const {
     daftarSesi,
     riwayat,
@@ -145,6 +146,18 @@ export default function PresensiScreen() {
         overScrollMode="always"
         decelerationRate="normal"
       >
+        <Pressable
+          style={styles.backButton}
+          onPress={() => {
+            if (router.canGoBack()) {
+              router.back();
+            } else {
+              router.replace("/praktikan");
+            }
+          }}
+        >
+          <Ionicons name="arrow-back" size={23} color="#FFFFFF" />
+        </Pressable>
         {/* HEADER */}
         <View style={styles.headerRow}>
           <View style={styles.headerTextCol}>
@@ -866,5 +879,14 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontWeight: "700",
     fontSize: 13,
+  },
+  backButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 13,
+    backgroundColor: "rgba(255,255,255,0.13)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 18,
   },
 });
