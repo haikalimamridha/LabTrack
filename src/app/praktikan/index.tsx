@@ -1,37 +1,54 @@
 import { useAuth } from "@/context/AuthContext";
-import Feather from "@expo/vector-icons/Feather";
+import {
+  Feather,
+  Ionicons,
+  MaterialCommunityIcons,
+} from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+
 import { usePresensi } from "../../context/PresensiContext";
-import { formatTanggal, waktuMulaiSesi } from "../../services/sessionService";
+import {
+  formatTanggal,
+  waktuMulaiSesi,
+} from "../../services/sessionService";
 
 export default function Index() {
   const router = useRouter();
-  const { profile } = useAuth();
-  const { daftarSesi, loading, error, sudahPresensi } = usePresensi();
-  const { logout } = useAuth();
+  const { profile, logout } = useAuth();
 
+  const {
+    daftarSesi,
+    loading,
+    error,
+    sudahPresensi,
+  } = usePresensi();
+
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+
+  // Logout
   const handleLogout = async () => {
     try {
+      setShowProfileMenu(false);
       await logout();
       router.replace("/login");
-    } catch (error) {
-      console.error("Gagal logout:", error);
+    } catch (err) {
+      console.error("Gagal logout:", err);
+      Alert.alert("Gagal", "Tidak dapat melakukan logout.");
     }
   };
 
+  // Data profil
   const nama = profile?.nama ?? "Praktikan";
-  const nim = profile?.nim ?? "-";
-  const angkatan = profile?.angkatan ?? "-";
-  const jurusan = profile?.jurusan ?? "-";
 
   const inisial = nama
     .split(" ")
@@ -41,18 +58,55 @@ export default function Index() {
     .join("")
     .toUpperCase();
 
+  // Ringkasan presensi
   const totalSesi = daftarSesi.length;
 
-  const sudahHadir = daftarSesi.filter((item) => sudahPresensi(item.id)).length;
+  const sudahHadir = daftarSesi.filter((item) =>
+    sudahPresensi(item.id)
+  ).length;
 
   const belumHadir = totalSesi - sudahHadir;
 
+  // Sesi terdekat
   const sesiTerdekat = daftarSesi
     .filter((item) => item.status !== "Selesai")
-    .sort((a, b) => waktuMulaiSesi(a) - waktuMulaiSesi(b))
+    .sort(
+      (a, b) => waktuMulaiSesi(a) - waktuMulaiSesi(b)
+    )
     .slice(0, 2);
 
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  // Menu dashboard
+  const menuItems = [
+    {
+      label: "Jadwal",
+      icon: "calendar-month" as const,
+      onPress: () => router.push("/praktikan/jadwal"),
+    },
+    {
+      label: "Presensi",
+      icon: "qrcode-scan" as const,
+      onPress: () => router.push("/praktikan/presensi"),
+    },
+    {
+      label: "Izin",
+      icon: "file-document-outline" as const,
+      onPress: () => router.push("/praktikan/izin"),
+    },
+    {
+      label: "Maps",
+      icon: "map-marker-radius-outline" as const,
+      onPress: () =>
+        Alert.alert(
+          "Maps",
+          "Fitur peta lokasi lab segera hadir."
+        ),
+    },
+    {
+      label: "Riwayat",
+      icon: "history" as const,
+      onPress: () => router.push("/praktikan/riwayat"),
+    },
+  ];
 
   return (
     <View style={styles.container}>
@@ -60,166 +114,241 @@ export default function Index() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.headerInfo}>
-            <Text style={styles.greeting}>Halo {nama}!</Text>
-          </View>
+        {/* HEADER */}
+        <View style={styles.headerBanner}>
+          <View style={styles.headerRow}>
+            {/* Avatar dan menu logout */}
+            <View style={styles.avatarWrapper}>
+              <TouchableOpacity
+                style={styles.avatarCircle}
+                onPress={() =>
+                  setShowProfileMenu(!showProfileMenu)
+                }
+                activeOpacity={0.85}
+              >
+                <Text style={styles.avatarText}>
+                  {inisial || "P"}
+                </Text>
+              </TouchableOpacity>
 
-          <View style={{ position: "relative" }}>
-            <TouchableOpacity
-              style={styles.avatar}
-              onPress={() => setShowProfileMenu(!showProfileMenu)}
-            >
-              <Text style={styles.avatarText}>{inisial || "A"}</Text>
-            </TouchableOpacity>
-
-            {showProfileMenu && (
-              <View style={styles.profileMenu}>
-                <TouchableOpacity
-                  style={styles.logoutButton}
-                  onPress={handleLogout}
-                >
-                  <Feather name="log-out" size={17} color="#EF6464" />
-                  <Text style={styles.logoutText}> Logout</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          </View>
-        </View>
-
-        {/* Identitas pengguna */}
-        <View style={styles.profileCard}>
-          <View style={styles.profileIcon}>
-            <Text style={styles.profileIconText}>
-              {(profile?.nama ?? "Pengguna")
-                .split(" ")
-                .filter(Boolean)
-                .map((kata) => kata.charAt(0))
-                .join("")
-                .toUpperCase()}
-            </Text>
-          </View>
-
-          <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>
-              {profile?.nama ?? "Pengguna Praktikan"}
-            </Text>
-            <Text style={styles.profileNim}>{profile?.nim ?? "-"}</Text>
-            <Text style={styles.profileMajor}>
-              {profile?.jurusan ?? "Jurusan belum tersedia"}
-              {" · Angkatan "}
-              {profile?.angkatan ?? "-"}
-            </Text>
-          </View>
-
-          <View style={styles.roleBadge}>
-            <Text style={styles.roleText}>Praktikan</Text>
-          </View>
-        </View>
-
-        {/* Ringkasan */}
-        <Text style={styles.sectionTitle}>Ringkasan Praktikum</Text>
-
-        <View style={styles.statsContainer}>
-          <View style={styles.statCard}>
-            <Text style={styles.statIcon}>▦</Text>
-            <Text style={styles.statNumber}>{totalSesi}</Text>
-            <Text style={styles.statLabel}>Total Sesi</Text>
-          </View>
-
-          <View style={styles.statCard}>
-            <Text style={styles.statIcon}>✓</Text>
-            <Text style={styles.statNumber}>{sudahHadir}</Text>
-            <Text style={styles.statLabel}>Sudah Hadir</Text>
-          </View>
-
-          <View style={styles.statCard}>
-            <Text style={styles.statIcon}>◷</Text>
-            <Text style={styles.statNumber}>{belumHadir}</Text>
-            <Text style={styles.statLabel}>Belum Hadir</Text>
-          </View>
-        </View>
-
-        {/* Sesi terdekat */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Sesi Terdekat</Text>
-
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={() => router.push("/praktikan/presensi")}
-          >
-            <Text style={styles.seeAll}>Lihat semua →</Text>
-          </TouchableOpacity>
-        </View>
-
-        {loading ? (
-          <View style={styles.emptyContainer}>
-            <ActivityIndicator color="#A5A2FF" />
-          </View>
-        ) : error ? (
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyTitle}>Gagal memuat sesi</Text>
-            <Text style={styles.emptyText}>{error}</Text>
-          </View>
-        ) : sesiTerdekat.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyTitle}>Belum Ada Jadwal</Text>
-            <Text style={styles.emptyText}>
-              Kamu belum memiliki jadwal praktikum mendatang.
-            </Text>
-          </View>
-        ) : (
-          sesiTerdekat.map((item) => (
-            <View key={item.id} style={styles.scheduleCard}>
-              <View style={styles.scheduleHeader}>
-                <View style={styles.codeBadge}>
-                  <Text style={styles.codeText}>
-                    {item.kode || `Kelas ${item.kelas}`}
-                  </Text>
+              {showProfileMenu && (
+                <View style={styles.profileMenu}>
+                  <TouchableOpacity
+                    style={styles.logoutButton}
+                    onPress={handleLogout}
+                    activeOpacity={0.8}
+                  >
+                    <Feather
+                      name="log-out"
+                      size={16}
+                      color="#FF6B7E"
+                    />
+                    <Text style={styles.logoutText}>
+                      Logout
+                    </Text>
+                  </TouchableOpacity>
                 </View>
+              )}
+            </View>
 
-                <Text
+            {/* Informasi pengguna */}
+            <View style={styles.headerTextCol}>
+              <Text style={styles.helloText}>
+                Hello!
+              </Text>
+
+              <Text
+                style={styles.userName}
+                numberOfLines={1}
+              >
+                {nama}
+              </Text>
+            </View>
+
+            {/* Notifikasi */}
+            <TouchableOpacity
+              style={styles.notifButton}
+              activeOpacity={0.8}
+              onPress={() =>
+                router.push("/praktikan/jadwal")
+              }
+            >
+              <Ionicons
+                name="notifications"
+                size={24}
+                color="#FFFFFF"
+              />
+
+              <View style={styles.notifDot} />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* BODY */}
+        <View style={styles.body}>
+          {/* RINGKASAN */}
+          <View style={styles.summaryCard}>
+            <View style={styles.cardHeaderRow}>
+              <Text style={styles.cardMutedTitle}>
+                Ringkasan
+              </Text>
+
+              <TouchableOpacity
+                activeOpacity={0.75}
+                onPress={() =>
+                  router.push("/praktikan/jadwal")
+                }
+              >
+                <Text style={styles.purpleLink}>
+                  Jadwal Saya
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>
+                Total Sesi
+              </Text>
+
+              <Text style={styles.summaryValue}>
+                {totalSesi}
+              </Text>
+            </View>
+
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>
+                Sudah Hadir
+              </Text>
+
+              <Text style={styles.summaryValue}>
+                {sudahHadir}
+              </Text>
+            </View>
+
+            <View
+              style={[
+                styles.summaryRow,
+                { marginBottom: 0 },
+              ]}
+            >
+              <Text style={styles.summaryLabel}>
+                Belum Hadir
+              </Text>
+
+              <Text style={styles.summaryValue}>
+                {belumHadir}
+              </Text>
+            </View>
+          </View>
+
+          {/* MENU DASHBOARD */}
+          <View style={styles.menuCard}>
+            <View style={styles.menuGrid}>
+              {menuItems.map((item) => (
+                <TouchableOpacity
+                  key={item.label}
+                  style={styles.menuBox}
+                  onPress={item.onPress}
+                  activeOpacity={0.85}
+                >
+                  <View style={styles.menuWhiteCircle}>
+                    <MaterialCommunityIcons
+                      name={item.icon}
+                      size={21}
+                      color="#4A4665"
+                    />
+                  </View>
+
+                  <Text style={styles.menuLabel}>
+                    {item.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          {/* SESI TERDEKAT */}
+          <View style={styles.nearestCard}>
+            <View style={styles.cardHeaderRow}>
+              <Text style={styles.cardMutedTitle}>
+                Sesi Terdekat
+              </Text>
+
+              <TouchableOpacity
+                activeOpacity={0.75}
+                onPress={() =>
+                  router.push("/praktikan/jadwal")
+                }
+              >
+                <Text style={styles.purpleLink}>
+                  Lihat Semua
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {loading ? (
+              <View style={styles.emptyBox}>
+                <ActivityIndicator color="#9623D6" />
+              </View>
+            ) : error ? (
+              <View style={styles.emptyBox}>
+                <Text style={styles.emptyTitle}>
+                  Gagal memuat sesi
+                </Text>
+
+                <Text style={styles.emptyText}>
+                  {error}
+                </Text>
+              </View>
+            ) : sesiTerdekat.length === 0 ? (
+              <View style={styles.emptyBox}>
+                <Text style={styles.emptyTitle}>
+                  Belum Ada Jadwal
+                </Text>
+
+                <Text style={styles.emptyText}>
+                  Kamu belum memiliki jadwal praktikum
+                  mendatang.
+                </Text>
+              </View>
+            ) : (
+              sesiTerdekat.map((item, idx) => (
+                <View
+                  key={item.id}
                   style={[
-                    styles.scheduleStatus,
-                    item.status === "Belum Dibuka" && {
-                      backgroundColor: "#854D0E",
-                    },
-                    item.status === "Sedang Berlangsung" && {
-                      backgroundColor: "#164E63",
-                    },
-                    item.status === "Selesai" && {
-                      backgroundColor: "#4B5563",
+                    styles.sessionItem,
+                    idx === sesiTerdekat.length - 1 && {
+                      marginBottom: 0,
                     },
                   ]}
                 >
-                  {item.status}
-                </Text>
-              </View>
+                  <View style={styles.sessionTopRow}>
+                    <Text style={styles.sessionCode}>
+                      {item.kode || `Kelas ${item.kelas}`}
+                    </Text>
 
-              <Text style={styles.scheduleName}>{item.mataPraktikum}</Text>
+                    <Text style={styles.sessionStatus}>
+                      {item.status}
+                    </Text>
+                  </View>
 
-              <View style={styles.divider} />
+                  <Text
+                    style={styles.sessionName}
+                    numberOfLines={1}
+                  >
+                    {item.mataPraktikum}
+                  </Text>
 
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Tanggal</Text>
-                <Text style={styles.infoValue}>
-                  {item.hari}, {formatTanggal(item.tanggal)}
-                </Text>
-              </View>
-
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Waktu</Text>
-                <Text style={styles.infoValue}>{item.waktu}</Text>
-              </View>
-
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Ruangan</Text>
-                <Text style={styles.infoValue}>{item.ruangan}</Text>
-              </View>
-            </View>
-          ))
-        )}
+                  <Text style={styles.sessionMeta}>
+                    {item.hari},{" "}
+                    {formatTanggal(item.tanggal)} ·{" "}
+                    {item.waktu} · {item.ruangan}
+                  </Text>
+                </View>
+              ))
+            )}
+          </View>
+        </View>
       </ScrollView>
     </View>
   );
@@ -228,302 +357,268 @@ export default function Index() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#25292e",
+    backgroundColor: "#1E1B3A",
   },
+
   scrollContent: {
-    padding: 20,
-    paddingTop: 24,
-    paddingBottom: 36,
+    paddingBottom: 110,
   },
-  header: {
+
+  // Header
+  headerBanner: {
+    backgroundColor: "#9623D6",
+    paddingTop: 52,
+    paddingBottom: 62,
+    paddingHorizontal: 22,
+  },
+
+  headerRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 24,
   },
-  brand: {
-    color: "#A5A2FF",
-    fontSize: 12,
-    fontWeight: "bold",
-    letterSpacing: 2,
-    marginBottom: 8,
+
+  avatarWrapper: {
+    position: "relative",
+    zIndex: 100,
+    marginRight: 14,
   },
-  greeting: {
-    color: "#FFFFFF",
-    fontSize: 27,
-    fontWeight: "bold",
-  },
-  subtitle: {
-    color: "#B8BCC4",
-    fontSize: 13,
-    marginTop: 6,
-  },
-  avatar: {
+
+  avatarCircle: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: "#45416F",
+    backgroundColor: "#25A9C9",
+    borderWidth: 2,
+    borderColor: "rgba(255,255,255,0.35)",
     alignItems: "center",
     justifyContent: "center",
-  },
-  avatarText: {
-    color: "#FFFFFF",
-    fontSize: 20,
-    fontWeight: "bold",
-  },
-  profileCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#343941",
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#454B55",
-    padding: 14,
-    marginBottom: 28,
-    gap: 12,
-  },
-  profileIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: "#45416F",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  profileIconText: {
-    color: "#C7C5FF",
-    fontWeight: "bold",
-    fontSize: 14,
-  },
-  profileInfo: {
-    flex: 1,
-  },
-  profileName: {
-    color: "#FFFFFF",
-    fontWeight: "bold",
-    fontSize: 14,
-    marginBottom: 4,
-  },
-  profileNim: {
-    color: "#C7C5FF",
-    fontSize: 12,
-    marginBottom: 4,
-  },
-  profileMajor: {
-    color: "#B8BCC4",
-    fontSize: 11,
-  },
-  roleBadge: {
-    backgroundColor: "#45416F",
-    paddingHorizontal: 8,
-    paddingVertical: 5,
-    borderRadius: 7,
-  },
-  roleText: {
-    color: "#C7C5FF",
-    fontSize: 10,
-    fontWeight: "bold",
-  },
-  sectionTitle: {
-    color: "#FFFFFF",
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 14,
-  },
-  statsContainer: {
-    flexDirection: "row",
-    gap: 10,
-    marginBottom: 28,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: "#343941",
-    borderRadius: 13,
-    paddingVertical: 16,
-    paddingHorizontal: 5,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#454B55",
-  },
-  statIcon: {
-    color: "#A5A2FF",
-    fontSize: 23,
-    marginBottom: 8,
-  },
-  statNumber: {
-    color: "#FFFFFF",
-    fontSize: 23,
-    fontWeight: "bold",
-  },
-  statLabel: {
-    color: "#B8BCC4",
-    fontSize: 10,
-    textAlign: "center",
-    marginTop: 5,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 14,
-  },
-  seeAll: {
-    color: "#A5A2FF",
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  scheduleCard: {
-    backgroundColor: "#343941",
-    borderRadius: 14,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: "#454B55",
-    marginBottom: 12,
-  },
-  scheduleHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  codeBadge: {
-    backgroundColor: "#45416F",
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 6,
-  },
-  codeText: {
-    color: "#C7C5FF",
-    fontWeight: "bold",
-    fontSize: 11,
-  },
-  scheduleStatus: {
-    color: "#FFFFFF",
-    fontSize: 11,
-    fontWeight: "600",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    overflow: "hidden",
-  },
-  scheduleName: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "bold",
-    lineHeight: 23,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: "#505661",
-    marginVertical: 14,
-  },
-  infoRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 10,
-    marginBottom: 9,
-  },
-  infoLabel: {
-    color: "#AEB4BE",
-    fontSize: 12,
-    flex: 1,
-  },
-  infoValue: {
-    color: "#FFFFFF",
-    fontSize: 12,
-    textAlign: "right",
-    flex: 2,
   },
 
-  emptyContainer: {
-    alignItems: "center",
-    backgroundColor: "#343941",
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "#454B55",
-    padding: 24,
-    marginBottom: 12,
-  },
-  emptyTitle: {
+  avatarText: {
     color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "bold",
-    marginBottom: 8,
-    textAlign: "center",
+    fontSize: 17,
+    fontWeight: "700",
   },
-  emptyText: {
-    color: "#B8BCC4",
-    fontSize: 13,
-    lineHeight: 20,
-    textAlign: "center",
-  },
-  quickActions: {
-    gap: 10,
-  },
-  quickAction: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#343941",
+
+  profileMenu: {
+    position: "absolute",
+    top: 56,
+    left: 0,
+    backgroundColor: "#2F2B44",
+    borderWidth: 1,
+    borderColor: "#4A4566",
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#454B55",
-    padding: 14,
-    gap: 12,
+    padding: 6,
+    minWidth: 130,
+    elevation: 8,
+    zIndex: 200,
   },
-  quickIcon: {
-    width: 40,
-    height: 40,
-    textAlign: "center",
-    textAlignVertical: "center",
-    overflow: "hidden",
-    borderRadius: 10,
-    backgroundColor: "#45416F",
-    color: "#C7C5FF",
-    fontSize: 20,
-  },
-  quickTitle: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "bold",
-    width: 75,
-  },
-  quickSubtitle: {
-    color: "#B8BCC4",
-    fontSize: 11,
-    flex: 1,
-  },
-  footer: {
-    textAlign: "center",
-    color: "#777E89",
-    fontSize: 11,
-    marginTop: 26,
-  },
+
   logoutButton: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 11,
+    gap: 8,
+    paddingVertical: 10,
     paddingHorizontal: 12,
     borderRadius: 8,
-    backgroundColor: "transparent",
   },
 
   logoutText: {
-    color: "#EF6464",
+    color: "#FF6B7E",
     fontSize: 13,
     fontWeight: "600",
   },
-  headerInfo: {
+
+  headerTextCol: {
     flex: 1,
   },
-  profileMenu: {
+
+  helloText: {
+    color: "#F3E5FF",
+    fontSize: 13,
+    fontWeight: "500",
+    marginBottom: 2,
+  },
+
+  userName: {
+    color: "#FFFFFF",
+    fontSize: 22,
+    fontWeight: "700",
+    letterSpacing: 0.2,
+  },
+
+  notifButton: {
+    position: "relative",
+    padding: 6,
+  },
+
+  notifDot: {
     position: "absolute",
-    top: 55,
-    right: 0,
-    backgroundColor: "#fff",
-    borderRadius: 10,
+    top: 6,
+    right: 7,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#3B82F6",
+  },
+
+  // Body
+  body: {
+    paddingHorizontal: 20,
+  },
+
+  // Summary
+  summaryCard: {
+    backgroundColor: "#2F2C44",
+    borderRadius: 18,
+    padding: 20,
+    marginTop: -40,
+    marginBottom: 18,
+    elevation: 4,
+  },
+
+  cardHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+
+  cardMutedTitle: {
+    color: "#8E8AA3",
+    fontSize: 13,
+    fontWeight: "500",
+  },
+
+  purpleLink: {
+    color: "#9623D6",
+    fontSize: 13,
+    fontWeight: "600",
+  },
+
+  summaryRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 14,
+  },
+
+  summaryLabel: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "600",
+  },
+
+  summaryValue: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "600",
+  },
+
+  // Menu
+  menuCard: {
+    backgroundColor: "#2F2C44",
+    borderRadius: 18,
+    padding: 18,
+    marginBottom: 18,
+  },
+
+  menuGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "flex-start",
+    columnGap: 12,
+    rowGap: 14,
+  },
+
+  menuBox: {
+    width: "30%",
+    aspectRatio: 1,
+    backgroundColor: "#4A4665",
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
     padding: 8,
-    minWidth: 120,
-    elevation: 5,
-    zIndex: 100,
+  },
+
+  menuWhiteCircle: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 7,
+  },
+
+  menuLabel: {
+    color: "#E2DFEE",
+    fontSize: 12,
+    fontWeight: "500",
+  },
+
+  // Nearest session
+  nearestCard: {
+    backgroundColor: "#2F2C44",
+    borderRadius: 18,
+    padding: 20,
+    minHeight: 190,
+  },
+
+  sessionItem: {
+    backgroundColor: "#3A3654",
+    borderRadius: 12,
+    padding: 13,
+    marginBottom: 10,
+  },
+
+  sessionTopRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 6,
+  },
+
+  sessionCode: {
+    color: "#B56DF0",
+    fontSize: 11,
+    fontWeight: "700",
+  },
+
+  sessionStatus: {
+    color: "#D5C2FF",
+    fontSize: 11,
+    fontWeight: "600",
+  },
+
+  sessionName: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "700",
+    marginBottom: 3,
+  },
+
+  sessionMeta: {
+    color: "#B8B4C8",
+    fontSize: 11,
+  },
+
+  emptyBox: {
+    paddingVertical: 28,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  emptyTitle: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "600",
+    marginBottom: 4,
+  },
+
+  emptyText: {
+    color: "#8E8AA3",
+    fontSize: 12,
+    textAlign: "center",
   },
 });
