@@ -7,6 +7,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -68,9 +69,13 @@ export default function LoginScreen() {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <View style={styles.content}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
         <Text style={styles.title}>Log In</Text>
 
         <View style={styles.formContainer}>
@@ -143,7 +148,7 @@ export default function LoginScreen() {
             </TouchableOpacity>
           </View>
         </View>
-      </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
@@ -154,8 +159,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#1E1B3A',
   },
   content: {
-    flex: 1,
+    flexGrow: 1,
     justifyContent: 'center',
+    paddingVertical: 32,
     paddingHorizontal: 24,
   },
   title: {
