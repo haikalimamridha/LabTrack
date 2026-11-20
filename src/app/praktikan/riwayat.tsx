@@ -1,3 +1,4 @@
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import {
   ActivityIndicator,
   FlatList,
@@ -35,21 +36,59 @@ export default function RiwayatScreen() {
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={
-          <Text style={styles.totalText}>{data.length} kehadiran tercatat</Text>
+          <View style={styles.headerBlock}>
+            <View style={styles.headerRow}>
+              <View style={styles.headerTextCol}>
+                <Text style={styles.headerTitle}>Riwayat</Text>
+                <Text style={styles.headerSubtitle}>
+                  Catatan kehadiran praktikum yang sudah tercatat
+                </Text>
+              </View>
+
+              <View style={styles.headerBadge}>
+                <MaterialCommunityIcons
+                  name="history"
+                  size={15}
+                  color="#D5C2FF"
+                />
+                <Text style={styles.headerBadgeText}>
+                  {data.length} Hadir
+                </Text>
+              </View>
+            </View>
+
+            <Text style={styles.totalText}>
+              {data.length} kehadiran tercatat
+            </Text>
+          </View>
         }
         ListEmptyComponent={
           loading ? (
-            <View style={styles.emptyContainer}>
-              <ActivityIndicator color="#A5A2FF" />
+            <View style={styles.stateCard}>
+              <ActivityIndicator color="#9623D6" size="large" />
+              <Text style={styles.stateText}>Memuat riwayat kehadiran...</Text>
             </View>
           ) : error ? (
-            <View style={styles.emptyContainer}>
+            <View style={styles.stateCard}>
+              <View style={styles.stateIcon}>
+                <MaterialCommunityIcons
+                  name="alert-circle-outline"
+                  size={28}
+                  color="#D5C2FF"
+                />
+              </View>
               <Text style={styles.emptyTitle}>Gagal memuat riwayat</Text>
               <Text style={styles.emptyText}>{error}</Text>
             </View>
           ) : (
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyIcon}>🗒️</Text>
+            <View style={styles.stateCard}>
+              <View style={styles.stateIcon}>
+                <MaterialCommunityIcons
+                  name="clipboard-text-clock-outline"
+                  size={28}
+                  color="#D5C2FF"
+                />
+              </View>
               <Text style={styles.emptyTitle}>Belum ada riwayat kehadiran</Text>
               <Text style={styles.emptyText}>
                 Lakukan presensi pada sesi yang sedang berlangsung, lalu
@@ -67,12 +106,21 @@ export default function RiwayatScreen() {
                   {item.sesi.kelas}
                 </Text>
               </View>
+
               <View style={styles.statusBadge}>
+                <MaterialCommunityIcons
+                  name="check"
+                  size={12}
+                  color="#FFFFFF"
+                />
                 <Text style={styles.statusText}>Hadir</Text>
               </View>
             </View>
 
-            <Text style={styles.subject}>{item.sesi.mataPraktikum}</Text>
+            <Text style={styles.subject} numberOfLines={2}>
+              {item.sesi.mataPraktikum}
+            </Text>
+
             <View style={styles.divider} />
 
             <View style={styles.infoRow}>
@@ -81,13 +129,17 @@ export default function RiwayatScreen() {
                 {item.sesi.hari}, {formatTanggal(item.sesi.tanggal)}
               </Text>
             </View>
+
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Jadwal sesi</Text>
               <Text style={styles.infoValue}>{item.sesi.waktu}</Text>
             </View>
-            <View style={styles.infoRow}>
+
+            <View style={[styles.infoRow, { marginBottom: 0 }]}>
               <Text style={styles.infoLabel}>Waktu hadir</Text>
-              <Text style={styles.infoValue}>{formatJam(item.waktuHadir)}</Text>
+              <Text style={styles.infoValueAccent}>
+                {formatJam(item.waktuHadir)}
+              </Text>
             </View>
           </View>
         )}
@@ -97,91 +149,188 @@ export default function RiwayatScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#25292e" },
+  container: {
+    flex: 1,
+    backgroundColor: "#1E1B3A",
+  },
   listContent: {
-    padding: 20,
-    paddingBottom: 30,
+    paddingHorizontal: 20,
+    paddingTop: 48,
+    paddingBottom: 115,
     width: "100%",
     maxWidth: 960,
     alignSelf: "center",
     flexGrow: 1,
   },
-  row: { justifyContent: "space-between" },
-  totalText: { color: "#B8BCC4", fontSize: 13, marginBottom: 12 },
+  row: {
+    justifyContent: "space-between",
+  },
+
+  /* Header */
+  headerBlock: {
+    marginBottom: 14,
+  },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 12,
+    marginBottom: 12,
+  },
+  headerTextCol: {
+    flex: 1,
+  },
+  headerTitle: {
+    color: "#FFFFFF",
+    fontSize: 28,
+    fontWeight: "700",
+    letterSpacing: 0.2,
+  },
+  headerSubtitle: {
+    color: "#9C98B2",
+    fontSize: 12,
+    marginTop: 3,
+  },
+  headerBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "#2F2C44",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+  },
+  headerBadgeText: {
+    color: "#D5C2FF",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  totalText: {
+    color: "#9C98B2",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+
+  /* Card */
   card: {
     width: "100%",
-    backgroundColor: "#343941",
-    borderRadius: 14,
+    backgroundColor: "#2F2C44",
+    borderRadius: 18,
     padding: 16,
     marginBottom: 14,
-    borderWidth: 1,
-    borderColor: "#454B55",
   },
-  cardWide: { width: "48.5%" },
+  cardWide: {
+    width: "48.6%",
+  },
   cardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    flexWrap: "wrap",
     gap: 8,
     marginBottom: 12,
   },
   codeBadge: {
-    backgroundColor: "#45416F",
+    backgroundColor: "#3A3654",
     paddingHorizontal: 10,
     paddingVertical: 5,
-    borderRadius: 6,
+    borderRadius: 8,
+    flexShrink: 1,
   },
-  codeText: { color: "#C7C5FF", fontSize: 12, fontWeight: "bold" },
+  codeText: {
+    color: "#D5C2FF",
+    fontSize: 11,
+    fontWeight: "700",
+  },
   statusBadge: {
-    backgroundColor: "#166534",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "#9623D6",
     paddingHorizontal: 10,
     paddingVertical: 5,
-    borderRadius: 6,
+    borderRadius: 8,
   },
-  statusText: { color: "#FFFFFF", fontSize: 11, fontWeight: "600" },
+  statusText: {
+    color: "#FFFFFF",
+    fontSize: 11,
+    fontWeight: "600",
+  },
   subject: {
     color: "#FFFFFF",
-    fontSize: 17,
-    fontWeight: "bold",
-    lineHeight: 24,
+    fontSize: 16,
+    fontWeight: "700",
+    lineHeight: 22,
   },
-  divider: { height: 1, backgroundColor: "#505661", marginVertical: 14 },
+  divider: {
+    height: 1,
+    backgroundColor: "#3F3A5C",
+    marginVertical: 13,
+  },
   infoRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 10,
+    alignItems: "center",
+    marginBottom: 9,
     gap: 12,
   },
-  infoLabel: { color: "#AEB4BE", fontSize: 13, flex: 1 },
+  infoLabel: {
+    color: "#9C98B2",
+    fontSize: 12,
+    flex: 1,
+  },
   infoValue: {
-    color: "#FFFFFF",
-    fontSize: 13,
-    fontWeight: "500",
+    color: "#F5F3FF",
+    fontSize: 12,
+    fontWeight: "600",
     flex: 2,
     textAlign: "right",
   },
-  emptyContainer: {
-    flex: 1,
+  infoValueAccent: {
+    color: "#D5C2FF",
+    fontSize: 12,
+    fontWeight: "700",
+    flex: 2,
+    textAlign: "right",
+  },
+
+  /* States */
+  stateCard: {
+    backgroundColor: "#2F2C44",
+    borderRadius: 18,
+    padding: 28,
     alignItems: "center",
     justifyContent: "center",
-    padding: 30,
-    marginTop: 60,
+    minHeight: 190,
+    marginTop: 8,
   },
-  emptyIcon: { fontSize: 44, marginBottom: 12 },
+  stateIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: 16,
+    backgroundColor: "#3A3654",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 12,
+  },
   emptyTitle: {
     color: "#FFFFFF",
-    fontSize: 17,
-    fontWeight: "bold",
-    marginBottom: 8,
+    fontSize: 15,
+    fontWeight: "700",
+    marginBottom: 6,
     textAlign: "center",
   },
   emptyText: {
-    color: "#B8BCC4",
-    fontSize: 13,
+    color: "#9C98B2",
+    fontSize: 12,
     textAlign: "center",
     maxWidth: 320,
-    lineHeight: 20,
+    lineHeight: 18,
+    marginTop: 4,
+  },
+  stateText: {
+    color: "#9C98B2",
+    fontSize: 12,
+    textAlign: "center",
+    marginTop: 10,
   },
 });
