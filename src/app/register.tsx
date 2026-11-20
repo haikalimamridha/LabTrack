@@ -91,7 +91,7 @@ export default function RegisterScreen() {
           nim,
           angkatan,
           jurusan,
-          kelasId
+          kelasId,
         },
         password
       );
@@ -145,7 +145,7 @@ export default function RegisterScreen() {
       <TextInput
         style={styles.input}
         placeholder={placeholder}
-        placeholderTextColor="#858B96"
+        placeholderTextColor="#B8B4C8"
         value={value}
         onChangeText={onChangeText}
         keyboardType={options.keyboardType ?? 'default'}
@@ -161,7 +161,7 @@ export default function RegisterScreen() {
     value: string,
     onChangeText: (value: string) => void,
     visible: boolean,
-    toggleVisible: () => void // Parameter ini sudah ada, tinggal dipakai!
+    toggleVisible: () => void
   ) => (
     <>
       <Text style={styles.label}>{label}</Text>
@@ -170,19 +170,22 @@ export default function RegisterScreen() {
         <TextInput
           style={styles.passwordInput}
           placeholder={placeholder}
-          placeholderTextColor="#858B96"
+          placeholderTextColor="#B8B4C8"
           value={value}
           onChangeText={onChangeText}
-          secureTextEntry={!visible} // Menggunakan parameter visible
+          secureTextEntry={!visible}
           autoCapitalize="none"
           autoCorrect={false}
         />
 
-        <TouchableOpacity onPress={toggleVisible}> {/* Menggunakan fungsi dari parameter */}
+        <TouchableOpacity
+          onPress={toggleVisible}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
           <Ionicons
-            name={visible ? 'eye-off-outline' : 'eye-outline'} // Menggunakan status visible yang dinamis
-            size={22}
-            color="#888"
+            name={visible ? 'eye-outline' : 'eye-off-outline'}
+            size={20}
+            color="#A6A2BA"
           />
         </TouchableOpacity>
       </View>
@@ -199,16 +202,23 @@ export default function RegisterScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
+          <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+        </TouchableOpacity>
+
         <View style={styles.header}>
-          <Text style={styles.logo}>LABTRACK</Text>
-          <Text style={styles.title}>Buat Akun Baru</Text>
+          <Text style={styles.title}>Sign Up</Text>
         </View>
 
         <View style={styles.formContainer}>
           <Text style={styles.sectionTitle}>Informasi Pribadi</Text>
 
           {renderInput(
-            'Nama Lengkap',
+            'Full Name',
             'Masukkan nama lengkap',
             nama,
             setNama
@@ -241,7 +251,7 @@ export default function RegisterScreen() {
 
           {loadingKelas ? (
             <View style={styles.classLoading}>
-              <ActivityIndicator color="#A5A2FF" />
+              <ActivityIndicator color="#B56DF0" />
               <Text style={styles.classLoadingText}>
                 Memuat daftar kelas...
               </Text>
@@ -255,7 +265,7 @@ export default function RegisterScreen() {
                 ]}
                 onPress={() => setShowKelasDropdown(!showKelasDropdown)}
                 disabled={daftarKelas.length === 0}
-                activeOpacity={0.8}
+                activeOpacity={0.85}
               >
                 <Text
                   style={[
@@ -270,7 +280,7 @@ export default function RegisterScreen() {
                 <Ionicons
                   name={showKelasDropdown ? 'chevron-up' : 'chevron-down'}
                   size={20}
-                  color="#A6ABB5"
+                  color="#A6A2BA"
                 />
               </TouchableOpacity>
 
@@ -287,7 +297,7 @@ export default function RegisterScreen() {
                         setKelasId(item.id);
                         setShowKelasDropdown(false);
                       }}
-                      activeOpacity={0.8}
+                      activeOpacity={0.85}
                     >
                       <Text
                         style={[
@@ -303,7 +313,7 @@ export default function RegisterScreen() {
                         <Ionicons
                           name="checkmark"
                           size={20}
-                          color="#A5A2FF"
+                          color="#B56DF0"
                         />
                       )}
                     </TouchableOpacity>
@@ -313,14 +323,13 @@ export default function RegisterScreen() {
             </View>
           )}
 
-
           <View style={styles.divider} />
 
           <Text style={styles.sectionTitle}>Informasi Akun</Text>
 
           {renderInput(
-            'Email',
-            'Masukkan email aktif',
+            'Your Email',
+            'Cooper_Kristin@gmail.com',
             email,
             setEmail,
             {
@@ -339,7 +348,7 @@ export default function RegisterScreen() {
           )}
 
           {renderPassword(
-            'Konfirmasi Password',
+            'Confirm Password',
             'Masukkan ulang password',
             konfirmasiPassword,
             setKonfirmasiPassword,
@@ -348,12 +357,10 @@ export default function RegisterScreen() {
           )}
 
           <View style={styles.roleInfo}>
-            <Text style={styles.roleInfoTitle}>
-              Role Akun
-            </Text>
+            <Text style={styles.roleInfoTitle}>Role Akun</Text>
             <Text style={styles.roleInfoText}>
-              Akun baru akan didaftarkan sebagai Praktikan.
-              Role Asisten diberikan oleh administrator.
+              Akun baru akan didaftarkan sebagai Praktikan. Role Asisten
+              diberikan oleh administrator.
             </Text>
           </View>
 
@@ -361,33 +368,22 @@ export default function RegisterScreen() {
             style={[styles.registerButton, loading && styles.disabled]}
             onPress={handleRegister}
             disabled={loading}
-            activeOpacity={0.8}
+            activeOpacity={0.85}
           >
             {loading ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text style={styles.registerButtonText}>
-                Daftar Sekarang
-              </Text>
+              <Text style={styles.registerButtonText}>Sign Up</Text>
             )}
           </TouchableOpacity>
 
           <View style={styles.loginContainer}>
-            <Text style={styles.loginText}>
-              Sudah punya akun?
-            </Text>
-
-            <TouchableOpacity
-              onPress={() => router.replace('/login')}
-            >
-              <Text style={styles.loginLink}>Masuk</Text>
+            <Text style={styles.loginText}>Sudah punya akun?</Text>
+            <TouchableOpacity onPress={() => router.replace('/login')}>
+              <Text style={styles.loginLink}>Log In</Text>
             </TouchableOpacity>
           </View>
         </View>
-
-        <Text style={styles.footer}>
-          © 2026 LabTrack. All rights reserved.
-        </Text>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -396,108 +392,97 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#25292e',
+    backgroundColor: '#1E1B3A',
   },
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 24,
-    paddingTop: 55,
-    paddingBottom: 30,
+    paddingTop: 52,
+    paddingBottom: 36,
+  },
+  backButton: {
+    alignSelf: 'flex-start',
+    marginBottom: 18,
   },
   header: {
-    marginBottom: 25,
-  },
-  logo: {
-    color: '#A5A2FF',
-    fontSize: 13,
-    fontWeight: '800',
-    letterSpacing: 3,
-    marginBottom: 18,
+    marginBottom: 28,
   },
   title: {
     color: '#FFFFFF',
-    fontSize: 27,
+    fontSize: 32,
     fontWeight: '700',
     marginBottom: 8,
+    letterSpacing: 0.2,
   },
   formContainer: {
-    backgroundColor: '#343941',
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: '#454B55',
-    padding: 20,
+    width: '100%',
   },
   sectionTitle: {
     color: '#FFFFFF',
     fontSize: 15,
-    fontWeight: '700',
-    marginBottom: 18,
+    fontWeight: '600',
+    marginBottom: 16,
   },
   label: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '600',
+    color: '#8E8AA3',
+    fontSize: 13,
+    fontWeight: '400',
     marginBottom: 8,
   },
   input: {
-    height: 48,
-    backgroundColor: '#25292e',
-    borderWidth: 1,
-    borderColor: '#454B55',
-    borderRadius: 9,
-    paddingHorizontal: 13,
+    height: 54,
+    backgroundColor: '#3A3654',
+    borderRadius: 12,
+    paddingHorizontal: 18,
     color: '#FFFFFF',
-    fontSize: 13,
-    marginBottom: 17,
+    fontSize: 14,
+    marginBottom: 20,
   },
   passwordContainer: {
-    height: 48,
+    height: 54,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#25292e',
-    borderWidth: 1,
-    borderColor: '#454B55',
-    borderRadius: 9,
-    paddingHorizontal: 13,
-    marginBottom: 17,
+    backgroundColor: '#3A3654',
+    borderRadius: 12,
+    paddingHorizontal: 18,
+    marginBottom: 20,
   },
   passwordInput: {
     flex: 1,
     color: '#FFFFFF',
-    fontSize: 13,
-  },
-  showPassword: {
-    color: '#A5A2FF',
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: 14,
+    paddingRight: 10,
   },
   divider: {
     height: 1,
-    backgroundColor: '#454B55',
-    marginVertical: 10,
+    backgroundColor: '#332F52',
+    marginTop: 4,
+    marginBottom: 22,
   },
   roleInfo: {
-    backgroundColor: '#45416F',
-    borderRadius: 10,
-    padding: 13,
-    marginTop: 5,
-    marginBottom: 20,
+    backgroundColor: '#2E2A4D',
+    borderWidth: 1,
+    borderColor: '#4A4375',
+    borderRadius: 12,
+    padding: 14,
+    marginTop: 4,
+    marginBottom: 24,
   },
   roleInfoTitle: {
-    color: '#D5D3FF',
-    fontSize: 12,
-    fontWeight: '700',
-    marginBottom: 5,
+    color: '#D5C2FF',
+    fontSize: 13,
+    fontWeight: '600',
+    marginBottom: 4,
   },
   roleInfoText: {
-    color: '#E0DFFF',
-    fontSize: 11,
-    lineHeight: 17,
+    color: '#B5B0CC',
+    fontSize: 12,
+    lineHeight: 18,
   },
   registerButton: {
-    height: 49,
-    backgroundColor: '#625ff0',
-    borderRadius: 9,
+    height: 54,
+    backgroundColor: '#9623D6',
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -506,146 +491,84 @@ const styles = StyleSheet.create({
   },
   registerButtonText: {
     color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: 16,
+    fontWeight: '600',
   },
   loginContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: 24,
     gap: 5,
   },
   loginText: {
-    color: '#A6ABB5',
-    fontSize: 12,
+    color: '#8E8AA3',
+    fontSize: 13,
   },
   loginLink: {
-    color: '#A5A2FF',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  footer: {
-    color: '#707782',
-    fontSize: 11,
-    textAlign: 'center',
-    marginTop: 25,
-  },
-
-  classOptions: {
-    gap: 9,
-    marginBottom: 17,
-  },
-
-  classOption: {
-    minHeight: 46,
-    backgroundColor: '#25292e',
-    borderWidth: 1,
-    borderColor: '#454B55',
-    borderRadius: 9,
-    paddingHorizontal: 13,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-
-  classOptionActive: {
-    borderColor: '#625ff0',
-    backgroundColor: '#45416F',
-  },
-
-  classOptionText: {
-    color: '#A6ABB5',
+    color: '#B56DF0',
     fontSize: 13,
-    fontWeight: '500',
+    fontWeight: '600',
   },
-
-  classOptionTextActive: {
-    color: '#FFFFFF',
-    fontWeight: '700',
-  },
-
   classLoading: {
-    height: 48,
+    height: 54,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    marginBottom: 17,
+    marginBottom: 20,
   },
-
   classLoadingText: {
-    color: '#A6ABB5',
-    fontSize: 12,
+    color: '#9C98B2',
+    fontSize: 13,
   },
-
-  classError: {
-    color: '#EF6464',
-    fontSize: 12,
-    marginBottom: 17,
-  },
-
   dropdownContainer: {
-    marginBottom: 17,
+    marginBottom: 20,
     zIndex: 10,
   },
-
   dropdownButton: {
-    height: 48,
-    backgroundColor: '#25292e',
-    borderWidth: 1,
-    borderColor: '#454B55',
-    borderRadius: 9,
-    paddingHorizontal: 13,
+    height: 54,
+    backgroundColor: '#3A3654',
+    borderRadius: 12,
+    paddingHorizontal: 18,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-
   dropdownButtonActive: {
-    borderColor: '#625ff0',
     borderBottomLeftRadius: 0,
     borderBottomRightRadius: 0,
   },
-
   dropdownText: {
     color: '#FFFFFF',
-    fontSize: 13,
+    fontSize: 14,
   },
-
   dropdownPlaceholder: {
-    color: '#858B96',
+    color: '#B8B4C8',
   },
-
   dropdownList: {
-    backgroundColor: '#25292e',
-    borderWidth: 1,
-    borderTopWidth: 0,
-    borderColor: '#625ff0',
-    borderBottomLeftRadius: 9,
-    borderBottomRightRadius: 9,
+    backgroundColor: '#3A3654',
+    borderTopWidth: 1,
+    borderTopColor: '#4D486E',
+    borderBottomLeftRadius: 12,
+    borderBottomRightRadius: 12,
     overflow: 'hidden',
   },
-
   dropdownItem: {
-    minHeight: 46,
-    paddingHorizontal: 13,
+    minHeight: 48,
+    paddingHorizontal: 18,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-
   dropdownItemActive: {
-    backgroundColor: '#45416F',
+    backgroundColor: '#4C4373',
   },
-
   dropdownItemText: {
-    color: '#A6ABB5',
-    fontSize: 13,
+    color: '#D8D5E6',
+    fontSize: 14,
   },
-
   dropdownItemTextActive: {
     color: '#FFFFFF',
-    fontWeight: '700',
+    fontWeight: '600',
   },
-
 });
