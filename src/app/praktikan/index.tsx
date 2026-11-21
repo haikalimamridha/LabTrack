@@ -84,7 +84,7 @@ export default function Index() {
     },
     {
       label: "Presensi",
-      icon: "qrcode-scan" as const,
+      icon: "account-check" as const,
       onPress: () => router.push("/praktikan/presensi"),
     },
     {
