@@ -11,9 +11,9 @@ import {
   View
 } from "react-native";
 
-import { usePresensi } from "../../context/PresensiContext";
-import { formatJam } from "../../data/sesi";
-import { formatTanggal, type Sesi } from "../../services/sessionService";
+import { usePresensi } from "@/context/PresensiContext";
+import { formatJam } from "@/data/sesi";
+import { formatTanggal, type Sesi } from "@/services/sessionService";
 
 type Toast = { pesan: string; ok: boolean } | null;
 type StatusFilter = "Semua" | "Sedang Berlangsung" | "Belum Dibuka" | "Selesai";

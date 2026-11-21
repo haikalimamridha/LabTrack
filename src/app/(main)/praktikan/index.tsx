@@ -15,11 +15,11 @@ import {
   View
 } from "react-native";
 
-import { usePresensi } from "../../context/PresensiContext";
+import { usePresensi } from "@/context/PresensiContext";
 import {
   formatTanggal,
   waktuMulaiSesi,
-} from "../../services/sessionService";
+} from "@/services/sessionService";
 
 export default function Index() {
   const router = useRouter();

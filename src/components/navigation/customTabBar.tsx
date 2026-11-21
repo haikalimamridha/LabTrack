@@ -1,6 +1,7 @@
 
+import { useAuth } from "@/context/AuthContext";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { Tabs, useRouter, type Href } from "expo-router";
+import { usePathname, useRouter } from "expo-router";
 import {
   Pressable,
   StyleSheet,
@@ -9,25 +10,45 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { PresensiProvider } from "@/context/PresensiContext";
-
-type CustomTabBarProps = {
-  state: {
-    index: number;
-    routes: Array<{
-      name: string;
-    }>;
-  };
-};
-
-function CustomTabBar({ state }: CustomTabBarProps) {
+export default function CustomTabBar() {
+  const { profile } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const insets = useSafeAreaInsets();
 
-  const activeRoute = state.routes[state.index]?.name;
+  // Menentukan role pengguna
+  const role = profile?.role;
 
-  const navigate = (route: string) => {
-    router.navigate(route as Href);
+  // Jika profil belum tersedia, navigasi tidak ditampilkan
+  if (!role) return null;
+
+  const isPraktikan = role === "praktikan";
+
+  // Menentukan halaman aktif
+  const isHome =
+    pathname === "/praktikan" ||
+    pathname === "/praktikan/" ||
+    pathname === "/asprak" ||
+    pathname === "/asprak/";
+
+  const isProfile = pathname === "/profile";
+
+  // Navigasi berdasarkan role
+  const handleHome = () => {
+
+    if (isPraktikan) {
+      router.navigate("/praktikan");
+    } else {
+      router.navigate("/asprak");
+    }
+  };
+
+  const handleProfile = () => {
+    router.navigate("/profile");
+  };
+
+  const handleQR = () => {
+    router.navigate("/praktikan/presensi");
   };
 
   return (
@@ -44,104 +65,66 @@ function CustomTabBar({ state }: CustomTabBarProps) {
         {/* HOME */}
         <Pressable
           style={styles.navItem}
-          onPress={() => navigate("/praktikan")}
+          onPress={handleHome}
         >
           <Ionicons
-            name={activeRoute === "index" ? "home" : "home-outline"}
+            name={isHome ? "home" : "home-outline"}
             size={24}
-            color={activeRoute === "index" ? "#9623D6" : "#A6A2BA"}
+            color={isHome ? "#9623D6" : "#A6A2BA"}
           />
 
           <Text
             style={[
               styles.navLabel,
-              activeRoute === "index" && styles.activeNavLabel,
+              isHome && styles.activeNavLabel,
             ]}
           >
             Home
           </Text>
         </Pressable>
 
-        {/* RUANG KOSONG UNTUK TOMBOL QR */}
-        <View style={styles.centerSpacer} />
+        {/* QR PRESENSI KHUSUS PRAKTIKAN */}
+        {isPraktikan && (
+          <>
+            <View style={styles.centerSpacer} />
+
+            <View style={styles.qrCutoutBg} />
+
+            <Pressable
+              style={styles.qrButton}
+              onPress={handleQR}
+            >
+              <MaterialCommunityIcons
+                name="qrcode-scan"
+                size={30}
+                color="#9C6ADE"
+              />
+            </Pressable>
+          </>
+        )}
 
         {/* PROFILE */}
         <Pressable
           style={styles.navItem}
-          onPress={() => navigate("/profile")}
+          onPress={handleProfile}
         >
           <Ionicons
-            name={
-              activeRoute === "profile"
-                ? "person"
-                : "person-outline"
-            }
+            name={isProfile ? "person" : "person-outline"}
             size={24}
-            color={activeRoute === "profile" ? "#9623D6" : "#A6A2BA"}
+            color={isProfile ? "#9623D6" : "#A6A2BA"}
           />
 
           <Text
             style={[
               styles.navLabel,
-              activeRoute === "profile" && styles.activeNavLabel,
+              isProfile && styles.activeNavLabel,
             ]}
           >
             Profile
           </Text>
         </Pressable>
       </View>
-
-      {/* CUTOUT DI TENGAH NAVIGASI */}
-      <View style={styles.qrCutoutBg} />
-
-      {/* TOMBOL QR SCAN */}
-      <Pressable
-        style={styles.qrButton}
-        onPress={() => navigate("/praktikan/presensi")}
-      >
-        <MaterialCommunityIcons
-          name="qrcode-scan"
-          size={30}
-          color="#9C6ADE"
-        />
-      </Pressable>
     </View>
-  );
-}
-
-export default function PraktikanLayout() {
-  return (
-    <PresensiProvider>
-      <Tabs
-        screenOptions={{
-          headerShown: false,
-        }}
-        tabBar={(props) => {
-          const currentRoute =
-            props.state.routes[props.state.index]?.name;
-
-          const showTabBar = [
-            "index",
-            "presensi",
-            "profile",
-          ].includes(currentRoute);
-
-          if (!showTabBar) {
-            return null;
-          }
-
-          return <CustomTabBar state={props.state} />;
-        }}
-      >
-        <Tabs.Screen name="index" />
-        <Tabs.Screen name="presensi" />
-        <Tabs.Screen name="profile" />
-        <Tabs.Screen name="jadwal" />
-        <Tabs.Screen name="izin" />
-        <Tabs.Screen name="riwayat" />
-        <Tabs.Screen name="maps" />
-      </Tabs>
-    </PresensiProvider>
   );
 }
 
@@ -156,7 +139,6 @@ const styles = StyleSheet.create({
 
   bottomBar: {
     width: "100%",
-    height: 72,
     backgroundColor: "#282442",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
