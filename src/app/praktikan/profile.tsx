@@ -128,8 +128,6 @@ export default function ProfileScreen() {
                   {inisial || "P"}
                 </Text>
               </LinearGradient>
-
-              <View style={styles.onlineIndicator} />
             </View>
 
             <Text style={styles.profileName}>
@@ -157,20 +155,9 @@ export default function ProfileScreen() {
             style={styles.card}
           >
             <View style={styles.sectionHeader}>
-              <View style={styles.sectionIcon}>
-                <Feather
-                  name="user"
-                  size={18}
-                  color="#C5A3FF"
-                />
-              </View>
-
               <View>
                 <Text style={styles.sectionTitle}>
                   Informasi Pribadi
-                </Text>
-                <Text style={styles.sectionSubtitle}>
-                  Data identitas akun kamu
                 </Text>
               </View>
             </View>
@@ -206,20 +193,10 @@ export default function ProfileScreen() {
             style={styles.card}
           >
             <View style={styles.sectionHeader}>
-              <View style={styles.sectionIcon}>
-                <Feather
-                  name="book-open"
-                  size={18}
-                  color="#C5A3FF"
-                />
-              </View>
 
               <View>
                 <Text style={styles.sectionTitle}>
                   Informasi Akademik
-                </Text>
-                <Text style={styles.sectionSubtitle}>
-                  Informasi perkuliahan kamu
                 </Text>
               </View>
             </View>
@@ -247,20 +224,10 @@ export default function ProfileScreen() {
             style={styles.card}
           >
             <View style={styles.sectionHeader}>
-              <View style={styles.sectionIcon}>
-                <Feather
-                  name="shield"
-                  size={18}
-                  color="#C5A3FF"
-                />
-              </View>
 
               <View>
                 <Text style={styles.sectionTitle}>
                   Informasi Akun
-                </Text>
-                <Text style={styles.sectionSubtitle}>
-                  Status akun LabTrack
                 </Text>
               </View>
             </View>
@@ -280,7 +247,6 @@ export default function ProfileScreen() {
               </Text>
 
               <View style={styles.activeBadge}>
-                <View style={styles.activeDot} />
                 <Text style={styles.activeText}>
                   Aktif
                 </Text>
@@ -380,18 +346,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
 
-  onlineIndicator: {
-    position: "absolute",
-    right: 5,
-    bottom: 6,
-    width: 17,
-    height: 17,
-    borderRadius: 9,
-    backgroundColor: "#55D6A0",
-    borderWidth: 3,
-    borderColor: "#512DA8",
-  },
-
   profileName: {
     color: "#FFFFFF",
     fontSize: 21,
@@ -438,26 +392,10 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
 
-  sectionIcon: {
-    width: 39,
-    height: 39,
-    borderRadius: 13,
-    backgroundColor: "rgba(181,138,255,0.13)",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
-  },
-
   sectionTitle: {
     color: "#FFFFFF",
     fontSize: 14,
     fontWeight: "700",
-  },
-
-  sectionSubtitle: {
-    color: "#AAA4C5",
-    fontSize: 10,
-    marginTop: 4,
   },
 
   // Info
@@ -528,13 +466,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 20,
-  },
-
-  activeDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-    backgroundColor: "#55D6A0",
   },
 
   activeText: {
