@@ -1,15 +1,15 @@
 import {
-    addDoc,
-    collection,
-    deleteDoc,
-    doc,
-    getDocs,
-    onSnapshot,
-    query,
-    serverTimestamp,
-    setDoc,
-    updateDoc,
-    where,
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  getDocs,
+  onSnapshot,
+  query,
+  serverTimestamp,
+  setDoc,
+  updateDoc,
+  where,
 } from "@react-native-firebase/firestore";
 
 import { firestore } from "@/config/firebase";
@@ -40,6 +40,7 @@ export type Sesi = {
   kode: string; // opsional, kosong jika tidak ada
   kelas: string; // kode/nama kelas untuk tampilan, contoh "A"
   scheduleId: string | null;
+  labId: string; 
   tanggal: string; // YYYY-MM-DD
   hari: string;
   waktu: string;
@@ -57,6 +58,7 @@ export type SesiInput = {
   kelas: string;
   kode?: string;
   scheduleId?: string | null;
+  labId: string; 
   tanggal: string;
   hari: string;
   waktu: string;
@@ -70,6 +72,7 @@ export type Jadwal = {
   mataPraktikum: string;
   kode: string;
   kelas: string;
+  labId: string; 
   hari: string;
   waktu: string;
   ruangan: string;
@@ -116,6 +119,7 @@ function toSesi(id: string, d: Data): Sesi {
     scheduleId: d.scheduleId ?? null,
     tanggal: d.tanggal ?? "",
     hari: d.hari ?? "",
+    labId: d.labId ?? "",
     waktu: d.waktu ?? "",
     ruangan: d.ruangan ?? "",
     status: LABEL_STATUS[statusDb] ?? "Belum Dibuka",
@@ -133,6 +137,7 @@ function toJadwal(id: string, d: Data): Jadwal {
     mataPraktikum: d.mataPraktikum ?? "",
     kode: d.kode ?? "",
     kelas: d.kelas ?? "",
+    labId: d.labId ?? "",
     hari: d.hari ?? "",
     waktu: d.waktu ?? "",
     ruangan: d.ruangan ?? "",

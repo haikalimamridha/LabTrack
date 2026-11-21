@@ -38,6 +38,7 @@ type Lab = {
   lantai: number;
   latitude: number;
   longitude: number;
+  radius: number;
   deskripsi: string;
   aktif: boolean;
 };
@@ -49,6 +50,7 @@ type LabForm = {
   lantai: string;
   latitude: string;
   longitude: string;
+  radius: string;
   deskripsi: string;
   aktif: boolean;
 };
@@ -60,6 +62,7 @@ const initialForm: LabForm = {
   lantai: "",
   latitude: "",
   longitude: "",
+  radius: "",
   deskripsi: "",
   aktif: true,
 };
@@ -92,6 +95,7 @@ export default function KelolaLabScreen() {
             lantai: Number(lab.lantai ?? 0),
             latitude: Number(lab.latitude ?? 0),
             longitude: Number(lab.longitude ?? 0),
+            radius: Number(lab.radiusPresensiMeter ?? 0),
             deskripsi: lab.deskripsi ?? "",
             aktif: lab.aktif ?? true,
           };
@@ -147,6 +151,7 @@ export default function KelolaLabScreen() {
       lantai: String(lab.lantai),
       latitude: String(lab.latitude),
       longitude: String(lab.longitude),
+      radius: String(lab.radius),
       deskripsi: lab.deskripsi,
       aktif: lab.aktif,
     });
@@ -163,6 +168,7 @@ export default function KelolaLabScreen() {
       lantai,
       latitude,
       longitude,
+      radius,
       deskripsi,
       aktif,
     } = form;
@@ -173,6 +179,7 @@ export default function KelolaLabScreen() {
       !gedung.trim() ||
       !lantai.trim() ||
       !latitude.trim() ||
+      !radius.trim() ||
       !longitude.trim()
     ) {
       Alert.alert("Validasi", "Mohon lengkapi seluruh data yang wajib diisi.");
@@ -182,10 +189,12 @@ export default function KelolaLabScreen() {
     const parsedLantai = Number(lantai);
     const parsedLatitude = Number(latitude);
     const parsedLongitude = Number(longitude);
+    const parsedRadius = Number(radius);
 
     if (
       !Number.isInteger(parsedLantai) ||
       parsedLantai < 0 ||
+      parsedRadius < 0 ||
       !Number.isFinite(parsedLatitude) ||
       !Number.isFinite(parsedLongitude) ||
       parsedLatitude < -90 ||
@@ -193,7 +202,7 @@ export default function KelolaLabScreen() {
       parsedLongitude < -180 ||
       parsedLongitude > 180
     ) {
-      Alert.alert("Validasi", "Periksa kembali lantai dan koordinat laboratorium.");
+      Alert.alert("Validasi", "Periksa kembali lantai, radius, dan koordinat laboratorium.");
       return;
     }
 
@@ -204,6 +213,7 @@ export default function KelolaLabScreen() {
       lantai: parsedLantai,
       latitude: parsedLatitude,
       longitude: parsedLongitude,
+      radius: radius.trim(),
       deskripsi: deskripsi.trim(),
       aktif,
     };
@@ -615,6 +625,16 @@ export default function KelolaLabScreen() {
                 keyboardType="decimal-pad"
                 value={form.longitude}
                 onChangeText={(value) => updateForm("longitude", value)}
+              />
+
+              <Text style={styles.inputLabel}>Radius Presensi (meter)*</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Contoh: 30"
+                placeholderTextColor="#89839F"
+                keyboardType="decimal-pad"
+                value={form.radius}
+                onChangeText={(value) => updateForm("radius", value)}
               />
 
               <Text style={styles.inputLabel}>Deskripsi</Text>

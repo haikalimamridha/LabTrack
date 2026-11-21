@@ -1,4 +1,7 @@
-
+import {
+  listenLaboratorium,
+  type Laboratorium,
+} from "@/services/laboratoriumService";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -82,6 +85,7 @@ function waktuValid(w: string): boolean {
 type Form = {
   kelasId: string;
   mataPraktikumId: string;
+  labId: string;
   hari: string;
   waktu: string;
   ruangan: string;
@@ -91,6 +95,7 @@ type Form = {
 const FORM_KOSONG: Form = {
   kelasId: "",
   mataPraktikumId: "",
+  labId: "",
   hari: "",
   waktu: "",
   ruangan: "",
@@ -182,6 +187,9 @@ export default function JadwalScreen() {
   // Pilihan form
   const [daftarKelas, setDaftarKelas] = useState<Kelas[]>([]);
   const [daftarMk, setDaftarMk] = useState<MataPraktikum[]>([]);
+  const [daftarLab, setDaftarLab] = useState<Laboratorium[]>([]);
+  const [labLoading, setLabLoading] = useState(true);
+  const [labError, setLabError] = useState<string | null>(null);
   const [pilihanError, setPilihanError] = useState<string | null>(null);
 
   // Form jadwal
@@ -226,6 +234,24 @@ export default function JadwalScreen() {
     };
   }, []);
 
+  // Memuat laboratorium aktif secara real-time
+  useEffect(() => {
+    const unsubscribe = listenLaboratorium(
+      (data) => {
+        setDaftarLab(data);
+        setLabLoading(false);
+        setLabError(null);
+      },
+      (error) => {
+        console.error("Gagal memuat laboratorium:", error);
+        setLabError("Gagal memuat daftar laboratorium.");
+        setLabLoading(false);
+      }
+    );
+
+    return unsubscribe;
+  }, []);
+
   // Membuka form tambah atau edit
   const bukaForm = (item?: Jadwal) => {
     setFormError(null);
@@ -236,6 +262,7 @@ export default function JadwalScreen() {
         ? {
             kelasId: item.kelasId,
             mataPraktikumId: item.mataPraktikumId,
+            labId: item.labId ?? "",
             hari: item.hari,
             waktu: item.waktu,
             ruangan: item.ruangan,
@@ -253,6 +280,7 @@ export default function JadwalScreen() {
 
     const kelas = daftarKelas.find((k) => k.id === form.kelasId);
     const mk = daftarMk.find((m) => m.id === form.mataPraktikumId);
+    const lab = daftarLab.find((l) => l.id === form.labId);
 
     const waktu = form.waktu.trim();
     const ruangan = form.ruangan.trim();
@@ -262,6 +290,7 @@ export default function JadwalScreen() {
 
     if (!kelas) pesan = "Pilih kelas terlebih dahulu.";
     else if (!mk) pesan = "Pilih mata praktikum terlebih dahulu.";
+    else if (!lab) pesan = "Pilih laboratorium terlebih dahulu.";
     else if (!HARI.includes(form.hari)) pesan = "Pilih hari terlebih dahulu.";
     else if (!waktuValid(waktu)) {
       pesan =
@@ -269,7 +298,7 @@ export default function JadwalScreen() {
     } else if (!ruangan) pesan = "Ruangan wajib diisi.";
     else if (!asisten) pesan = "Nama asisten wajib diisi.";
 
-    if (pesan || !kelas || !mk) {
+    if (pesan || !kelas || !mk || !lab) {
       setFormError(pesan);
       return;
     }
@@ -278,6 +307,7 @@ export default function JadwalScreen() {
       kelasId: kelas.id,
       mataPraktikumId: mk.id,
       mataPraktikum: mk.nama,
+      labId: lab.id,
       kode: "",
       kelas: kelas.kode,
       hari: form.hari,
@@ -345,6 +375,26 @@ export default function JadwalScreen() {
   const buatSesiDari = async (item: Jadwal, tanggal: string) => {
     if (membuat) return;
 
+    // Pastikan jadwal memiliki laboratorium
+    if (!item.labId) {
+      Alert.alert(
+        "Laboratorium Belum Dipilih",
+        "Jadwal ini belum terhubung ke laboratorium. Ubah jadwal terlebih dahulu."
+      );
+      return;
+    }
+
+    // Pastikan laboratorium masih aktif dan tersedia
+    const lab = daftarLab.find((l) => l.id === item.labId);
+
+    if (!lab) {
+      Alert.alert(
+        "Laboratorium Tidak Tersedia",
+        "Laboratorium pada jadwal ini tidak ditemukan atau sudah tidak aktif. Silakan ubah jadwal dan pilih laboratorium aktif."
+      );
+      return;
+    }
+
     setMembuat(true);
 
     try {
@@ -355,6 +405,7 @@ export default function JadwalScreen() {
         kode: item.kode,
         kelas: item.kelas,
         scheduleId: item.id,
+        labId: item.labId,
         tanggal,
         hari: item.hari,
         waktu: item.waktu,
@@ -366,7 +417,7 @@ export default function JadwalScreen() {
 
         Alert.alert(
           "Berhasil",
-          `Sesi ${formatTanggal(tanggal)} dibuat. Buka sesinya dari tab Sesi.`
+          `Sesi ${formatTanggal(tanggal)} dibuat di ${lab.nama}. Buka sesinya dari tab Sesi.`
         );
       } else {
         Alert.alert("Gagal", hasil.pesan);
@@ -583,6 +634,21 @@ export default function JadwalScreen() {
 
                   <View style={styles.infoItem}>
                     <MaterialCommunityIcons
+                      name="domain"
+                      size={18}
+                      color="#B99AFF"
+                    />
+                    <View style={styles.infoContent}>
+                      <Text style={styles.infoLabel}>Laboratorium</Text>
+                      <Text style={styles.infoValue}>
+                        {daftarLab.find((lab) => lab.id === item.labId)?.nama ??
+                          "Laboratorium tidak tersedia"}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.infoItem}>
+                    <MaterialCommunityIcons
                       name="account-outline"
                       size={18}
                       color="#B99AFF"
@@ -775,6 +841,67 @@ export default function JadwalScreen() {
                 </Text>
               )}
 
+              {/* LABORATORIUM */}
+              <Text style={styles.fieldLabel}>Pilih Laboratorium</Text>
+
+              {labLoading ? (
+                <View style={styles.labLoading}>
+                  <ActivityIndicator size="small" color="#B99AFF" />
+                  <Text style={styles.helperText}>
+                    Memuat daftar laboratorium...
+                  </Text>
+                </View>
+              ) : labError ? (
+                <Text style={styles.errorText}>{labError}</Text>
+              ) : (
+                <View style={styles.chipRow}>
+                  {daftarLab.map((lab) => (
+                    <Chip
+                      key={lab.id}
+                      label={lab.nama}
+                      aktif={form.labId === lab.id}
+                      onPress={() =>
+                        setForm({ ...form, labId: lab.id })
+                      }
+                    />
+                  ))}
+                </View>
+              )}
+
+              {!labLoading && !labError && daftarLab.length === 0 && (
+                <Text style={styles.helperText}>
+                  Belum ada laboratorium aktif. Tambahkan atau aktifkan
+                  laboratorium terlebih dahulu.
+                </Text>
+              )}
+
+              {form.labId !== "" && (
+                <View style={styles.labInfoBox}>
+                  {(() => {
+                    const lab = daftarLab.find((l) => l.id === form.labId);
+
+                    if (!lab) return null;
+
+                    return (
+                      <>
+                        <MaterialCommunityIcons
+                          name="map-marker-check"
+                          size={19}
+                          color="#69D9A3"
+                        />
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.labInfoName}>{lab.nama}</Text>
+                          <Text style={styles.labInfoDetail}>
+                            {lab.gedung} · Lantai {lab.lantai} · Radius presensi{" "}
+                            {lab.radiusPresensiMeter} meter
+                          </Text>
+                        </View>
+                      </>
+                    );
+                  })()}
+                </View>
+              )}
+
               {/* HARI */}
               <Text style={styles.fieldLabel}>Hari Praktikum</Text>
               <View style={styles.chipRow}>
@@ -918,6 +1045,25 @@ export default function JadwalScreen() {
               <Text style={styles.sessionClass}>
                 Kelas {jadwalSesi?.kelas}
               </Text>
+
+              <Text style={styles.sessionClass}>
+                Kelas {jadwalSesi?.kelas}
+              </Text>
+
+              <View style={styles.sessionLabInfo}>
+                <MaterialCommunityIcons
+                  name="domain"
+                  size={17}
+                  color="#69D9A3"
+                />
+
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.sessionLabName}>
+                    {daftarLab.find((lab) => lab.id === jadwalSesi?.labId)?.nama ??
+                      "Laboratorium tidak tersedia"}
+                  </Text>
+                </View>
+              </View>
 
               <View style={styles.sessionDetails}>
                 <View style={styles.sessionDetailItem}>
@@ -1675,5 +1821,60 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 13,
     marginTop: 20,
+  },
+  // Informasi laboratorium
+  labLoading: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingVertical: 10,
+  },
+
+  labInfoBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    backgroundColor: "rgba(105,217,163,0.10)",
+    borderWidth: 1,
+    borderColor: "rgba(105,217,163,0.25)",
+    borderRadius: 12,
+    padding: 12,
+    marginTop: 12,
+  },
+
+  labInfoName: {
+    color: "#69D9A3",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+
+  labInfoDetail: {
+    color: "#B8B0D0",
+    fontSize: 10,
+    marginTop: 4,
+    lineHeight: 16,
+  },
+
+  // Informasi laboratorium pada modal sesi
+  sessionLabInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    backgroundColor: "rgba(105,217,163,0.10)",
+    borderRadius: 10,
+    padding: 11,
+    marginTop: 12,
+  },
+
+  sessionLabName: {
+    color: "#69D9A3",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+
+  sessionLabRadius: {
+    color: "#B8B0D0",
+    fontSize: 10,
+    marginTop: 4,
   },
 });

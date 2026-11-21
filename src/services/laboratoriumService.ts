@@ -1,7 +1,7 @@
 
 import {
-    collection,
-    onSnapshot,
+  collection,
+  onSnapshot,
 } from "@react-native-firebase/firestore";
 
 import { firestore } from "@/config/firebase";
@@ -14,6 +14,7 @@ export type Laboratorium = {
   lantai: number;
   latitude: number;
   longitude: number;
+  radiusPresensiMeter: number;
   deskripsi: string;
   aktif: boolean;
 };
