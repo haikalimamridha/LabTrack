@@ -28,6 +28,13 @@
     },
     "plugins": [
       "expo-router",
+      "@maplibre/maplibre-react-native",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "LabTrack membutuhkan akses lokasi untuk menampilkan posisi kamu di peta."
+        }
+      ],
       [
         "expo-splash-screen",
         {
