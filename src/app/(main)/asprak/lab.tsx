@@ -264,11 +264,17 @@ export default function KelolaLabScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <ScrollView
+    <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+    >
+        <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingBottom: 35 }}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
+        keyboardShouldPersistTaps="handled"
+        >
         {/* HEADER */}
         <LinearGradient
           colors={["#7928CA", "#512DA8", "#29215C"]}
@@ -508,17 +514,19 @@ export default function KelolaLabScreen() {
       </ScrollView>
 
       {/* MODAL FORM LAB */}
-      <Modal
+        <Modal
         visible={modalVisible}
         transparent
         animationType="slide"
+        statusBarTranslucent
         onRequestClose={() => setModalVisible(false)}
-      >
-        <KeyboardAvoidingView
-          style={styles.modalOverlay}
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
         >
-          <View style={styles.modalContent}>
+        <KeyboardAvoidingView
+            style={styles.modalOverlay}
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+        >
+            <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <View>
                 <Text style={styles.modalTitle}>
@@ -672,7 +680,7 @@ export default function KelolaLabScreen() {
           </View>
         </KeyboardAvoidingView>
       </Modal>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -685,7 +693,7 @@ const styles = StyleSheet.create({
     paddingBottom: 35,
   },
   header: {
-    paddingTop: 55,
+    paddingTop: 40,
     paddingBottom: 30,
     paddingHorizontal: 22,
     borderBottomLeftRadius: 28,
@@ -698,7 +706,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.15)",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 18,
+    marginBottom: 20,
   },
   headerTitle: {
     fontSize: 23,
@@ -932,20 +940,21 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "700",
   },
-  modalOverlay: {
+    modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.7)",
     justifyContent: "flex-end",
-  },
-  modalContent: {
+    },
+    modalContent: {
     backgroundColor: "#25213D",
     borderTopLeftRadius: 25,
     borderTopRightRadius: 25,
     paddingHorizontal: 21,
     paddingTop: 22,
-    paddingBottom: 30,
+    paddingBottom: 45,
     maxHeight: "90%",
-  },
+    flexShrink: 1,
+    },
   modalHeader: {
     flexDirection: "row",
     alignItems: "center",

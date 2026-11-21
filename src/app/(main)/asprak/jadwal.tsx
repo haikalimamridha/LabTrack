@@ -1,8 +1,11 @@
+
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -10,6 +13,10 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
 
 import { useAuth } from "@/context/AuthContext";
 import { useSesi } from "@/context/SesiContext";
@@ -39,31 +46,37 @@ const pad = (n: number) => String(n).padStart(2, "0");
 const toIso = (d: Date) =>
   `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 
-/** Beberapa tanggal terdekat (mulai hari ini) yang jatuh pada hari tertentu. */
 function tanggalHari(hari: string, jumlah = 6): string[] {
   const indeks = HARI.indexOf(hari);
   if (indeks < 0) return [];
 
-  const target = (indeks + 1) % 7; // HARI mulai Senin, getDay() mulai Minggu = 0
+  const target = (indeks + 1) % 7;
   const d = new Date();
   d.setHours(0, 0, 0, 0);
-  while (d.getDay() !== target) d.setDate(d.getDate() + 1);
+
+  while (d.getDay() !== target) {
+    d.setDate(d.getDate() + 1);
+  }
 
   const hasil: string[] = [];
+
   for (let i = 0; i < jumlah; i++) {
     hasil.push(toIso(d));
     d.setDate(d.getDate() + 7);
   }
+
   return hasil;
 }
 
-/** Format wajib: "09.00 - 11.00" */
 function waktuValid(w: string): boolean {
   const m = w.match(/^(\d{2})\.(\d{2})\s*-\s*(\d{2})\.(\d{2})$/);
   if (!m) return false;
+
   const [, h1, m1, h2, m2] = m.map(Number);
+
   if (h1 > 23 || h2 > 23 || m1 > 59 || m2 > 59) return false;
-  return h2 * 60 + m2 > h1 * 60 + m1; // selesai harus setelah mulai
+
+  return h2 * 60 + m2 > h1 * 60 + m1;
 }
 
 type Form = {
@@ -83,6 +96,10 @@ const FORM_KOSONG: Form = {
   ruangan: "",
   asisten: "",
 };
+
+// ---------------------------------------------------------------------------
+// Komponen Chip
+// ---------------------------------------------------------------------------
 
 function Chip({
   label,
@@ -106,6 +123,14 @@ function Chip({
       disabled={disabled}
       onPress={onPress}
     >
+      {aktif && (
+        <MaterialCommunityIcons
+          name="check-circle"
+          size={14}
+          color="#FFFFFF"
+        />
+      )}
+
       <Text style={[styles.chipText, aktif && styles.chipTextActive]}>
         {label}
       </Text>
@@ -114,43 +139,86 @@ function Chip({
 }
 
 // ---------------------------------------------------------------------------
-// Layar
+// Komponen Input
+// ---------------------------------------------------------------------------
+
+function FormInput({
+  label,
+  value,
+  onChangeText,
+  placeholder,
+}: {
+  label: string;
+  value: string;
+  onChangeText: (value: string) => void;
+  placeholder: string;
+}) {
+  return (
+    <View style={styles.formGroup}>
+      <Text style={styles.fieldLabel}>{label}</Text>
+
+      <TextInput
+        style={styles.input}
+        value={value}
+        onChangeText={onChangeText}
+        placeholder={placeholder}
+        placeholderTextColor="#89839F"
+      />
+    </View>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Layar Jadwal
 // ---------------------------------------------------------------------------
 
 export default function JadwalScreen() {
+  const router = useRouter();
   const { profile } = useAuth();
+
   const { jadwal: jadwalTampil, loading, error } = useJadwal();
   const { daftarSesi, tambahSesi } = useSesi();
 
-  // Pilihan untuk form
+  // Pilihan form
   const [daftarKelas, setDaftarKelas] = useState<Kelas[]>([]);
   const [daftarMk, setDaftarMk] = useState<MataPraktikum[]>([]);
   const [pilihanError, setPilihanError] = useState<string | null>(null);
 
-  // Form tambah/ubah
+  // Form jadwal
   const [formTampil, setFormTampil] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<Form>(FORM_KOSONG);
   const [formError, setFormError] = useState<string | null>(null);
   const [menyimpan, setMenyimpan] = useState(false);
 
-  // Buat sesi dari jadwal
+  // Pembuatan sesi
   const [jadwalSesi, setJadwalSesi] = useState<Jadwal | null>(null);
   const [membuat, setMembuat] = useState(false);
 
+  // Memuat pilihan kelas dan mata praktikum
   useEffect(() => {
     let aktif = true;
 
     Promise.all([getKelasAktif(), getMataPraktikumAktif()])
       .then(([kelas, mk]) => {
         if (!aktif) return;
-        setDaftarKelas([...kelas].sort((a, b) => a.kode.localeCompare(b.kode)));
-        setDaftarMk([...mk].sort((a, b) => a.nama.localeCompare(b.nama)));
+
+        setDaftarKelas(
+          [...kelas].sort((a, b) => a.kode.localeCompare(b.kode))
+        );
+
+        setDaftarMk(
+          [...mk].sort((a, b) => a.nama.localeCompare(b.nama))
+        );
       })
       .catch((e) => {
         console.error("Gagal memuat pilihan form:", e);
-        if (aktif)
-          setPilihanError("Gagal memuat pilihan kelas dan mata praktikum.");
+
+        if (aktif) {
+          setPilihanError(
+            "Gagal memuat pilihan kelas dan mata praktikum."
+          );
+        }
       });
 
     return () => {
@@ -158,9 +226,11 @@ export default function JadwalScreen() {
     };
   }, []);
 
+  // Membuka form tambah atau edit
   const bukaForm = (item?: Jadwal) => {
     setFormError(null);
     setEditId(item?.id ?? null);
+
     setForm(
       item
         ? {
@@ -171,28 +241,32 @@ export default function JadwalScreen() {
             ruangan: item.ruangan,
             asisten: item.asisten,
           }
-        : FORM_KOSONG,
+        : FORM_KOSONG
     );
+
     setFormTampil(true);
   };
 
+  // Simpan jadwal
   const simpan = async () => {
     if (menyimpan) return;
 
     const kelas = daftarKelas.find((k) => k.id === form.kelasId);
     const mk = daftarMk.find((m) => m.id === form.mataPraktikumId);
+
     const waktu = form.waktu.trim();
     const ruangan = form.ruangan.trim();
     const asisten = form.asisten.trim();
 
     let pesan: string | null = null;
+
     if (!kelas) pesan = "Pilih kelas terlebih dahulu.";
     else if (!mk) pesan = "Pilih mata praktikum terlebih dahulu.";
     else if (!HARI.includes(form.hari)) pesan = "Pilih hari terlebih dahulu.";
-    else if (!waktuValid(waktu))
+    else if (!waktuValid(waktu)) {
       pesan =
         "Format waktu harus seperti 09.00 - 11.00 (selesai setelah mulai).";
-    else if (!ruangan) pesan = "Ruangan wajib diisi.";
+    } else if (!ruangan) pesan = "Ruangan wajib diisi.";
     else if (!asisten) pesan = "Nama asisten wajib diisi.";
 
     if (pesan || !kelas || !mk) {
@@ -214,20 +288,27 @@ export default function JadwalScreen() {
 
     setMenyimpan(true);
     setFormError(null);
+
     try {
-      if (editId) await ubahJadwal(editId, input);
-      else await buatJadwal(input);
+      if (editId) {
+        await ubahJadwal(editId, input);
+      } else {
+        await buatJadwal(input);
+      }
+
       setFormTampil(false);
     } catch (e) {
       console.error("Gagal menyimpan jadwal:", e);
+
       setFormError(
-        pesanError(e, "Kamu tidak punya izin untuk menyimpan jadwal."),
+        pesanError(e, "Kamu tidak punya izin untuk menyimpan jadwal.")
       );
     } finally {
       setMenyimpan(false);
     }
   };
 
+  // Hapus jadwal
   const hapus = (item: Jadwal) => {
     Alert.alert(
       "Hapus Jadwal",
@@ -242,192 +323,438 @@ export default function JadwalScreen() {
               await hapusJadwal(item.id);
             } catch (e) {
               console.error("Gagal menghapus jadwal:", e);
+
               Alert.alert(
                 "Gagal",
-                pesanError(e, "Kamu tidak punya izin untuk menghapus jadwal."),
+                pesanError(e, "Kamu tidak punya izin untuk menghapus jadwal.")
               );
             }
           },
         },
-      ],
+      ]
     );
   };
 
+  // Mengecek sesi yang sudah dibuat
   const sudahAda = (jadwalId: string, tanggal: string) =>
-    daftarSesi.some((s) => s.scheduleId === jadwalId && s.tanggal === tanggal);
+    daftarSesi.some(
+      (s) => s.scheduleId === jadwalId && s.tanggal === tanggal
+    );
 
+  // Membuat sesi dari jadwal
   const buatSesiDari = async (item: Jadwal, tanggal: string) => {
     if (membuat) return;
-    setMembuat(true);
-    const hasil = await tambahSesi({
-      kelasId: item.kelasId,
-      mataPraktikumId: item.mataPraktikumId,
-      mataPraktikum: item.mataPraktikum,
-      kode: item.kode,
-      kelas: item.kelas,
-      scheduleId: item.id,
-      tanggal,
-      hari: item.hari,
-      waktu: item.waktu,
-      ruangan: item.ruangan,
-    });
-    setMembuat(false);
 
-    if (hasil.ok) {
-      setJadwalSesi(null);
-      Alert.alert(
-        "Berhasil",
-        `Sesi ${formatTanggal(tanggal)} dibuat. Buka sesinya dari tab Sesi.`,
-      );
-    } else {
-      Alert.alert("Gagal", hasil.pesan);
+    setMembuat(true);
+
+    try {
+      const hasil = await tambahSesi({
+        kelasId: item.kelasId,
+        mataPraktikumId: item.mataPraktikumId,
+        mataPraktikum: item.mataPraktikum,
+        kode: item.kode,
+        kelas: item.kelas,
+        scheduleId: item.id,
+        tanggal,
+        hari: item.hari,
+        waktu: item.waktu,
+        ruangan: item.ruangan,
+      });
+
+      if (hasil.ok) {
+        setJadwalSesi(null);
+
+        Alert.alert(
+          "Berhasil",
+          `Sesi ${formatTanggal(tanggal)} dibuat. Buka sesinya dari tab Sesi.`
+        );
+      } else {
+        Alert.alert("Gagal", hasil.pesan);
+      }
+    } catch (e) {
+      console.error("Gagal membuat sesi:", e);
+      Alert.alert("Gagal", "Terjadi kesalahan saat membuat sesi.");
+    } finally {
+      setMembuat(false);
     }
   };
+
+  const totalKelas = new Set(jadwalTampil.map((item) => item.kelasId)).size;
 
   return (
     <View style={styles.container}>
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
       >
-        <TouchableOpacity
-          style={styles.addButton}
-          activeOpacity={0.8}
-          onPress={() => bukaForm()}
+        {/* HEADER */}
+        <LinearGradient
+          colors={["#7928CA", "#512DA8", "#29215C"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.header}
         >
-          <Text style={styles.addButtonText}>+ Tambah Jadwal</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => router.back()}
+          >
+            <MaterialCommunityIcons
+              name="chevron-left"
+              size={27}
+              color="#FFFFFF"
+            />
+          </TouchableOpacity>
 
+          <View style={styles.headerIcon}>
+            <MaterialCommunityIcons
+              name="calendar-month"
+              size={30}
+              color="#FFFFFF"
+            />
+          </View>
+
+          <Text style={styles.headerTitle}>Jadwal Praktikum</Text>
+
+          <Text style={styles.headerSubtitle}>
+            Halo, {profile?.nama || "Asisten"}! Kelola jadwal praktikum di sini.
+          </Text>
+        </LinearGradient>
+
+        {/* STATISTIK */}
+        <View style={styles.statsContainer}>
+          <View style={styles.statCard}>
+            <View style={styles.statIcon}>
+              <MaterialCommunityIcons
+                name="calendar-check"
+                size={23}
+                color="#B99AFF"
+              />
+            </View>
+
+            <Text style={styles.statValue}>{jadwalTampil.length}</Text>
+            <Text style={styles.statLabel}>Total Jadwal</Text>
+          </View>
+
+          <View style={styles.statCard}>
+            <View style={styles.statIcon}>
+              <MaterialCommunityIcons
+                name="account-group-outline"
+                size={23}
+                color="#69D9A3"
+              />
+            </View>
+
+            <Text style={styles.statValue}>{totalKelas}</Text>
+            <Text style={styles.statLabel}>Total Kelas</Text>
+          </View>
+
+          <View style={styles.statCard}>
+            <View style={styles.statIcon}>
+              <MaterialCommunityIcons
+                name="book-open-page-variant-outline"
+                size={23}
+                color="#F3C879"
+              />
+            </View>
+
+            <Text style={styles.statValue}>{daftarMk.length}</Text>
+            <Text style={styles.statLabel}>Mata Praktikum</Text>
+          </View>
+        </View>
+
+        {/* DAFTAR JADWAL */}
+        <View style={styles.sectionHeader}>
+          <View>
+            <Text style={styles.sectionTitle}>Daftar Jadwal</Text>
+            <Text style={styles.sectionSubtitle}>
+              {jadwalTampil.length} jadwal tersedia
+            </Text>
+          </View>
+
+          <TouchableOpacity
+            style={styles.addButton}
+            activeOpacity={0.8}
+            onPress={() => bukaForm()}
+          >
+            <MaterialCommunityIcons
+              name="plus"
+              size={20}
+              color="#FFFFFF"
+            />
+            <Text style={styles.addButtonText}>Tambah</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* ERROR PILIHAN */}
+        {pilihanError && (
+          <View style={styles.warningBox}>
+            <MaterialCommunityIcons
+              name="alert-circle-outline"
+              size={18}
+              color="#F3C879"
+            />
+            <Text style={styles.warningText}>{pilihanError}</Text>
+          </View>
+        )}
+
+        {/* LOADING */}
         {loading ? (
-          <View style={styles.emptyContainer}>
-            <ActivityIndicator color="#A5A2FF" />
+          <View style={styles.stateContainer}>
+            <ActivityIndicator size="large" color="#A77BFF" />
+            <Text style={styles.stateText}>Memuat jadwal...</Text>
           </View>
         ) : error ? (
           <View style={styles.emptyContainer}>
+            <MaterialCommunityIcons
+              name="alert-circle-outline"
+              size={48}
+              color="#F18A8A"
+            />
             <Text style={styles.emptyTitle}>Gagal memuat jadwal</Text>
             <Text style={styles.emptyText}>{error}</Text>
           </View>
         ) : (
           <>
-            {/* Jumlah jadwal */}
-            <Text style={styles.totalText}>
-              {jadwalTampil.length} jadwal ditemukan
-            </Text>
-
-            {/* Daftar jadwal */}
             {jadwalTampil.map((item) => (
               <View key={item.id} style={styles.card}>
-                {item.kode ? (
-                  <View style={styles.cardHeader}>
+                {/* CARD HEADER */}
+                <View style={styles.cardHeader}>
+                  <View style={styles.cardIcon}>
+                    <MaterialCommunityIcons
+                      name="book-open-variant"
+                      size={24}
+                      color="#B99AFF"
+                    />
+                  </View>
+
+                  <View style={styles.cardHeading}>
+                    <Text style={styles.subject}>{item.mataPraktikum}</Text>
+                    <Text style={styles.classText}>
+                      Kelas {item.kelas}
+                    </Text>
+                  </View>
+
+                  {item.kode ? (
                     <View style={styles.codeBadge}>
                       <Text style={styles.codeText}>{item.kode}</Text>
                     </View>
-                  </View>
-                ) : null}
-
-                <Text style={styles.subject}>{item.mataPraktikum}</Text>
-
-                <Text style={styles.classText}>Kelas {item.kelas}</Text>
+                  ) : null}
+                </View>
 
                 <View style={styles.divider} />
 
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>Hari</Text>
-                  <Text style={styles.infoValue}>{item.hari}</Text>
+                {/* INFORMASI JADWAL */}
+                <View style={styles.infoGrid}>
+                  <View style={styles.infoItem}>
+                    <MaterialCommunityIcons
+                      name="calendar-outline"
+                      size={18}
+                      color="#B99AFF"
+                    />
+                    <View style={styles.infoContent}>
+                      <Text style={styles.infoLabel}>Hari</Text>
+                      <Text style={styles.infoValue}>{item.hari}</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.infoItem}>
+                    <MaterialCommunityIcons
+                      name="clock-outline"
+                      size={18}
+                      color="#B99AFF"
+                    />
+                    <View style={styles.infoContent}>
+                      <Text style={styles.infoLabel}>Waktu</Text>
+                      <Text style={styles.infoValue}>{item.waktu}</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.infoItem}>
+                    <MaterialCommunityIcons
+                      name="flask-outline"
+                      size={18}
+                      color="#B99AFF"
+                    />
+                    <View style={styles.infoContent}>
+                      <Text style={styles.infoLabel}>Ruangan</Text>
+                      <Text style={styles.infoValue}>{item.ruangan}</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.infoItem}>
+                    <MaterialCommunityIcons
+                      name="account-outline"
+                      size={18}
+                      color="#B99AFF"
+                    />
+                    <View style={styles.infoContent}>
+                      <Text style={styles.infoLabel}>Asisten</Text>
+                      <Text style={styles.infoValue}>{item.asisten}</Text>
+                    </View>
+                  </View>
                 </View>
 
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>Waktu</Text>
-                  <Text style={styles.infoValue}>{item.waktu}</Text>
-                </View>
-
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>Ruangan</Text>
-                  <Text style={styles.infoValue}>{item.ruangan}</Text>
-                </View>
-
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>Asisten</Text>
-                  <Text style={styles.infoValue}>{item.asisten}</Text>
-                </View>
-
+                {/* BUAT SESI */}
                 <TouchableOpacity
-                  style={styles.primaryButton}
-                  activeOpacity={0.8}
+                  activeOpacity={0.85}
                   onPress={() => setJadwalSesi(item)}
+                  style={styles.createSessionButton}
                 >
-                  <Text style={styles.primaryButtonText}>
-                    Buat Sesi dari Jadwal Ini
-                  </Text>
+                  <LinearGradient
+                    colors={["#7651C9", "#49358B"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.createSessionGradient}
+                  >
+                    <MaterialCommunityIcons
+                      name="calendar-plus"
+                      size={19}
+                      color="#FFFFFF"
+                    />
+                    <Text style={styles.createSessionText}>
+                      Buat Sesi dari Jadwal Ini
+                    </Text>
+                    <MaterialCommunityIcons
+                      name="arrow-right"
+                      size={18}
+                      color="#FFFFFF"
+                    />
+                  </LinearGradient>
                 </TouchableOpacity>
 
+                {/* ACTION */}
                 <View style={styles.actionRow}>
                   <TouchableOpacity
-                    style={[styles.actionButton, styles.editButton]}
+                    style={styles.editButton}
                     activeOpacity={0.8}
                     onPress={() => bukaForm(item)}
                   >
-                    <Text style={styles.actionText}>Ubah</Text>
+                    <MaterialCommunityIcons
+                      name="pencil-outline"
+                      size={17}
+                      color="#B99AFF"
+                    />
+                    <Text style={styles.editButtonText}>Ubah</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
-                    style={[styles.actionButton, styles.deleteButton]}
+                    style={styles.deleteButton}
                     activeOpacity={0.8}
                     onPress={() => hapus(item)}
                   >
-                    <Text style={styles.actionText}>Hapus</Text>
+                    <MaterialCommunityIcons
+                      name="trash-can-outline"
+                      size={17}
+                      color="#F18A8A"
+                    />
+                    <Text style={styles.deleteButtonText}>Hapus</Text>
                   </TouchableOpacity>
                 </View>
               </View>
             ))}
 
-            {/* Empty state */}
+            {/* EMPTY STATE */}
             {jadwalTampil.length === 0 && (
               <View style={styles.emptyContainer}>
-                <Text style={styles.emptyTitle}>Tidak ada jadwal</Text>
+                <View style={styles.emptyIcon}>
+                  <MaterialCommunityIcons
+                    name="calendar-blank-outline"
+                    size={36}
+                    color="#B99AFF"
+                  />
+                </View>
+
+                <Text style={styles.emptyTitle}>Belum Ada Jadwal</Text>
+
                 <Text style={styles.emptyText}>
-                  Belum ada jadwal. Tekan "Tambah Jadwal" untuk membuat yang
-                  pertama.
+                  Belum ada jadwal praktikum. Tambahkan jadwal pertama untuk
+                  mulai mengelola kegiatan praktikum.
                 </Text>
+
+                <TouchableOpacity
+                  style={styles.emptyButton}
+                  onPress={() => bukaForm()}
+                >
+                  <Text style={styles.emptyButtonText}>
+                    + Tambah Jadwal
+                  </Text>
+                </TouchableOpacity>
               </View>
             )}
           </>
         )}
       </ScrollView>
 
-      {/* Form tambah / ubah jadwal */}
+      {/* ================================================================ */}
+      {/* MODAL TAMBAH / UBAH JADWAL */}
+      {/* ================================================================ */}
+
       <Modal
         visible={formTampil}
         transparent
-        animationType="fade"
+        animationType="slide"
         onRequestClose={() => setFormTampil(false)}
       >
-        <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+        >
           <View style={styles.modalBox}>
+            <View style={styles.modalHeader}>
+              <View>
+                <Text style={styles.modalTitle}>
+                  {editId ? "Ubah Jadwal" : "Tambah Jadwal"}
+                </Text>
+                <Text style={styles.modalSubtitle}>
+                  Lengkapi informasi jadwal praktikum
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={() => setFormTampil(false)}
+                disabled={menyimpan}
+              >
+                <MaterialCommunityIcons
+                  name="close"
+                  size={21}
+                  color="#FFFFFF"
+                />
+              </TouchableOpacity>
+            </View>
+
             <ScrollView
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
             >
-              <Text style={styles.modalTitle}>
-                {editId ? "Ubah Jadwal" : "Tambah Jadwal"}
-              </Text>
-
               {pilihanError && (
-                <Text style={styles.errorText}>{pilihanError}</Text>
+                <View style={styles.warningBox}>
+                  <Text style={styles.warningText}>{pilihanError}</Text>
+                </View>
               )}
 
-              <Text style={styles.fieldLabel}>Kelas</Text>
+              {/* KELAS */}
+              <Text style={styles.fieldLabel}>Pilih Kelas</Text>
               <View style={styles.chipRow}>
                 {daftarKelas.map((k) => (
                   <Chip
                     key={k.id}
                     label={`Kelas ${k.kode}`}
                     aktif={form.kelasId === k.id}
-                    onPress={() => setForm({ ...form, kelasId: k.id })}
+                    onPress={() =>
+                      setForm({ ...form, kelasId: k.id })
+                    }
                   />
                 ))}
               </View>
 
+              {daftarKelas.length === 0 && (
+                <Text style={styles.helperText}>
+                  Belum ada kelas aktif yang tersedia.
+                </Text>
+              )}
+
+              {/* MATA PRAKTIKUM */}
               <Text style={styles.fieldLabel}>Mata Praktikum</Text>
               <View style={styles.chipRow}>
                 {daftarMk.map((m) => (
@@ -435,12 +762,21 @@ export default function JadwalScreen() {
                     key={m.id}
                     label={m.nama}
                     aktif={form.mataPraktikumId === m.id}
-                    onPress={() => setForm({ ...form, mataPraktikumId: m.id })}
+                    onPress={() =>
+                      setForm({ ...form, mataPraktikumId: m.id })
+                    }
                   />
                 ))}
               </View>
 
-              <Text style={styles.fieldLabel}>Hari</Text>
+              {daftarMk.length === 0 && (
+                <Text style={styles.helperText}>
+                  Belum ada mata praktikum aktif yang tersedia.
+                </Text>
+              )}
+
+              {/* HARI */}
+              <Text style={styles.fieldLabel}>Hari Praktikum</Text>
               <View style={styles.chipRow}>
                 {HARI.map((h) => (
                   <Chip
@@ -452,111 +788,237 @@ export default function JadwalScreen() {
                 ))}
               </View>
 
-              <Text style={styles.fieldLabel}>Waktu</Text>
-              <TextInput
-                style={styles.input}
+              {/* WAKTU */}
+              <FormInput
+                label="Waktu Praktikum"
                 value={form.waktu}
                 onChangeText={(t) => setForm({ ...form, waktu: t })}
                 placeholder="09.00 - 11.00"
-                placeholderTextColor="#777E89"
               />
 
-              <Text style={styles.fieldLabel}>Ruangan</Text>
-              <TextInput
-                style={styles.input}
+              <Text style={styles.helperText}>
+                Gunakan format jam seperti 09.00 - 11.00.
+              </Text>
+
+              {/* RUANGAN */}
+              <FormInput
+                label="Ruangan"
                 value={form.ruangan}
                 onChangeText={(t) => setForm({ ...form, ruangan: t })}
-                placeholder="Lab Komputer 1"
-                placeholderTextColor="#777E89"
+                placeholder="Contoh: Lab Komputer 1"
               />
 
-              <Text style={styles.fieldLabel}>Asisten</Text>
-              <TextInput
-                style={styles.input}
+              {/* ASISTEN */}
+              <FormInput
+                label="Nama Asisten"
                 value={form.asisten}
                 onChangeText={(t) => setForm({ ...form, asisten: t })}
-                placeholder="Nama asisten"
-                placeholderTextColor="#777E89"
+                placeholder="Masukkan nama asisten"
               />
 
-              {formError && <Text style={styles.errorText}>{formError}</Text>}
+              {/* ERROR */}
+              {formError && (
+                <View style={styles.errorBox}>
+                  <MaterialCommunityIcons
+                    name="alert-circle-outline"
+                    size={18}
+                    color="#F18A8A"
+                  />
+                  <Text style={styles.errorText}>{formError}</Text>
+                </View>
+              )}
 
+              {/* BUTTON */}
               <View style={styles.modalActions}>
                 <TouchableOpacity
-                  style={[styles.modalButton, styles.modalCancel]}
+                  style={styles.cancelButton}
                   disabled={menyimpan}
                   onPress={() => setFormTampil(false)}
                 >
-                  <Text style={styles.modalCancelText}>Batal</Text>
+                  <Text style={styles.cancelButtonText}>Batal</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={[
-                    styles.modalButton,
-                    styles.modalConfirm,
-                    menyimpan && styles.buttonDisabled,
-                  ]}
+                  style={styles.confirmButton}
                   disabled={menyimpan}
+                  activeOpacity={0.8}
                   onPress={simpan}
                 >
-                  <Text style={styles.modalConfirmText}>
-                    {menyimpan ? "Menyimpan..." : "Simpan"}
-                  </Text>
+                  <LinearGradient
+                    colors={["#7651C9", "#49358B"]}
+                    style={styles.confirmGradient}
+                  >
+                    {menyimpan ? (
+                      <ActivityIndicator color="#FFFFFF" />
+                    ) : (
+                      <>
+                        <MaterialCommunityIcons
+                          name="content-save-outline"
+                          size={18}
+                          color="#FFFFFF"
+                        />
+                        <Text style={styles.confirmButtonText}>
+                          {editId ? "Simpan Perubahan" : "Simpan Jadwal"}
+                        </Text>
+                      </>
+                    )}
+                  </LinearGradient>
                 </TouchableOpacity>
               </View>
             </ScrollView>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
-      {/* Pilih tanggal untuk membuat sesi */}
+      {/* ================================================================ */}
+      {/* MODAL BUAT SESI */}
+      {/* ================================================================ */}
+
       <Modal
         visible={jadwalSesi !== null}
         transparent
-        animationType="fade"
+        animationType="slide"
         onRequestClose={() => setJadwalSesi(null)}
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalBox}>
-            <Text style={styles.modalTitle}>Buat Sesi dari Jadwal</Text>
+            <View style={styles.modalHeader}>
+              <View style={styles.sessionModalIcon}>
+                <MaterialCommunityIcons
+                  name="calendar-plus"
+                  size={25}
+                  color="#B99AFF"
+                />
+              </View>
 
-            <Text style={styles.modalSubject}>
-              {jadwalSesi?.mataPraktikum} (Kelas {jadwalSesi?.kelas})
-            </Text>
-            <Text style={styles.hintText}>
-              {jadwalSesi?.hari}, {jadwalSesi?.waktu} · {jadwalSesi?.ruangan}
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={() => setJadwalSesi(null)}
+                disabled={membuat}
+              >
+                <MaterialCommunityIcons
+                  name="close"
+                  size={21}
+                  color="#FFFFFF"
+                />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.modalTitle}>Buat Sesi Praktikum</Text>
+
+            <Text style={styles.modalSubtitle}>
+              Pilih tanggal pertemuan untuk membuat sesi.
             </Text>
 
-            <Text style={styles.fieldLabel}>Pilih tanggal pertemuan</Text>
-            <View style={styles.chipRow}>
+            <View style={styles.sessionInfo}>
+              <Text style={styles.sessionSubject}>
+                {jadwalSesi?.mataPraktikum}
+              </Text>
+
+              <Text style={styles.sessionClass}>
+                Kelas {jadwalSesi?.kelas}
+              </Text>
+
+              <View style={styles.sessionDetails}>
+                <View style={styles.sessionDetailItem}>
+                  <MaterialCommunityIcons
+                    name="calendar-outline"
+                    size={16}
+                    color="#B99AFF"
+                  />
+                  <Text style={styles.sessionDetailText}>
+                    {jadwalSesi?.hari}
+                  </Text>
+                </View>
+
+                <View style={styles.sessionDetailItem}>
+                  <MaterialCommunityIcons
+                    name="clock-outline"
+                    size={16}
+                    color="#B99AFF"
+                  />
+                  <Text style={styles.sessionDetailText}>
+                    {jadwalSesi?.waktu}
+                  </Text>
+                </View>
+
+                <View style={styles.sessionDetailItem}>
+                  <MaterialCommunityIcons
+                    name="map-marker-outline"
+                    size={16}
+                    color="#B99AFF"
+                  />
+                  <Text style={styles.sessionDetailText}>
+                    {jadwalSesi?.ruangan}
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            <Text style={styles.fieldLabel}>
+              Pilih Tanggal Pertemuan
+            </Text>
+
+            <View style={styles.dateList}>
               {jadwalSesi &&
                 tanggalHari(jadwalSesi.hari).map((t) => {
                   const ada = sudahAda(jadwalSesi.id, t);
+
                   return (
-                    <Chip
+                    <TouchableOpacity
                       key={t}
-                      label={ada ? `${formatTanggal(t)} ✓` : formatTanggal(t)}
+                      style={[
+                        styles.dateItem,
+                        ada && styles.dateItemDisabled,
+                      ]}
                       disabled={ada || membuat}
+                      activeOpacity={0.8}
                       onPress={() => buatSesiDari(jadwalSesi, t)}
-                    />
+                    >
+                      <View style={styles.dateIcon}>
+                        <MaterialCommunityIcons
+                          name={ada ? "check-circle" : "calendar"}
+                          size={20}
+                          color={ada ? "#69D9A3" : "#B99AFF"}
+                        />
+                      </View>
+
+                      <View style={styles.dateInfo}>
+                        <Text style={styles.dateText}>
+                          {formatTanggal(t)}
+                        </Text>
+
+                        <Text style={styles.dateStatus}>
+                          {ada ? "Sesi sudah dibuat" : "Belum ada sesi"}
+                        </Text>
+                      </View>
+
+                      {membuat && !ada ? (
+                        <ActivityIndicator color="#B99AFF" />
+                      ) : (
+                        <MaterialCommunityIcons
+                          name={ada ? "check" : "chevron-right"}
+                          size={20}
+                          color={ada ? "#69D9A3" : "#A9A2C7"}
+                        />
+                      )}
+                    </TouchableOpacity>
                   );
                 })}
             </View>
 
-            <Text style={styles.hintText}>
-              Sesi langsung dibuat saat tanggal dipilih. Tanggal bertanda ✓
-              sudah punya sesi.
+            <Text style={styles.helperText}>
+              Sesi langsung dibuat saat tanggal dipilih. Tanggal dengan tanda
+              centang sudah memiliki sesi.
             </Text>
 
-            <View style={styles.modalActions}>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.modalCancel]}
-                disabled={membuat}
-                onPress={() => setJadwalSesi(null)}
-              >
-                <Text style={styles.modalCancelText}>Tutup</Text>
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity
+              style={styles.closeModalButton}
+              disabled={membuat}
+              onPress={() => setJadwalSesi(null)}
+            >
+              <Text style={styles.cancelButtonText}>Tutup</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -564,254 +1026,654 @@ export default function JadwalScreen() {
   );
 }
 
+// ---------------------------------------------------------------------------
+// STYLES
+// ---------------------------------------------------------------------------
+
 const styles = StyleSheet.create({
-  addButton: {
-    backgroundColor: "#625ff0",
-    borderRadius: 10,
-    paddingVertical: 12,
+  container: {
+    flex: 1,
+    backgroundColor: "#1E1B35",
+  },
+
+  scrollContent: {
+    paddingBottom: 35,
+  },
+
+  // Header
+  header: {
+    paddingTop: 55,
+    paddingBottom: 30,
+    paddingHorizontal: 22,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+  },
+
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 13,
+    backgroundColor: "rgba(255,255,255,0.15)",
     alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 18,
+  },
+
+  headerIcon: {
+    width: 55,
+    height: 55,
+    borderRadius: 18,
+    backgroundColor: "rgba(255,255,255,0.16)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 14,
+  },
+
+  headerTitle: {
+    fontSize: 23,
+    fontWeight: "800",
+    color: "#FFFFFF",
+  },
+
+  headerSubtitle: {
+    color: "#DDD1F7",
+    fontSize: 13,
+    marginTop: 6,
+    lineHeight: 20,
+  },
+
+  // Statistik
+  statsContainer: {
+    flexDirection: "row",
+    gap: 10,
+    paddingHorizontal: 18,
+    marginTop: 20,
+  },
+
+  statCard: {
+    flex: 1,
+    backgroundColor: "#302A4D",
+    borderRadius: 17,
+    padding: 13,
+    alignItems: "center",
+  },
+
+  statIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 13,
+    backgroundColor: "#45366B",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 9,
+  },
+
+  statValue: {
+    color: "#FFFFFF",
+    fontSize: 22,
+    fontWeight: "800",
+  },
+
+  statLabel: {
+    color: "#B8B0D0",
+    fontSize: 10,
+    marginTop: 4,
+    textAlign: "center",
+  },
+
+  // Section
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginHorizontal: 20,
+    marginTop: 28,
     marginBottom: 16,
   },
+
+  sectionTitle: {
+    color: "#FFFFFF",
+    fontSize: 17,
+    fontWeight: "800",
+  },
+
+  sectionSubtitle: {
+    color: "#A9A2C7",
+    fontSize: 12,
+    marginTop: 5,
+  },
+
+  addButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    backgroundColor: "#7651C9",
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    borderRadius: 12,
+  },
+
   addButtonText: {
     color: "#FFFFFF",
-    fontSize: 13,
-    fontWeight: "bold",
+    fontSize: 12,
+    fontWeight: "700",
   },
-  primaryButton: {
-    backgroundColor: "#625ff0",
-    borderRadius: 10,
-    paddingVertical: 12,
+
+  // Card
+  card: {
+    backgroundColor: "#302A4D",
+    borderRadius: 18,
+    padding: 16,
+    marginHorizontal: 18,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: "#453B64",
+  },
+
+  cardHeader: {
+    flexDirection: "row",
     alignItems: "center",
+  },
+
+  cardIcon: {
+    width: 47,
+    height: 47,
+    borderRadius: 15,
+    backgroundColor: "#45366B",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  cardHeading: {
+    flex: 1,
+    marginLeft: 12,
+  },
+
+  subject: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "800",
+    lineHeight: 21,
+  },
+
+  classText: {
+    color: "#B99AFF",
+    fontSize: 12,
+    marginTop: 4,
+    fontWeight: "600",
+  },
+
+  codeBadge: {
+    backgroundColor: "#45366B",
+    paddingHorizontal: 9,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+
+  codeText: {
+    color: "#CDB7FF",
+    fontSize: 10,
+    fontWeight: "700",
+  },
+
+  divider: {
+    height: 1,
+    backgroundColor: "#49415F",
+    marginVertical: 15,
+  },
+
+  // Informasi jadwal
+  infoGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    rowGap: 16,
+    marginBottom: 12,
+  },
+
+  infoItem: {
+    width: "50%",
+    flexDirection: "row",
+    alignItems: "center",
+    paddingRight: 8,
+    gap: 9,
+  },
+
+  infoContent: {
+    flex: 1,
+  },
+
+  infoLabel: {
+    color: "#A9A2C7",
+    fontSize: 10,
+    marginBottom: 3,
+  },
+
+  infoValue: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+
+  // Tombol buat sesi
+  createSessionButton: {
+    borderRadius: 12,
+    overflow: "hidden",
     marginTop: 8,
   },
-  primaryButtonText: {
-    color: "#FFFFFF",
-    fontSize: 13,
-    fontWeight: "bold",
+
+  createSessionGradient: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 9,
+    paddingVertical: 13,
+    paddingHorizontal: 12,
   },
+
+  createSessionText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "700",
+    flex: 1,
+    textAlign: "center",
+  },
+
+  // Aksi
   actionRow: {
     flexDirection: "row",
     gap: 10,
-    marginTop: 10,
+    marginTop: 11,
   },
-  actionButton: {
-    flex: 1,
-    borderRadius: 10,
-    paddingVertical: 11,
-    alignItems: "center",
-    borderWidth: 1,
-  },
+
   editButton: {
-    borderColor: "#555B65",
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 7,
+    backgroundColor: "rgba(185,154,255,0.12)",
+    borderRadius: 11,
+    paddingVertical: 11,
   },
+
+  editButtonText: {
+    color: "#B99AFF",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+
   deleteButton: {
-    borderColor: "#991B1B",
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 7,
+    backgroundColor: "rgba(241,138,138,0.10)",
+    borderRadius: 11,
+    paddingVertical: 11,
   },
-  actionText: {
+
+  deleteButtonText: {
+    color: "#F18A8A",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+
+  // Loading dan empty state
+  stateContainer: {
+    alignItems: "center",
+    paddingVertical: 55,
+  },
+
+  stateText: {
+    color: "#B8B0D0",
+    fontSize: 12,
+    marginTop: 12,
+  },
+
+  emptyContainer: {
+    alignItems: "center",
+    paddingHorizontal: 30,
+    paddingVertical: 45,
+    marginHorizontal: 18,
+    backgroundColor: "#302A4D",
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "#453B64",
+  },
+
+  emptyIcon: {
+    width: 65,
+    height: 65,
+    borderRadius: 22,
+    backgroundColor: "#45366B",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 15,
+  },
+
+  emptyTitle: {
     color: "#FFFFFF",
-    fontSize: 13,
-    fontWeight: "600",
+    fontSize: 16,
+    fontWeight: "800",
+    marginBottom: 8,
   },
+
+  emptyText: {
+    color: "#A9A2C7",
+    fontSize: 12,
+    textAlign: "center",
+    lineHeight: 19,
+  },
+
+  emptyButton: {
+    backgroundColor: "#7651C9",
+    borderRadius: 11,
+    paddingHorizontal: 18,
+    paddingVertical: 11,
+    marginTop: 18,
+  },
+
+  emptyButtonText: {
+    color: "#FFFFFF",
+    fontWeight: "700",
+    fontSize: 12,
+  },
+
+  // Peringatan
+  warningBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "rgba(243,200,121,0.10)",
+    borderRadius: 11,
+    padding: 12,
+    marginHorizontal: 18,
+    marginBottom: 14,
+  },
+
+  warningText: {
+    color: "#F3C879",
+    fontSize: 12,
+    flex: 1,
+    lineHeight: 18,
+  },
+
+  // Modal
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.6)",
+    backgroundColor: "rgba(0,0,0,0.72)",
     justifyContent: "center",
     alignItems: "center",
-    padding: 24,
+    padding: 18,
   },
+
   modalBox: {
     width: "100%",
     maxWidth: 460,
     maxHeight: "90%",
-    backgroundColor: "#343941",
-    borderRadius: 16,
+    backgroundColor: "#25213D",
+    borderRadius: 23,
     padding: 20,
     borderWidth: 1,
-    borderColor: "#454B55",
+    borderColor: "#49415F",
   },
+
+  modalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 16,
+  },
+
   modalTitle: {
     color: "#FFFFFF",
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 12,
+    fontSize: 19,
+    fontWeight: "800",
   },
-  modalSubject: {
-    color: "#FFFFFF",
-    fontSize: 15,
-    fontWeight: "bold",
-  },
-  fieldLabel: {
-    color: "#B8BCC4",
+
+  modalSubtitle: {
+    color: "#A9A2C7",
     fontSize: 12,
-    marginTop: 14,
-    marginBottom: 8,
+    marginTop: 5,
+    lineHeight: 18,
   },
+
+  closeButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: "#403957",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  // Form
+  fieldLabel: {
+    color: "#DDD6EF",
+    fontSize: 12,
+    fontWeight: "700",
+    marginTop: 17,
+    marginBottom: 10,
+  },
+
+  formGroup: {
+    marginTop: 5,
+  },
+
+  input: {
+    backgroundColor: "#342E50",
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    height: 48,
+    color: "#FFFFFF",
+    fontSize: 13,
+    borderWidth: 1,
+    borderColor: "#49415F",
+  },
+
   chipRow: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 8,
   },
+
   chip: {
-    backgroundColor: "#25292e",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    backgroundColor: "#342E50",
     borderWidth: 1,
-    borderColor: "#454B55",
+    borderColor: "#49415F",
     borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingHorizontal: 11,
+    paddingVertical: 9,
   },
+
   chipActive: {
-    backgroundColor: "#45416F",
-    borderColor: "#7772F5",
+    backgroundColor: "#7651C9",
+    borderColor: "#A77BFF",
   },
+
   chipDisabled: {
-    opacity: 0.45,
+    opacity: 0.4,
   },
+
   chipText: {
-    color: "#B8BCC4",
-    fontSize: 12,
+    color: "#C4BCD9",
+    fontSize: 11,
     fontWeight: "600",
   },
+
   chipTextActive: {
     color: "#FFFFFF",
   },
-  input: {
-    backgroundColor: "#25292e",
-    borderWidth: 1,
-    borderColor: "#454B55",
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    color: "#FFFFFF",
-    fontSize: 14,
+
+  helperText: {
+    color: "#A9A2C7",
+    fontSize: 11,
+    marginTop: 8,
+    lineHeight: 17,
   },
+
+  errorBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "rgba(241,138,138,0.10)",
+    padding: 12,
+    borderRadius: 11,
+    marginTop: 15,
+  },
+
   errorText: {
-    color: "#F87171",
+    color: "#F18A8A",
     fontSize: 12,
-    marginTop: 12,
+    flex: 1,
     lineHeight: 18,
   },
-  hintText: {
-    color: "#AEB4BE",
-    fontSize: 12,
-    marginTop: 10,
-    lineHeight: 18,
-  },
+
   modalActions: {
     flexDirection: "row",
     gap: 10,
-    marginTop: 20,
+    marginTop: 23,
+    marginBottom: 5,
   },
-  modalButton: {
+
+  cancelButton: {
     flex: 1,
-    paddingVertical: 12,
-    borderRadius: 9,
-    alignItems: "center",
-  },
-  modalCancel: {
     borderWidth: 1,
-    borderColor: "#555B65",
+    borderColor: "#5A526E",
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  modalCancelText: {
-    color: "#D1D5DB",
+
+  cancelButtonText: {
+    color: "#D5CFE6",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+
+  confirmButton: {
+    flex: 1.5,
+    borderRadius: 12,
+    overflow: "hidden",
+  },
+
+  confirmGradient: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 7,
+    paddingVertical: 14,
+  },
+
+  confirmButtonText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "800",
+  },
+
+  // Modal sesi
+  sessionModalIcon: {
+    width: 45,
+    height: 45,
+    borderRadius: 14,
+    backgroundColor: "#45366B",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  sessionInfo: {
+    backgroundColor: "#342E50",
+    borderRadius: 14,
+    padding: 14,
+    marginTop: 17,
+  },
+
+  sessionSubject: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "800",
+  },
+
+  sessionClass: {
+    color: "#B99AFF",
+    fontSize: 12,
+    marginTop: 5,
     fontWeight: "600",
   },
-  modalConfirm: {
-    backgroundColor: "#625ff0",
+
+  sessionDetails: {
+    gap: 9,
+    marginTop: 13,
   },
-  modalConfirmText: {
-    color: "#FFFFFF",
-    fontWeight: "bold",
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  container: {
-    flex: 1,
-    backgroundColor: "#25292e",
-  },
-  scrollContent: {
-    padding: 20,
-    paddingBottom: 30,
-  },
-  totalText: {
-    color: "#B8BCC4",
-    fontSize: 13,
-    marginBottom: 12,
-  },
-  card: {
-    backgroundColor: "#343941",
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 14,
-    borderWidth: 1,
-    borderColor: "#454B55",
-  },
-  cardHeader: {
+
+  sessionDetailItem: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
     gap: 8,
-    marginBottom: 12,
   },
-  codeBadge: {
-    backgroundColor: "#45416F",
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 6,
-  },
-  codeText: {
-    color: "#C7C5FF",
+
+  sessionDetailText: {
+    color: "#D5CFE6",
     fontSize: 12,
-    fontWeight: "bold",
   },
-  subject: {
-    color: "#FFFFFF",
-    fontSize: 17,
-    fontWeight: "bold",
-    lineHeight: 24,
+
+  // Pilihan tanggal
+  dateList: {
+    gap: 9,
   },
-  classText: {
-    color: "#C7C5FF",
-    fontSize: 12,
-    marginTop: 6,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: "#505661",
-    marginVertical: 14,
-  },
-  infoRow: {
+
+  dateItem: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 10,
-    gap: 12,
+    alignItems: "center",
+    backgroundColor: "#342E50",
+    borderWidth: 1,
+    borderColor: "#49415F",
+    borderRadius: 12,
+    padding: 12,
+    gap: 11,
   },
-  infoLabel: {
-    color: "#AEB4BE",
-    fontSize: 13,
+
+  dateItemDisabled: {
+    opacity: 0.55,
+    borderColor: "#69D9A3",
+  },
+
+  dateIcon: {
+    width: 37,
+    height: 37,
+    borderRadius: 11,
+    backgroundColor: "#45366B",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  dateInfo: {
     flex: 1,
   },
-  infoValue: {
+
+  dateText: {
     color: "#FFFFFF",
-    fontSize: 13,
-    fontWeight: "500",
-    flex: 2,
-    textAlign: "right",
+    fontSize: 12,
+    fontWeight: "700",
   },
-  emptyContainer: {
+
+  dateStatus: {
+    color: "#A9A2C7",
+    fontSize: 10,
+    marginTop: 4,
+  },
+
+  closeModalButton: {
+    borderWidth: 1,
+    borderColor: "#5A526E",
+    borderRadius: 12,
     alignItems: "center",
-    padding: 30,
-  },
-  emptyTitle: {
-    color: "#FFFFFF",
-    fontSize: 17,
-    fontWeight: "bold",
-    marginBottom: 8,
-  },
-  emptyText: {
-    color: "#B8BCC4",
-    fontSize: 13,
-    textAlign: "center",
+    paddingVertical: 13,
+    marginTop: 20,
   },
 });
