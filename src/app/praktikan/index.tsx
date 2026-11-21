@@ -271,11 +271,7 @@ export default function Index() {
                   activeOpacity={0.8}
                 >
                   <LinearGradient
-                    colors={
-                      index % 2 === 0
-                        ? ["#7651C9", "#49358B"]
-                        : ["#5367B8", "#39447F"]
-                    }
+                    colors={["#7651C9", "#49358B"]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={styles.menuIconCircle}
