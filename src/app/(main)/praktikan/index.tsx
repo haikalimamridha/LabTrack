@@ -1,21 +1,28 @@
 
 import { useAuth } from "@/context/AuthContext";
+import { usePresensi } from "@/context/PresensiContext";
+
+import AppBadge from "@/components/ui/appBadge";
+import AppCard from "@/components/ui/appCard";
+import AppSectionTitle from "@/components/ui/appSectionTitle";
+
 import {
   Ionicons,
-  MaterialCommunityIcons
+  MaterialCommunityIcons,
 } from "@expo/vector-icons";
+
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
+
 import {
   ActivityIndicator,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 
-import { usePresensi } from "@/context/PresensiContext";
 import {
   formatTanggal,
   waktuMulaiSesi,
@@ -34,14 +41,6 @@ export default function Index() {
 
   // Data profil
   const nama = profile?.nama ?? "Praktikan";
-
-  const inisial = nama
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((kata) => kata[0])
-    .join("")
-    .toUpperCase();
 
   // Ringkasan presensi
   const totalSesi = daftarSesi.length;
@@ -108,22 +107,22 @@ export default function Index() {
           <View style={styles.headerDecoration} />
 
           <View style={styles.headerRow}>
-            <View style={styles.avatarWrapper}>
-              <TouchableOpacity
-                style={styles.avatarCircle}
-                onPress={() => router.push("/profile")}
-                activeOpacity={0.85}
-              >
-                <Ionicons
-                  name="person"
-                  size={25}
-                  color="#FFFFFF"
-                />
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity
+              style={styles.avatarCircle}
+              onPress={() => router.push("/profile")}
+              activeOpacity={0.85}
+            >
+              <Ionicons
+                name="person"
+                size={25}
+                color="#FFFFFF"
+              />
+            </TouchableOpacity>
 
             <View style={styles.headerTextCol}>
-              <Text style={styles.helloText}>Hello!</Text>
+              <Text style={styles.helloText}>
+                Hello!
+              </Text>
 
               <Text
                 style={styles.userName}
@@ -151,37 +150,30 @@ export default function Index() {
 
         {/* BODY */}
         <View style={styles.body}>
-          {/* RINGKASAN */}
-          <LinearGradient
-            colors={["#39325E", "#292542", "#25213C"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
+
+          {/* RINGKASAN PRESENSI */}
+          <AppCard
+            gradientColors={[
+              "#39325E",
+              "#292542",
+              "#25213C",
+            ]}
             style={styles.summaryCard}
           >
-            <View style={styles.cardHeaderRow}>
-              <View>
-                <Text style={styles.cardMutedTitle}>
-                  Ringkasan Presensi
-                </Text>
-              </View>
-
-              <TouchableOpacity
-                activeOpacity={0.75}
-                onPress={() =>
-                  router.push("/praktikan/jadwal")
-                }
-              >
-                <Text style={styles.purpleLink}>
-                  Jadwal Saya →
-                </Text>
-              </TouchableOpacity>
-            </View>
+            <AppSectionTitle
+              title="Ringkasan Presensi"
+              actionLabel="Jadwal Saya"
+              onActionPress={() =>
+                router.push("/praktikan/jadwal")
+              }
+            />
 
             <View style={styles.summaryStats}>
               <View style={styles.statItem}>
                 <Text style={styles.statValue}>
                   {totalSesi}
                 </Text>
+
                 <Text style={styles.statLabel}>
                   Total Sesi
                 </Text>
@@ -193,6 +185,7 @@ export default function Index() {
                 <Text style={styles.statValue}>
                   {sudahHadir}
                 </Text>
+
                 <Text style={styles.statLabel}>
                   Sudah Hadir
                 </Text>
@@ -204,26 +197,28 @@ export default function Index() {
                 <Text style={styles.statValue}>
                   {belumHadir}
                 </Text>
+
                 <Text style={styles.statLabel}>
                   Belum Hadir
                 </Text>
               </View>
             </View>
-          </LinearGradient>
+          </AppCard>
 
-          {/* MENU DASHBOARD */}
-          <LinearGradient
-            colors={["#39325E", "#292542"]}
+          {/* MENU UTAMA */}
+          <AppCard
+            gradientColors={[
+              "#39325E",
+              "#292542",
+            ]}
             style={styles.menuCard}
           >
-            <View style={styles.sectionHeader}>
-              <Text style={styles.cardMutedTitle}>
-                Menu Utama
-              </Text>
-            </View>
+            <AppSectionTitle
+              title="Menu Utama"
+            />
 
             <View style={styles.menuGrid}>
-              {menuItems.map((item, index) => (
+              {menuItems.map((item) => (
                 <TouchableOpacity
                   key={item.label}
                   style={styles.menuBox}
@@ -249,31 +244,24 @@ export default function Index() {
                 </TouchableOpacity>
               ))}
             </View>
-          </LinearGradient>
+          </AppCard>
 
           {/* SESI TERDEKAT */}
-          <LinearGradient
-            colors={["#39325E", "#292542", "#25213C"]}
+          <AppCard
+            gradientColors={[
+              "#39325E",
+              "#292542",
+              "#25213C",
+            ]}
             style={styles.nearestCard}
           >
-            <View style={styles.cardHeaderRow}>
-              <View>
-                <Text style={styles.cardMutedTitle}>
-                  Sesi Terdekat
-                </Text>
-              </View>
-
-              <TouchableOpacity
-                activeOpacity={0.75}
-                onPress={() =>
-                  router.push("/praktikan/jadwal")
-                }
-              >
-                <Text style={styles.purpleLink}>
-                  Lihat Semua →
-                </Text>
-              </TouchableOpacity>
-            </View>
+            <AppSectionTitle
+              title="Sesi Terdekat"
+              actionLabel="Lihat Semua"
+              onActionPress={() =>
+                router.push("/praktikan/jadwal")
+              }
+            />
 
             {loading ? (
               <View style={styles.emptyBox}>
@@ -284,6 +272,7 @@ export default function Index() {
                 <Text style={styles.emptyTitle}>
                   Gagal memuat sesi
                 </Text>
+
                 <Text style={styles.emptyText}>
                   {error}
                 </Text>
@@ -295,80 +284,91 @@ export default function Index() {
                   size={30}
                   color="#77718F"
                 />
+
                 <Text style={styles.emptyTitle}>
                   Belum Ada Jadwal
                 </Text>
+
                 <Text style={styles.emptyText}>
                   Kamu belum memiliki jadwal praktikum
                   mendatang.
                 </Text>
               </View>
             ) : (
-              sesiTerdekat.map((item, idx) => (
-                <View
-                  key={item.id}
-                  style={[
-                    styles.sessionItem,
-                    idx === sesiTerdekat.length - 1 && {
-                      marginBottom: 0,
-                    },
-                  ]}
-                >
-                  <View style={styles.sessionTopRow}>
-                    <Text style={styles.sessionCode}>
-                      {item.kode || `Kelas ${item.kelas}`}
+              sesiTerdekat.map((item, idx) => {
+                const statusVariant =
+                  item.status === "Sedang Berlangsung"
+                    ? "warning"
+                    : "primary";
+
+                return (
+                  <View
+                    key={item.id}
+                    style={[
+                      styles.sessionItem,
+                      idx === sesiTerdekat.length - 1 && {
+                        marginBottom: 0,
+                      },
+                    ]}
+                  >
+                    <View style={styles.sessionTopRow}>
+                      <Text style={styles.sessionCode}>
+                        {item.kode || `Kelas ${item.kelas}`}
+                      </Text>
+
+                      <AppBadge
+                        label={item.status}
+                        variant={statusVariant}
+                      />
+                    </View>
+
+                    <Text
+                      style={styles.sessionName}
+                      numberOfLines={1}
+                    >
+                      {item.mataPraktikum}
                     </Text>
 
-                    <View style={styles.statusBadge}>
-                      <Text style={styles.sessionStatus}>
-                        {item.status}
+                    <View style={styles.sessionMetaRow}>
+                      <Ionicons
+                        name="calendar-outline"
+                        size={13}
+                        color="#AAA4C5"
+                      />
+
+                      <Text style={styles.sessionMeta}>
+                        {item.hari},{" "}
+                        {formatTanggal(item.tanggal)}
+                      </Text>
+                    </View>
+
+                    <View style={styles.sessionMetaRow}>
+                      <Ionicons
+                        name="time-outline"
+                        size={13}
+                        color="#AAA4C5"
+                      />
+
+                      <Text style={styles.sessionMeta}>
+                        {item.waktu}
+                      </Text>
+
+                      <Ionicons
+                        name="location-outline"
+                        size={13}
+                        color="#AAA4C5"
+                        style={{ marginLeft: 8 }}
+                      />
+
+                      <Text style={styles.sessionMeta}>
+                        {item.ruangan}
                       </Text>
                     </View>
                   </View>
-
-                  <Text
-                    style={styles.sessionName}
-                    numberOfLines={1}
-                  >
-                    {item.mataPraktikum}
-                  </Text>
-
-                  <View style={styles.sessionMetaRow}>
-                    <Ionicons
-                      name="calendar-outline"
-                      size={13}
-                      color="#AAA4C5"
-                    />
-                    <Text style={styles.sessionMeta}>
-                      {item.hari},{" "}
-                      {formatTanggal(item.tanggal)}
-                    </Text>
-                  </View>
-
-                  <View style={styles.sessionMetaRow}>
-                    <Ionicons
-                      name="time-outline"
-                      size={13}
-                      color="#AAA4C5"
-                    />
-                    <Text style={styles.sessionMeta}>
-                      {item.waktu}
-                    </Text>
-
-                    <Ionicons
-                      name="location-outline"
-                      size={13}
-                      color="#AAA4C5"
-                      style={{ marginLeft: 8 }}
-                    />
-                    <Text style={styles.sessionMeta}>
-                      {item.ruangan}
-                    </Text>
-                  </View>
-                </View>
-              ))
+                );
+              })
             )}
-          </LinearGradient>
+          </AppCard>
         </View>
       </ScrollView>
     </View>
@@ -411,12 +411,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  avatarWrapper: {
-    position: "relative",
-    zIndex: 100,
-    marginRight: 14,
-  },
-
   avatarCircle: {
     width: 50,
     height: 50,
@@ -426,26 +420,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.45)",
     alignItems: "center",
     justifyContent: "center",
-  },
-
-  avatarText: {
-    color: "#FFFFFF",
-    fontSize: 17,
-    fontWeight: "700",
-  },
-
-  profileMenu: {
-    position: "absolute",
-    top: 58,
-    left: 0,
-    backgroundColor: "#302B49",
-    borderWidth: 1,
-    borderColor: "#51496E",
-    borderRadius: 12,
-    padding: 6,
-    minWidth: 130,
-    elevation: 8,
-    zIndex: 200,
+    marginRight: 14,
   },
 
   headerTextCol: {
@@ -467,7 +442,6 @@ const styles = StyleSheet.create({
   },
 
   notifButton: {
-    position: "relative",
     padding: 9,
     backgroundColor: "rgba(255,255,255,0.13)",
     borderRadius: 13,
@@ -479,34 +453,11 @@ const styles = StyleSheet.create({
     marginTop: -42,
   },
 
-  // Card header
-  cardHeaderRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 19,
-  },
-
-  cardMutedTitle: {
-    color: "#FFFFFF",
-    fontSize: 15,
-    fontWeight: "700",
-  },
-
-  purpleLink: {
-    color: "#C5A3FF",
-    fontSize: 12,
-    fontWeight: "600",
-  },
-
   // Summary
   summaryCard: {
+    marginBottom: 18,
     borderRadius: 22,
     padding: 20,
-    marginBottom: 18,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.08)",
-    elevation: 5,
   },
 
   summaryStats: {
@@ -542,15 +493,9 @@ const styles = StyleSheet.create({
 
   // Menu
   menuCard: {
+    marginBottom: 18,
     borderRadius: 22,
     padding: 20,
-    marginBottom: 18,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.07)",
-  },
-
-  sectionHeader: {
-    marginBottom: 18,
   },
 
   menuGrid: {
@@ -593,9 +538,6 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     padding: 20,
     minHeight: 190,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.08)",
-    elevation: 5,
   },
 
   sessionItem: {
@@ -620,19 +562,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
 
-  statusBadge: {
-    backgroundColor: "rgba(181,138,255,0.15)",
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 20,
-  },
-
-  sessionStatus: {
-    color: "#D9C5FF",
-    fontSize: 10,
-    fontWeight: "600",
-  },
-
   sessionName: {
     color: "#FFFFFF",
     fontSize: 14,
@@ -652,6 +581,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
   },
 
+  // Empty state
   emptyBox: {
     paddingVertical: 28,
     alignItems: "center",
@@ -670,14 +600,5 @@ const styles = StyleSheet.create({
     color: "#AAA4C5",
     fontSize: 12,
     textAlign: "center",
-  },
-
-  footerText: {
-    color: "#716B8D",
-    fontSize: 9,
-    fontWeight: "600",
-    letterSpacing: 1.5,
-    textAlign: "center",
-    marginTop: 25,
   },
 });
