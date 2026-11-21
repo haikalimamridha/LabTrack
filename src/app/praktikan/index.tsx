@@ -95,11 +95,7 @@ export default function Index() {
     {
       label: "Maps",
       icon: "map-marker-radius-outline" as const,
-      onPress: () =>
-        Alert.alert(
-          "Maps",
-          "Fitur peta lokasi lab segera hadir."
-        ),
+      onPress: () => router.push("/praktikan/maps"),
     },
     {
       label: "Riwayat",

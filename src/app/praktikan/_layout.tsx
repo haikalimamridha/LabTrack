@@ -139,6 +139,7 @@ export default function PraktikanLayout() {
         <Tabs.Screen name="jadwal" />
         <Tabs.Screen name="izin" />
         <Tabs.Screen name="riwayat" />
+        <Tabs.Screen name="maps" />
       </Tabs>
     </PresensiProvider>
   );
