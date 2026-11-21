@@ -1,4 +1,3 @@
-
 import { PresensiProvider } from "@/context/PresensiContext";
 import { Stack } from "expo-router";
 
@@ -8,6 +7,10 @@ export default function PraktikanLayout() {
       <Stack
         screenOptions={{
           headerShown: false,
+          animation: "slide_from_right",
+          animationDuration: 280,
+          gestureEnabled: true,
+          fullScreenGestureEnabled: true,
         }}
       >
         <Stack.Screen name="index" />
