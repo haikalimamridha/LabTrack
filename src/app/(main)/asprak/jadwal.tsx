@@ -443,10 +443,6 @@ export default function JadwalScreen() {
           <BackButton />
 
           <Text style={styles.headerTitle}>Jadwal Praktikum</Text>
-
-          <Text style={styles.headerSubtitle}>
-            Halo, {profile?.nama || "Asisten"}! Kelola jadwal praktikum di sini.
-          </Text>
         </LinearGradient>
 
         {/* STATISTIK */}
@@ -1132,13 +1128,6 @@ const styles = StyleSheet.create({
     fontSize: 23,
     fontWeight: "800",
     color: "#FFFFFF",
-  },
-
-  headerSubtitle: {
-    color: "#DDD1F7",
-    fontSize: 13,
-    marginTop: 6,
-    lineHeight: 20,
   },
 
   // Statistik
