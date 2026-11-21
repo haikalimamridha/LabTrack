@@ -7,7 +7,7 @@ import {
     ViewAnnotation,
 } from "@maplibre/maplibre-react-native";
 import * as Location from "expo-location";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
     ActivityIndicator,
     Alert,
@@ -17,35 +17,78 @@ import {
     View,
 } from "react-native";
 
-const LAB_B = {
-  latitude: -7.0495631,
-  longitude: 110.4412289,
-  nama: "Lab B",
-  kode: "LAB-IF-B",
-  gedung: "E",
-  lantai: 2,
-  deskripsi: "Laboratorium B informatika",
-};
+import {
+    listenLaboratorium,
+    type Laboratorium,
+} from "@/services/laboratoriumService";
 
 const MAP_STYLE = "https://tiles.openfreemap.org/styles/dark";
+
+// Koordinat awal peta kampus
+const INITIAL_CENTER: [number, number] = [
+  110.4412289,
+  -7.0495631,
+];
 
 export default function MapsScreen() {
   const cameraRef = useRef<any>(null);
 
-  const [selectedLab, setSelectedLab] = useState(false);
+  const [labs, setLabs] = useState<Laboratorium[]>([]);
+  const [selectedLab, setSelectedLab] =
+    useState<Laboratorium | null>(null);
+
+  const [loadingLabs, setLoadingLabs] = useState(true);
   const [loadingLocation, setLoadingLocation] = useState(false);
+
   const [userCoordinate, setUserCoordinate] = useState<
     [number, number] | null
   >(null);
 
-  const focusLab = () => {
+  // Mendengarkan perubahan data laboratorium dari Firestore
+  useEffect(() => {
+    const unsubscribe = listenLaboratorium(
+      (data) => {
+        setLabs(data);
+        setLoadingLabs(false);
+
+        // Memperbarui data lab yang sedang dipilih
+        // atau menutup kartu jika lab sudah tidak aktif.
+        setSelectedLab((current) => {
+          if (!current) return null;
+
+          return data.find((lab) => lab.id === current.id) ?? null;
+        });
+      },
+        (error) => {
+        console.log("FIRESTORE ERROR:", error);
+        console.log("ERROR MESSAGE:", error.message);
+
+        setLoadingLabs(false);
+        }
+    );
+
+    return unsubscribe;
+  }, []);
+
+  // Fokus ke laboratorium tertentu
+    const focusLab = (lab: Laboratorium) => {
     cameraRef.current?.flyTo({
-      center: [LAB_B.longitude, LAB_B.latitude],
-      zoom: 17,
+        center: [lab.longitude, lab.latitude],
+        zoom: 17,
+        duration: 1000,
+    });
+    };
+
+  // Kembali ke posisi awal kampus
+  const focusCampus = () => {
+    cameraRef.current?.flyTo({
+      center: INITIAL_CENTER,
+      zoom: 16,
       duration: 1000,
     });
   };
 
+  // Mendapatkan posisi pengguna
   const goToMyLocation = async () => {
     try {
       setLoadingLocation(true);
@@ -61,9 +104,10 @@ export default function MapsScreen() {
         return;
       }
 
-      const location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.High,
-      });
+      const location =
+        await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.High,
+        });
 
       const coordinate: [number, number] = [
         location.coords.longitude,
@@ -78,6 +122,8 @@ export default function MapsScreen() {
         duration: 1200,
       });
     } catch (error) {
+      console.error("Gagal mendapatkan lokasi:", error);
+
       Alert.alert(
         "Gagal mendapatkan lokasi",
         "Pastikan GPS aktif dan coba kembali."
@@ -92,33 +138,43 @@ export default function MapsScreen() {
       <Map
         style={styles.map}
         mapStyle={MAP_STYLE}
+        compassPosition={{
+            top: 115,
+            left: 16,
+        }}
       >
         <Camera
-          ref={cameraRef}
-          initialViewState={{
-            center: [LAB_B.longitude, LAB_B.latitude],
+        ref={cameraRef}
+        initialViewState={{
+            center: [
+            labs[0]?.longitude ?? 110.4412289,
+            labs[0]?.latitude ?? -7.0495631,
+            ],
             zoom: 16,
             pitch: 35,
-          }}
+        }}
         />
 
-        {/* Marker laboratorium */}
+        {/* Marker laboratorium dari Firestore */}
+        {labs.map((lab) => (
         <Marker
-        id="lab-b"
-        lngLat={[LAB_B.longitude, LAB_B.latitude]}
-        onPress={() => setSelectedLab(true)}
+            key={lab.id}
+            id={lab.id}
+            lngLat={[lab.longitude, lab.latitude]}
+            onPress={() => setSelectedLab(lab)}
         >
-        <View style={styles.markerContainer}>
+            <View style={styles.markerContainer}>
             <View style={styles.marker}>
-            <Ionicons
+                <Ionicons
                 name="business"
                 size={19}
                 color="#FFFFFF"
-            />
+                />
             </View>
             <View style={styles.markerTail} />
-        </View>
+            </View>
         </Marker>
+        ))}
 
         {/* Marker posisi pengguna */}
         {userCoordinate && (
@@ -144,9 +200,12 @@ export default function MapsScreen() {
         </View>
 
         <View style={styles.headerText}>
-          <Text style={styles.headerTitle}>Peta Kampus</Text>
+          <Text style={styles.headerTitle}>
+            Peta Kampus
+          </Text>
+
           <Text style={styles.headerSubtitle}>
-            Temukan lokasi laboratorium
+            Ketuk marker untuk melihat informasi laboratorium
           </Text>
         </View>
       </View>
@@ -159,7 +218,10 @@ export default function MapsScreen() {
           disabled={loadingLocation}
         >
           {loadingLocation ? (
-            <ActivityIndicator color="#FFFFFF" size="small" />
+            <ActivityIndicator
+              color="#FFFFFF"
+              size="small"
+            />
           ) : (
             <Ionicons
               name="locate"
@@ -171,10 +233,10 @@ export default function MapsScreen() {
 
         <Pressable
           style={styles.controlButton}
-          onPress={focusLab}
+          onPress={focusCampus}
         >
           <Ionicons
-            name="business-outline"
+            name="business"
             size={22}
             color="#FFFFFF"
           />
@@ -197,15 +259,16 @@ export default function MapsScreen() {
 
             <View style={styles.labHeading}>
               <Text style={styles.labName}>
-                {LAB_B.nama}
+                {selectedLab.nama}
               </Text>
+
               <Text style={styles.labCode}>
-                {LAB_B.kode}
+                {selectedLab.kode}
               </Text>
             </View>
 
             <Pressable
-              onPress={() => setSelectedLab(false)}
+              onPress={() => setSelectedLab(null)}
               style={styles.closeButton}
             >
               <Ionicons
@@ -217,7 +280,7 @@ export default function MapsScreen() {
           </View>
 
           <Text style={styles.description}>
-            {LAB_B.deskripsi}
+            {selectedLab.deskripsi}
           </Text>
 
           <View style={styles.detailsContainer}>
@@ -227,10 +290,14 @@ export default function MapsScreen() {
                 size={17}
                 color="#A78BFA"
               />
+
               <View>
-                <Text style={styles.detailLabel}>Gedung</Text>
+                <Text style={styles.detailLabel}>
+                  Gedung
+                </Text>
+
                 <Text style={styles.detailValue}>
-                  {LAB_B.gedung}
+                  {selectedLab.gedung}
                 </Text>
               </View>
             </View>
@@ -241,10 +308,14 @@ export default function MapsScreen() {
                 size={17}
                 color="#A78BFA"
               />
+
               <View>
-                <Text style={styles.detailLabel}>Lantai</Text>
+                <Text style={styles.detailLabel}>
+                  Lantai
+                </Text>
+
                 <Text style={styles.detailValue}>
-                  {LAB_B.lantai}
+                  {selectedLab.lantai}
                 </Text>
               </View>
             </View>
@@ -252,31 +323,18 @@ export default function MapsScreen() {
 
           <Pressable
             style={styles.directionButton}
-            onPress={focusLab}
+            onPress={() => focusLab(selectedLab)}
           >
             <Ionicons
               name="navigate"
               size={18}
               color="#FFFFFF"
             />
+
             <Text style={styles.directionText}>
               Lihat lokasi
             </Text>
           </Pressable>
-        </View>
-      )}
-
-      {/* Petunjuk bawah */}
-      {!selectedLab && (
-        <View style={styles.hint}>
-          <Ionicons
-            name="information-circle-outline"
-            size={17}
-            color="#C4B5FD"
-          />
-          <Text style={styles.hintText}>
-            Ketuk marker untuk melihat informasi laboratorium
-          </Text>
         </View>
       )}
     </View>
@@ -328,7 +386,7 @@ const styles = StyleSheet.create({
     marginTop: 3,
   },
 
-  // Marker lab
+  // Marker laboratorium
   markerContainer: {
     alignItems: "center",
   },
@@ -487,26 +545,5 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 14,
     fontWeight: "600",
-  },
-
-  // Petunjuk
-  hint: {
-    position: "absolute",
-    bottom: 24,
-    left: 16,
-    right: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    backgroundColor: "#2A2545",
-    borderRadius: 14,
-    padding: 13,
-    borderWidth: 1,
-    borderColor: "#494263",
-  },
-  hintText: {
-    color: "#D1CEE0",
-    fontSize: 12,
   },
 });
