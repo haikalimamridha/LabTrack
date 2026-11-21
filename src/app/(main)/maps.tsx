@@ -23,7 +23,12 @@ import {
   type Laboratorium,
 } from "@/services/laboratoriumService";
 
-const MAP_STYLE = "https://tiles.openfreemap.org/styles/dark";
+const MAP_STYLES = {
+  dark: "https://tiles.openfreemap.org/styles/dark",
+  liberty: "https://tiles.openfreemap.org/styles/liberty",
+} as const;
+
+type MapTheme = keyof typeof MAP_STYLES;
 
 // Koordinat awal peta kampus
 const INITIAL_CENTER: [number, number] = [
@@ -135,11 +140,19 @@ export default function MapsScreen() {
     }
   };
 
+  const [mapTheme, setMapTheme] = useState<MapTheme>("dark");
+
+  const toggleMapStyle = () => {
+    setMapTheme((prev) => (prev === "dark" ? "liberty" : "dark"));
+  };
+
+  const currentMapStyle = MAP_STYLES[mapTheme];
+
   return (
     <View style={styles.container}>
       <Map
         style={styles.map}
-        mapStyle={MAP_STYLE}
+        mapStyle={currentMapStyle}
         compassPosition={{
             top: 115,
             left: 16,
@@ -252,6 +265,17 @@ export default function MapsScreen() {
         >
           <Ionicons
             name="business"
+            size={22}
+            color="#FFFFFF"
+          />
+        </Pressable>
+
+        <Pressable
+          style={styles.controlButton}
+          onPress={toggleMapStyle}
+        >
+          <Ionicons
+            name={mapTheme === "dark" ? "moon-outline" : "sunny-outline"}
             size={22}
             color="#FFFFFF"
           />
