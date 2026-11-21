@@ -24,6 +24,10 @@ export default function MainLayout() {
         name="profile"
         options={{ title: "Profile" }}
       />
+      <Tabs.Screen
+        name="maps"
+        options={{ title: "Maps" }}
+      />
     </Tabs>
   );
 }

@@ -15,7 +15,6 @@ export default function PraktikanLayout() {
         <Stack.Screen name="jadwal" />
         <Stack.Screen name="izin" />
         <Stack.Screen name="riwayat" />
-        <Stack.Screen name="maps" />
       </Stack>
     </PresensiProvider>
   );
