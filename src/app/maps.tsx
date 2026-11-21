@@ -1,26 +1,26 @@
 
 import { Ionicons } from "@expo/vector-icons";
 import {
-    Camera,
-    Map,
-    Marker,
-    ViewAnnotation,
+  Camera,
+  Map,
+  Marker,
+  ViewAnnotation,
 } from "@maplibre/maplibre-react-native";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    Pressable,
-    StyleSheet,
-    Text,
-    View,
+  ActivityIndicator,
+  Alert,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
 
 import {
-    listenLaboratorium,
-    type Laboratorium,
+  listenLaboratorium,
+  type Laboratorium,
 } from "@/services/laboratoriumService";
 
 const MAP_STYLE = "https://tiles.openfreemap.org/styles/dark";

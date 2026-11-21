@@ -80,7 +80,7 @@ export default function Index() {
     {
       label: "Maps",
       icon: "map-marker-radius-outline" as const,
-      onPress: () => router.push("/praktikan/maps"),
+      onPress: () => router.push("/maps"),
     },
     {
       label: "Riwayat",
