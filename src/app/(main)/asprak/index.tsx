@@ -1,9 +1,20 @@
+
 import { useAuth } from "@/context/AuthContext";
 import { useSesi } from "@/context/SesiContext";
-import { formatTanggal, waktuMulaiSesi } from "@/services/sessionService";
-import Feather from "@expo/vector-icons/Feather";
+
+import AppBadge from "@/components/ui/appBadge";
+import AppCard from "@/components/ui/appCard";
+import AppSectionTitle from "@/components/ui/appSectionTitle";
+
+import {
+  Ionicons,
+  MaterialCommunityIcons,
+} from "@expo/vector-icons";
+
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useState } from "react";
+
 import {
   ActivityIndicator,
   ScrollView,
@@ -13,20 +24,24 @@ import {
   View,
 } from "react-native";
 
+import {
+  formatTanggal,
+  waktuMulaiSesi,
+} from "@/services/sessionService";
+
 export default function AsistenDashboard() {
   const router = useRouter();
-  const { profile } = useAuth();
-  const { logout } = useAuth();
+  const { profile, logout } = useAuth();
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-      router.replace("/login");
-    } catch (error) {
-      console.error("Gagal logout:", error);
-    }
-  };
+  const {
+    daftarSesi,
+    loading,
+    error,
+  } = useSesi();
 
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+
+  // Data profil
   const namaAsisten = profile?.nama ?? "Asisten";
   const nimAsisten = profile?.nim ?? "-";
   const angkatanAsisten = profile?.angkatan ?? "-";
@@ -40,182 +55,397 @@ export default function AsistenDashboard() {
     .join("")
     .toUpperCase();
 
-  const { daftarSesi, loading, error } = useSesi();
+  // Logout
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.replace("/login");
+    } catch (error) {
+      console.error("Gagal logout:", error);
+    }
+  };
 
+  // Ringkasan sesi
+  const totalSesi = daftarSesi.length;
+
+  const totalSesiMendatang = daftarSesi.filter(
+    (item) => item.status === "Belum Dibuka"
+  ).length;
+
+  // Sesi terdekat
   const sekarang = Date.now();
 
-  // Sesi yang sedang berlangsung, atau yang belum dibuka dan masih akan datang.
   const sesiTerdekat = daftarSesi
     .filter(
       (item) =>
         item.statusDb === "open" ||
-        (item.statusDb === "draft" && waktuMulaiSesi(item) >= sekarang),
+        (item.statusDb === "draft" &&
+          waktuMulaiSesi(item) >= sekarang)
     )
-    .sort((a, b) => waktuMulaiSesi(a) - waktuMulaiSesi(b))
+    .sort(
+      (a, b) =>
+        waktuMulaiSesi(a) - waktuMulaiSesi(b)
+    )
     .slice(0, 2);
 
-  const totalSesi = daftarSesi.length;
-
-  const totalSesiMendatang = daftarSesi.filter(
-    (item) => item.status === "Belum Dibuka",
-  ).length;
-
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  // Menu dashboard
+  const menuItems = [
+    {
+      label: "Jadwal",
+      icon: "calendar-month" as const,
+      onPress: () => router.push("/asprak/jadwal"),
+    },
+    {
+      label: "Sesi",
+      icon: "clipboard-list-outline" as const,
+      onPress: () => router.push("/asprak/sesi"),
+    },
+    {
+      label: "Rekap",
+      icon: "chart-box-outline" as const,
+      onPress: () => router.push("/asprak/rekap"),
+    },
+    {
+      label: "Izin",
+      icon: "file-document-outline" as const,
+      onPress: () => router.push("/asprak/izin"),
+    },
+    {
+      label: "Maps",
+      icon: "map-marker-radius-outline" as const,
+      onPress: () => router.push("/maps"),
+    },
+    {
+      label: "Kelola Lab",
+      icon: "flask-outline" as const,
+      onPress: () => router.push("/asprak/lab"),
+    },
+  ];
 
   return (
     <View style={styles.container}>
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        bounces
+        alwaysBounceVertical
+        overScrollMode="always"
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.headerInfo}>
-            <Text style={styles.greeting}>Halo {namaAsisten}!</Text>
-          </View>
+        {/* HEADER */}
+        <LinearGradient
+          colors={["#7928CA", "#512DA8", "#29215C"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.headerBanner}
+        >
+          <View style={styles.headerDecoration} />
 
-          <View style={{ position: "relative" }}>
+          <View style={styles.headerRow}>
             <TouchableOpacity
-              style={styles.avatar}
-              onPress={() => setShowProfileMenu(!showProfileMenu)}
+              style={styles.avatarCircle}
+              onPress={() =>
+                router.push("/profile")
+              }
+              activeOpacity={0.85}
             >
-              <Text style={styles.avatarText}>{inisial || "A"}</Text>
+              <Text style={styles.avatarText}>
+                {inisial || "A"}
+              </Text>
             </TouchableOpacity>
 
-            {showProfileMenu && (
-              <View style={styles.profileMenu}>
-                <TouchableOpacity
-                  style={styles.logoutButton}
-                  onPress={handleLogout}
-                >
-                  <Feather name="log-out" size={17} color="#EF6464" />
-                  <Text style={styles.logoutText}> Logout</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          </View>
-        </View>
+            <View style={styles.headerTextCol}>
+              <Text style={styles.helloText}>
+                Hello, Asisten!
+              </Text>
 
-        {/* Identitas pengguna */}
-        <View style={styles.profileCard}>
-          <View style={styles.profileIcon}>
-            <Text style={styles.profileIconText}>{inisial || "A"}</Text>
-          </View>
-
-          <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>{namaAsisten}</Text>
-            <Text style={styles.profileNim}>{nimAsisten}</Text>
-            <Text style={styles.profileMajor}>
-              {jurusanAsisten}
-              {" · "}
-              {angkatanAsisten}
-            </Text>
-          </View>
-
-          <View style={styles.roleBadge}>
-            <Text style={styles.roleText}>Asisten</Text>
-          </View>
-        </View>
-
-        {/* Ringkasan Sesi */}
-        <Text style={styles.sectionTitle}>Ringkasan Sesi</Text>
-
-        <View style={styles.statsContainer}>
-          <View style={styles.statCard}>
-            <View style={styles.statIconContainer}>
-              <Text style={styles.statIcon}>▦</Text>
+              <Text
+                style={styles.userName}
+                numberOfLines={1}
+              >
+                {namaAsisten}
+              </Text>
             </View>
 
-            <Text style={styles.statValue}>{totalSesi}</Text>
-            <Text style={styles.statLabel}>Total Sesi</Text>
-          </View>
+            <View style={styles.profileMenuContainer}>
+              <TouchableOpacity
+                style={styles.notifButton}
+                onPress={() =>
+                  setShowProfileMenu(!showProfileMenu)
+                }
+                activeOpacity={0.8}
+              >
+                <Ionicons
+                  name="ellipsis-vertical"
+                  size={22}
+                  color="#FFFFFF"
+                />
+              </TouchableOpacity>
 
-          <View style={styles.statCard}>
-            <View style={styles.statIconContainer}>
-              <Text style={styles.statIcon}>◷</Text>
+              {showProfileMenu && (
+                <View style={styles.profileMenu}>
+                  <TouchableOpacity
+                    style={styles.logoutButton}
+                    onPress={handleLogout}
+                  >
+                    <Ionicons
+                      name="log-out-outline"
+                      size={17}
+                      color="#EF6464"
+                    />
+                    <Text style={styles.logoutText}>
+                      Logout
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              )}
             </View>
-
-            <Text style={styles.statValue}>{totalSesiMendatang}</Text>
-            <Text style={styles.statLabel}>Sesi Mendatang</Text>
           </View>
-        </View>
+        </LinearGradient>
 
-        {/* Sesi Terdekat */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Sesi Terdekat</Text>
+        {/* BODY */}
+        <View style={styles.body}>
 
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={() => router.push("/asprak/sesi")}
+          {/* RINGKASAN SESI */}
+          <AppCard
+            gradientColors={[
+              "#39325E",
+              "#292542",
+              "#25213C",
+            ]}
+            style={styles.summaryCard}
           >
-            <Text style={styles.seeAll}>Lihat semua →</Text>
-          </TouchableOpacity>
-        </View>
+            <AppSectionTitle title="Ringkasan Sesi" />
 
-        {loading ? (
-          <View style={styles.emptyContainer}>
-            <ActivityIndicator color="#A5A2FF" />
-          </View>
-        ) : error ? (
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyTitle}>Gagal memuat sesi</Text>
-            <Text style={styles.emptyText}>{error}</Text>
-          </View>
-        ) : sesiTerdekat.length > 0 ? (
-          sesiTerdekat.map((item) => (
-            <View key={item.id} style={styles.scheduleCard}>
-              <View style={styles.scheduleHeader}>
-                <View style={styles.codeBadge}>
-                  <Text style={styles.codeText}>
-                    {item.kode || `Kelas ${item.kelas}`}
-                  </Text>
-                </View>
+            <View style={styles.summaryStats}>
+              <View style={styles.statItem}>
 
-                <View
-                  style={[
-                    styles.statusBadge,
-                    item.status === "Belum Dibuka" && styles.statusBelumDibuka,
-                    item.status === "Sedang Berlangsung" &&
-                      styles.statusBerlangsung,
-                    item.status === "Selesai" && styles.statusSelesai,
-                  ]}
-                >
-                  <Text style={styles.statusText}>{item.status}</Text>
-                </View>
-              </View>
+                <Text style={styles.statValue}>
+                  {totalSesi}
+                </Text>
 
-              <Text style={styles.subject}>{item.mataPraktikum}</Text>
-
-              <Text style={styles.classText}>Kelas {item.kelas}</Text>
-
-              <View style={styles.scheduleDivider} />
-
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Tanggal</Text>
-                <Text style={styles.infoValue}>
-                  {item.hari}, {formatTanggal(item.tanggal)}
+                <Text style={styles.statLabel}>
+                  Total Sesi
                 </Text>
               </View>
 
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Waktu</Text>
-                <Text style={styles.infoValue}>{item.waktu}</Text>
-              </View>
+              <View style={styles.statDivider} />
 
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Ruangan</Text>
-                <Text style={styles.infoValue}>{item.ruangan}</Text>
+              <View style={styles.statItem}>
+
+                <Text style={styles.statValue}>
+                  {totalSesiMendatang}
+                </Text>
+
+                <Text style={styles.statLabel}>
+                  Sesi Mendatang
+                </Text>
               </View>
             </View>
-          ))
-        ) : (
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyTitle}>Belum Ada Sesi</Text>
-            <Text style={styles.emptyText}>
-              Tidak ada sesi mendatang atau sesi yang sedang berlangsung.
-            </Text>
-          </View>
-        )}
+          </AppCard>
+
+          {/* MENU UTAMA */}
+          <AppCard
+            gradientColors={[
+              "#39325E",
+              "#292542",
+            ]}
+            style={styles.menuCard}
+          >
+            <AppSectionTitle title="Menu Utama" />
+
+            <View style={styles.menuGrid}>
+              {menuItems.map((item) => (
+                <TouchableOpacity
+                  key={item.label}
+                  style={styles.menuBox}
+                  onPress={item.onPress}
+                  activeOpacity={0.8}
+                >
+                  <LinearGradient
+                    colors={["#7651C9", "#49358B"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.menuIconCircle}
+                  >
+                    <MaterialCommunityIcons
+                      name={item.icon}
+                      size={23}
+                      color="#FFFFFF"
+                    />
+                  </LinearGradient>
+
+                  <Text style={styles.menuLabel}>
+                    {item.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </AppCard>
+
+          {/* SESI TERDEKAT */}
+          <AppCard
+            gradientColors={[
+              "#39325E",
+              "#292542",
+              "#25213C",
+            ]}
+            style={styles.nearestCard}
+          >
+            <AppSectionTitle
+              title="Sesi Terdekat"
+              actionLabel="Lihat Semua"
+              onActionPress={() =>
+                router.push("/asprak/sesi")
+              }
+            />
+
+            {loading ? (
+              <View style={styles.emptyBox}>
+                <ActivityIndicator color="#B58AFF" />
+              </View>
+            ) : error ? (
+              <View style={styles.emptyBox}>
+                <Text style={styles.emptyTitle}>
+                  Gagal memuat sesi
+                </Text>
+
+                <Text style={styles.emptyText}>
+                  {error}
+                </Text>
+              </View>
+            ) : sesiTerdekat.length === 0 ? (
+              <View style={styles.emptyBox}>
+                <Ionicons
+                  name="calendar-outline"
+                  size={30}
+                  color="#77718F"
+                />
+
+                <Text style={styles.emptyTitle}>
+                  Belum Ada Sesi
+                </Text>
+
+                <Text style={styles.emptyText}>
+                  Tidak ada sesi mendatang atau sesi
+                  yang sedang berlangsung.
+                </Text>
+              </View>
+            ) : (
+              sesiTerdekat.map((item, idx) => {
+                const statusVariant =
+                  item.status === "Sedang Berlangsung"
+                    ? "warning"
+                    : "primary";
+
+                return (
+                  <View
+                    key={item.id}
+                    style={[
+                      styles.sessionItem,
+                      idx === sesiTerdekat.length - 1 && {
+                        marginBottom: 0,
+                      },
+                    ]}
+                  >
+                    <View style={styles.sessionTopRow}>
+                      <Text style={styles.sessionCode}>
+                        {item.kode || `Kelas ${item.kelas}`}
+                      </Text>
+
+                      <AppBadge
+                        label={item.status}
+                        variant={statusVariant}
+                      />
+                    </View>
+
+                    <Text
+                      style={styles.sessionName}
+                      numberOfLines={1}
+                    >
+                      {item.mataPraktikum}
+                    </Text>
+
+                    <View style={styles.sessionMetaRow}>
+                      <Ionicons
+                        name="people-outline"
+                        size={14}
+                        color="#AAA4C5"
+                      />
+
+                      <Text style={styles.sessionMeta}>
+                        Kelas {item.kelas}
+                      </Text>
+                    </View>
+
+                    <View style={styles.sessionMetaRow}>
+                      <Ionicons
+                        name="calendar-outline"
+                        size={14}
+                        color="#AAA4C5"
+                      />
+
+                      <Text style={styles.sessionMeta}>
+                        {item.hari},{" "}
+                        {formatTanggal(item.tanggal)}
+                      </Text>
+                    </View>
+
+                    <View style={styles.sessionMetaRow}>
+                      <Ionicons
+                        name="time-outline"
+                        size={14}
+                        color="#AAA4C5"
+                      />
+
+                      <Text style={styles.sessionMeta}>
+                        {item.waktu}
+                      </Text>
+
+                      <Ionicons
+                        name="location-outline"
+                        size={14}
+                        color="#AAA4C5"
+                        style={{ marginLeft: 8 }}
+                      />
+
+                      <Text style={styles.sessionMeta}>
+                        {item.ruangan}
+                      </Text>
+                    </View>
+                  </View>
+                );
+              })
+            )}
+          </AppCard>
+
+          {/* INFORMASI LAB */}
+          <AppCard
+            gradientColors={[
+              "#39325E",
+              "#292542",
+            ]}
+            style={styles.labCard}
+          >
+
+            <TouchableOpacity
+              style={styles.labButton}
+              onPress={() =>
+                router.push("/asprak/lab")
+              }
+              activeOpacity={0.8}
+            >
+              <Text style={styles.labButtonText}>
+                Buka Kelola Lab
+              </Text>
+
+              <Ionicons
+                name="arrow-forward"
+                size={17}
+                color="#FFFFFF"
+              />
+            </TouchableOpacity>
+          </AppCard>
+        </View>
       </ScrollView>
     </View>
   );
@@ -224,271 +454,323 @@ export default function AsistenDashboard() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#25292e",
+    backgroundColor: "#1E1B35",
   },
+
   scrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 24,
+    paddingTop: 0,
     paddingBottom: 36,
   },
-  header: {
+
+  // Header
+  headerBanner: {
+    paddingTop: 58,
+    paddingBottom: 78,
+    paddingHorizontal: 22,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    overflow: "visible",
+  },
+
+  headerDecoration: {
+    position: "absolute",
+    width: 190,
+    height: 190,
+    borderRadius: 95,
+    backgroundColor: "rgba(255,255,255,0.06)",
+    right: -55,
+    top: -55,
+  },
+
+  headerRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 24,
   },
-  headerInfo: {
-    flex: 1,
-  },
-  greeting: {
-    color: "#FFFFFF",
-    fontSize: 27,
-    fontWeight: "700",
-    marginBottom: 6,
-  },
-  avatar: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    backgroundColor: "#45416F",
+
+  avatarCircle: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: "rgba(255,255,255,0.18)",
+    borderWidth: 1.5,
+    borderColor: "rgba(255,255,255,0.45)",
     alignItems: "center",
     justifyContent: "center",
-    marginLeft: 12,
+    marginRight: 14,
   },
+
   avatarText: {
     color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "700",
   },
-  profileCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#343941",
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#454B55",
-    padding: 14,
-    marginBottom: 28,
-    gap: 12,
-  },
-  profileIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: "#45416F",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  profileIconText: {
-    color: "#C7C5FF",
-    fontWeight: "bold",
-    fontSize: 14,
-  },
-  profileInfo: {
+
+  headerTextCol: {
     flex: 1,
   },
-  profileName: {
-    color: "#FFFFFF",
-    fontWeight: "bold",
-    fontSize: 14,
-    marginBottom: 4,
-  },
-  profileNim: {
-    color: "#C7C5FF",
-    fontSize: 12,
-    marginBottom: 4,
-  },
-  profileMajor: {
-    color: "#B8BCC4",
-    fontSize: 11,
-  },
-  roleBadge: {
-    backgroundColor: "#45416F",
-    paddingHorizontal: 8,
-    paddingVertical: 5,
-    borderRadius: 7,
-  },
-  roleText: {
-    color: "#C7C5FF",
-    fontSize: 10,
-    fontWeight: "bold",
-  },
-  sectionTitle: {
-    color: "#FFFFFF",
-    fontSize: 17,
-    fontWeight: "700",
-    marginBottom: 14,
-  },
-  statsContainer: {
-    flexDirection: "row",
-    gap: 12,
-    marginBottom: 28,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: "#343941",
-    borderWidth: 1,
-    borderColor: "#454B55",
-    borderRadius: 16,
-    padding: 16,
-  },
-  statIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: "#45416F",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 14,
-  },
-  statIcon: {
-    color: "#D5D3FF",
-    fontSize: 23,
-    fontWeight: "600",
-  },
-  statValue: {
-    color: "#FFFFFF",
-    fontSize: 26,
-    fontWeight: "700",
-    marginBottom: 4,
-  },
-  statLabel: {
-    color: "#A6ABB5",
-    fontSize: 12,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 14,
-  },
-  seeAll: {
-    color: "#A5A2FF",
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  scheduleCard: {
-    backgroundColor: "#343941",
-    borderWidth: 1,
-    borderColor: "#454B55",
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
-  },
-  scheduleHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 14,
-  },
-  codeBadge: {
-    backgroundColor: "#45416F",
-    borderRadius: 7,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  codeText: {
-    color: "#D5D3FF",
-    fontSize: 11,
-    fontWeight: "700",
-  },
-  statusBadge: {
-    borderRadius: 7,
-    paddingHorizontal: 9,
-    paddingVertical: 6,
-  },
-  statusBelumDibuka: {
-    backgroundColor: "#854D0E",
-  },
-  statusBerlangsung: {
-    backgroundColor: "#164E63",
-  },
-  statusSelesai: {
-    backgroundColor: "#4B5563",
-  },
-  statusText: {
-    color: "#FFFFFF",
-    fontSize: 11,
-    fontWeight: "600",
-  },
-  subject: {
-    color: "#FFFFFF",
-    fontSize: 17,
-    fontWeight: "bold",
-    lineHeight: 24,
-  },
-  classText: {
-    color: "#A5A2FF",
-    fontSize: 12,
+
+  helloText: {
+    color: "#E4D8FF",
+    fontSize: 13,
     fontWeight: "500",
-    marginTop: 6,
+    marginBottom: 3,
   },
-  scheduleDivider: {
-    height: 1,
-    backgroundColor: "#454B55",
-    marginVertical: 14,
-  },
-  infoRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 10,
-  },
-  infoLabel: {
-    color: "#A6ABB5",
-    fontSize: 12,
-  },
-  infoValue: {
+
+  userName: {
     color: "#FFFFFF",
-    fontSize: 12,
-    fontWeight: "500",
-    textAlign: "right",
-    flex: 1,
-    marginLeft: 16,
-  },
-  emptyContainer: {
-    backgroundColor: "#343941",
-    borderWidth: 1,
-    borderColor: "#454B55",
-    borderRadius: 16,
-    padding: 24,
-    alignItems: "center",
-  },
-  emptyTitle: {
-    color: "#FFFFFF",
-    fontSize: 15,
+    fontSize: 21,
     fontWeight: "700",
-    marginBottom: 8,
+    letterSpacing: 0.2,
   },
-  emptyText: {
-    color: "#A6ABB5",
-    fontSize: 12,
-    textAlign: "center",
-    lineHeight: 18,
+
+  profileMenuContainer: {
+    position: "relative",
+    zIndex: 10,
   },
+
+  notifButton: {
+    padding: 9,
+    backgroundColor: "rgba(255,255,255,0.13)",
+    borderRadius: 13,
+  },
+
   profileMenu: {
     position: "absolute",
-    top: 55,
+    top: 48,
     right: 0,
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    padding: 8,
-    minWidth: 120,
-    elevation: 5,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    padding: 6,
+    minWidth: 125,
+    elevation: 8,
     zIndex: 100,
   },
 
   logoutButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 10,
     paddingHorizontal: 12,
-    borderRadius: 8,
+    gap: 7,
   },
 
   logoutText: {
-    color: "#EF4444",
-    fontSize: 14,
+    color: "#EF6464",
+    fontSize: 13,
+    fontWeight: "600",
+  },
+
+  // Body
+  body: {
+    paddingHorizontal: 20,
+    marginTop: -42,
+  },
+
+  // Summary
+  summaryCard: {
+    marginBottom: 18,
+    borderRadius: 22,
+    padding: 20,
+  },
+
+  summaryStats: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-around",
+    paddingTop: 8,
+  },
+
+  statItem: {
+    flex: 1,
+    alignItems: "center",
+  },
+
+  statValue: {
+    color: "#FFFFFF",
+    fontSize: 27,
+    fontWeight: "700",
+  },
+
+  statLabel: {
+    color: "#B8B1D0",
+    fontSize: 11,
+    marginTop: 5,
+    textAlign: "center",
+  },
+
+  statDivider: {
+    width: 1,
+    height: 65,
+    backgroundColor: "rgba(255,255,255,0.15)",
+  },
+
+  // Menu
+  menuCard: {
+    marginBottom: 18,
+    borderRadius: 22,
+    padding: 20,
+  },
+
+  menuGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "flex-start",
+    columnGap: 12,
+    rowGap: 13,
+  },
+
+  menuBox: {
+    width: "30%",
+    aspectRatio: 1,
+    backgroundColor: "rgba(255,255,255,0.055)",
+    borderRadius: 17,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.07)",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 8,
+  },
+
+  menuIconCircle: {
+    width: 43,
+    height: 43,
+    borderRadius: 15,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 9,
+  },
+
+  menuLabel: {
+    color: "#F0EDF9",
+    fontSize: 12,
     fontWeight: "600",
     textAlign: "center",
+  },
+
+  // Nearest session
+  nearestCard: {
+    borderRadius: 22,
+    padding: 20,
+    marginBottom: 18,
+    minHeight: 190,
+  },
+
+  sessionItem: {
+    backgroundColor: "rgba(255,255,255,0.055)",
+    borderRadius: 15,
+    padding: 15,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.07)",
+  },
+
+  sessionTopRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 9,
+    gap: 8,
+  },
+
+  sessionCode: {
+    color: "#C4A4FF",
+    fontSize: 11,
+    fontWeight: "700",
+  },
+
+  sessionName: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "700",
+    marginBottom: 10,
+  },
+
+  sessionMetaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+    marginTop: 6,
+  },
+
+  sessionMeta: {
+    color: "#AAA4C5",
+    fontSize: 11,
+  },
+
+  // Empty state
+  emptyBox: {
+    paddingVertical: 28,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  emptyTitle: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "600",
+    marginTop: 8,
+    marginBottom: 5,
+  },
+
+  emptyText: {
+    color: "#AAA4C5",
+    fontSize: 12,
+    textAlign: "center",
+    lineHeight: 18,
+  },
+
+  // Lab
+  labCard: {
+    borderRadius: 22,
+    padding: 20,
+  },
+
+  labContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    marginBottom: 18,
+  },
+
+  labIcon: {
+    width: 54,
+    height: 54,
+    borderRadius: 17,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  labInfo: {
+    flex: 1,
+  },
+
+  labTitle: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "700",
+    marginBottom: 5,
+  },
+
+  labDescription: {
+    color: "#AAA4C5",
+    fontSize: 11,
+    lineHeight: 17,
+  },
+
+  labButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 9,
+    backgroundColor: "#6544B5",
+    paddingVertical: 12,
+    borderRadius: 13,
+  },
+
+  labButtonText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "700",
   },
 });
