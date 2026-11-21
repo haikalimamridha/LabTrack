@@ -1,3 +1,4 @@
+import BackButton from "@/components/ui/backButton";
 import {
   listenLaboratorium,
   type Laboratorium,
@@ -439,16 +440,7 @@ export default function JadwalScreen() {
           end={{ x: 1, y: 1 }}
           style={styles.header}
         >
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.back()}
-          >
-            <MaterialCommunityIcons
-              name="chevron-left"
-              size={27}
-              color="#FFFFFF"
-            />
-          </TouchableOpacity>
+          <BackButton />
 
           <Text style={styles.headerTitle}>Jadwal Praktikum</Text>
 
@@ -1124,16 +1116,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 22,
     borderBottomLeftRadius: 28,
     borderBottomRightRadius: 28,
-  },
-
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 13,
-    backgroundColor: "rgba(255,255,255,0.15)",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 18,
   },
 
   headerIcon: {
