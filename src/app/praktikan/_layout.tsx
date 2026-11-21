@@ -68,7 +68,7 @@ function CustomTabBar({ state }: CustomTabBarProps) {
         {/* PROFILE */}
         <Pressable
           style={styles.navItem}
-          onPress={() => navigate("/praktikan/profile")}
+          onPress={() => navigate("/profile")}
         >
           <Ionicons
             name={

@@ -111,7 +111,7 @@ export default function Index() {
             <View style={styles.avatarWrapper}>
               <TouchableOpacity
                 style={styles.avatarCircle}
-                onPress={() => router.push("/praktikan/profile")}
+                onPress={() => router.push("/profile")}
                 activeOpacity={0.85}
               >
                 <Ionicons
