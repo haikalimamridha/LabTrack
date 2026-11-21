@@ -88,7 +88,6 @@ type Form = {
   labId: string;
   hari: string;
   waktu: string;
-  ruangan: string;
   asisten: string;
 };
 
@@ -98,7 +97,6 @@ const FORM_KOSONG: Form = {
   labId: "",
   hari: "",
   waktu: "",
-  ruangan: "",
   asisten: "",
 };
 
@@ -265,7 +263,6 @@ export default function JadwalScreen() {
             labId: item.labId ?? "",
             hari: item.hari,
             waktu: item.waktu,
-            ruangan: item.ruangan,
             asisten: item.asisten,
           }
         : FORM_KOSONG
@@ -283,7 +280,6 @@ export default function JadwalScreen() {
     const lab = daftarLab.find((l) => l.id === form.labId);
 
     const waktu = form.waktu.trim();
-    const ruangan = form.ruangan.trim();
     const asisten = form.asisten.trim();
 
     let pesan: string | null = null;
@@ -295,7 +291,7 @@ export default function JadwalScreen() {
     else if (!waktuValid(waktu)) {
       pesan =
         "Format waktu harus seperti 09.00 - 11.00 (selesai setelah mulai).";
-    } else if (!ruangan) pesan = "Ruangan wajib diisi.";
+    }
     else if (!asisten) pesan = "Nama asisten wajib diisi.";
 
     if (pesan || !kelas || !mk || !lab) {
@@ -312,7 +308,6 @@ export default function JadwalScreen() {
       kelas: kelas.kode,
       hari: form.hari,
       waktu,
-      ruangan,
       asisten,
     };
 
@@ -409,7 +404,6 @@ export default function JadwalScreen() {
         tanggal,
         hari: item.hari,
         waktu: item.waktu,
-        ruangan: item.ruangan,
       });
 
       if (hasil.ok) {
@@ -456,14 +450,6 @@ export default function JadwalScreen() {
             />
           </TouchableOpacity>
 
-          <View style={styles.headerIcon}>
-            <MaterialCommunityIcons
-              name="calendar-month"
-              size={30}
-              color="#FFFFFF"
-            />
-          </View>
-
           <Text style={styles.headerTitle}>Jadwal Praktikum</Text>
 
           <Text style={styles.headerSubtitle}>
@@ -474,40 +460,16 @@ export default function JadwalScreen() {
         {/* STATISTIK */}
         <View style={styles.statsContainer}>
           <View style={styles.statCard}>
-            <View style={styles.statIcon}>
-              <MaterialCommunityIcons
-                name="calendar-check"
-                size={23}
-                color="#B99AFF"
-              />
-            </View>
-
             <Text style={styles.statValue}>{jadwalTampil.length}</Text>
             <Text style={styles.statLabel}>Total Jadwal</Text>
           </View>
 
           <View style={styles.statCard}>
-            <View style={styles.statIcon}>
-              <MaterialCommunityIcons
-                name="account-group-outline"
-                size={23}
-                color="#69D9A3"
-              />
-            </View>
-
             <Text style={styles.statValue}>{totalKelas}</Text>
             <Text style={styles.statLabel}>Total Kelas</Text>
           </View>
 
           <View style={styles.statCard}>
-            <View style={styles.statIcon}>
-              <MaterialCommunityIcons
-                name="book-open-page-variant-outline"
-                size={23}
-                color="#F3C879"
-              />
-            </View>
-
             <Text style={styles.statValue}>{daftarMk.length}</Text>
             <Text style={styles.statLabel}>Mata Praktikum</Text>
           </View>
@@ -617,18 +579,6 @@ export default function JadwalScreen() {
                     <View style={styles.infoContent}>
                       <Text style={styles.infoLabel}>Waktu</Text>
                       <Text style={styles.infoValue}>{item.waktu}</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.infoItem}>
-                    <MaterialCommunityIcons
-                      name="flask-outline"
-                      size={18}
-                      color="#B99AFF"
-                    />
-                    <View style={styles.infoContent}>
-                      <Text style={styles.infoLabel}>Ruangan</Text>
-                      <Text style={styles.infoValue}>{item.ruangan}</Text>
                     </View>
                   </View>
 
@@ -927,14 +877,6 @@ export default function JadwalScreen() {
                 Gunakan format jam seperti 09.00 - 11.00.
               </Text>
 
-              {/* RUANGAN */}
-              <FormInput
-                label="Ruangan"
-                value={form.ruangan}
-                onChangeText={(t) => setForm({ ...form, ruangan: t })}
-                placeholder="Contoh: Lab Komputer 1"
-              />
-
               {/* ASISTEN */}
               <FormInput
                 label="Nama Asisten"
@@ -1085,17 +1027,6 @@ export default function JadwalScreen() {
                   />
                   <Text style={styles.sessionDetailText}>
                     {jadwalSesi?.waktu}
-                  </Text>
-                </View>
-
-                <View style={styles.sessionDetailItem}>
-                  <MaterialCommunityIcons
-                    name="map-marker-outline"
-                    size={16}
-                    color="#B99AFF"
-                  />
-                  <Text style={styles.sessionDetailText}>
-                    {jadwalSesi?.ruangan}
                   </Text>
                 </View>
               </View>

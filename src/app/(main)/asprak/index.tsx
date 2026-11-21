@@ -13,7 +13,7 @@ import {
 
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   ActivityIndicator,
@@ -29,6 +29,8 @@ import {
   waktuMulaiSesi,
 } from "@/services/sessionService";
 
+import { listenLaboratorium, type Laboratorium } from "@/services/laboratoriumService";
+
 export default function AsistenDashboard() {
   const router = useRouter();
   const { profile, logout } = useAuth();
@@ -40,6 +42,21 @@ export default function AsistenDashboard() {
   } = useSesi();
 
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [daftarLab, setDaftarLab] = useState<Laboratorium[]>([]);
+  
+  useEffect(() => {
+    const unsubscribe = listenLaboratorium(
+      (data) => {
+        setDaftarLab(data);
+      },
+      (error) => {
+        console.error("Gagal memuat laboratorium:", error);
+      }
+    );
+
+    return unsubscribe;
+  }, []);
+  
 
   // Data profil
   const namaAsisten = profile?.nama ?? "Asisten";
@@ -409,7 +426,7 @@ export default function AsistenDashboard() {
                       />
 
                       <Text style={styles.sessionMeta}>
-                        {item.ruangan}
+                        {daftarLab.find((lab) => lab.id === item.labId)?.nama}
                       </Text>
                     </View>
                   </View>

@@ -10,8 +10,10 @@ import {
   MaterialCommunityIcons,
 } from "@expo/vector-icons";
 
+import { listenLaboratorium, type Laboratorium } from "@/services/laboratoriumService";
+
 import { useRouter } from "expo-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import {
   ActivityIndicator,
@@ -41,6 +43,20 @@ export default function JadwalScreen() {
     useState<FilterMode>("Semua");
 
   const [sortByHari, setSortByHari] = useState(false);
+  const [daftarLab, setDaftarLab] = useState<Laboratorium[]>([]);
+  
+  useEffect(() => {
+    const unsubscribe = listenLaboratorium(
+      (data) => {
+        setDaftarLab(data);
+      },
+      (error) => {
+        console.error("Gagal memuat laboratorium:", error);
+      }
+    );
+
+    return unsubscribe;
+  }, []);
 
   const hariNamaHariIni = useMemo(() => {
     const namaHari = [
@@ -74,7 +90,6 @@ export default function JadwalScreen() {
         (item) =>
           item.mataPraktikum?.toLowerCase().includes(q) ||
           item.asisten?.toLowerCase().includes(q) ||
-          item.ruangan?.toLowerCase().includes(q) ||
           item.kode?.toLowerCase().includes(q) ||
           item.kelas?.toLowerCase().includes(q)
       );
@@ -357,7 +372,7 @@ export default function JadwalScreen() {
                       style={styles.metaSecondary}
                       numberOfLines={1}
                     >
-                      {item.ruangan}
+                      {daftarLab.find((lab) => lab.id === item.labId)?.nama}
                     </Text>
                   </View>
                 </View>

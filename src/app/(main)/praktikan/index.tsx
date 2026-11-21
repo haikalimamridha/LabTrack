@@ -6,6 +6,10 @@ import AppBadge from "@/components/ui/appBadge";
 import AppCard from "@/components/ui/appCard";
 import AppSectionTitle from "@/components/ui/appSectionTitle";
 
+import { useEffect, useState } from "react";
+
+import { listenLaboratorium, type Laboratorium } from "@/services/laboratoriumService";
+
 import {
   Ionicons,
   MaterialCommunityIcons,
@@ -38,6 +42,22 @@ export default function Index() {
     error,
     sudahPresensi,
   } = usePresensi();
+
+  const [daftarLab, setDaftarLab] = useState<Laboratorium[]>([]);
+  
+  useEffect(() => {
+    const unsubscribe = listenLaboratorium(
+      (data) => {
+        setDaftarLab(data);
+      },
+      (error) => {
+        console.error("Gagal memuat laboratorium:", error);
+      }
+    );
+
+    return unsubscribe;
+  }, []);
+  
 
   // Data profil
   const nama = profile?.nama ?? "Praktikan";
@@ -361,7 +381,7 @@ export default function Index() {
                       />
 
                       <Text style={styles.sessionMeta}>
-                        {item.ruangan}
+                        {daftarLab.find((lab) => lab.id === item.labId)?.nama}
                       </Text>
                     </View>
                   </View>

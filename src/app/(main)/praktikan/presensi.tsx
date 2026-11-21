@@ -11,6 +11,8 @@ import {
   View
 } from "react-native";
 
+import { listenLaboratorium, type Laboratorium } from "@/services/laboratoriumService";
+
 import { usePresensi } from "@/context/PresensiContext";
 import { formatJam } from "@/data/sesi";
 import { formatTanggal, type Sesi } from "@/services/sessionService";
@@ -36,6 +38,20 @@ export default function PresensiScreen() {
   const [toast, setToast] = useState<Toast>(null);
   const [mengirim, setMengirim] = useState(false);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("Semua");
+  const [daftarLab, setDaftarLab] = useState<Laboratorium[]>([]);
+  
+  useEffect(() => {
+    const unsubscribe = listenLaboratorium(
+      (data) => {
+        setDaftarLab(data);
+      },
+      (error) => {
+        console.error("Gagal memuat laboratorium:", error);
+      }
+    );
+
+    return unsubscribe;
+  }, []);
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -345,7 +361,9 @@ export default function PresensiScreen() {
                         size={15}
                         color="#9C98B2"
                       />
-                      <Text style={styles.metaText}>{item.ruangan}</Text>
+                      <Text style={styles.metaText}>
+                        {daftarLab.find((lab) => lab.id === item.labId)?.nama}
+                      </Text>
                     </View>
 
                     {catatan && (
@@ -438,7 +456,7 @@ export default function PresensiScreen() {
                 {sesiDipilih?.mataPraktikum}
               </Text>
               <Text style={styles.modalClass}>
-                Kelas {sesiDipilih?.kelas} · {sesiDipilih?.ruangan}
+                Kelas {sesiDipilih?.kelas} · {daftarLab.find((lab) => lab.id === sesiDipilih?.labId)?.nama}
               </Text>
             </View>
 

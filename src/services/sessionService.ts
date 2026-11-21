@@ -44,7 +44,6 @@ export type Sesi = {
   tanggal: string; // YYYY-MM-DD
   hari: string;
   waktu: string;
-  ruangan: string;
   status: StatusSesi; // label UI
   statusDb: StatusDb; // nilai asli di database
   openedAt: Date | null;
@@ -62,7 +61,6 @@ export type SesiInput = {
   tanggal: string;
   hari: string;
   waktu: string;
-  ruangan: string;
 };
 
 export type Jadwal = {
@@ -75,7 +73,6 @@ export type Jadwal = {
   labId: string; 
   hari: string;
   waktu: string;
-  ruangan: string;
   asisten: string;
 };
 
@@ -121,7 +118,6 @@ function toSesi(id: string, d: Data): Sesi {
     hari: d.hari ?? "",
     labId: d.labId ?? "",
     waktu: d.waktu ?? "",
-    ruangan: d.ruangan ?? "",
     status: LABEL_STATUS[statusDb] ?? "Belum Dibuka",
     statusDb,
     openedAt: toDate(d.openedAt),
@@ -140,7 +136,6 @@ function toJadwal(id: string, d: Data): Jadwal {
     labId: d.labId ?? "",
     hari: d.hari ?? "",
     waktu: d.waktu ?? "",
-    ruangan: d.ruangan ?? "",
     asisten: d.asisten ?? "",
   };
 }

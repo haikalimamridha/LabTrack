@@ -82,7 +82,6 @@ export default function IzinPraktikanScreen() {
             tanggal: data.tanggal ?? '',
             hari: data.hari ?? '',
             waktu: data.waktu ?? '',
-            ruangan: data.ruangan ?? '',
             status: statusLabel,
             statusDb,
             openedAt: data.openedAt?.toDate?.() ?? null,
