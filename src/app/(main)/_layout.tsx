@@ -8,26 +8,40 @@ export default function MainLayout() {
       screenOptions={{
         headerShown: false,
       }}
-      tabBar={() => <CustomTabBar />}
+      tabBar={(props) => {
+        const currentRoute =
+          props.state.routes[props.state.index];
+
+        const nestedState = (
+          currentRoute as typeof currentRoute & {
+            state?: {
+              index?: number;
+              routes: { name: string }[];
+            };
+          }
+        ).state;
+
+        const nestedRoute =
+          nestedState?.routes[
+            nestedState.index ?? 0
+          ]?.name ?? "index";
+
+        const showTabBar =
+          (currentRoute.name === "praktikan" &&
+            nestedRoute === "index") ||
+          (currentRoute.name === "asprak" &&
+            nestedRoute === "index") ||
+          currentRoute.name === "profile";
+
+        if (!showTabBar) return null;
+
+        return <CustomTabBar />;
+      }}
     >
-      <Tabs.Screen
-        name="praktikan"
-        options={{ title: "Praktikan" }}
-      />
-
-      <Tabs.Screen
-        name="asprak"
-        options={{ title: "Asprak" }}
-      />
-
-      <Tabs.Screen
-        name="profile"
-        options={{ title: "Profile" }}
-      />
-      <Tabs.Screen
-        name="maps"
-        options={{ title: "Maps" }}
-      />
+      <Tabs.Screen name="praktikan" />
+      <Tabs.Screen name="asprak" />
+      <Tabs.Screen name="profile" />
+      <Tabs.Screen name="maps" />
     </Tabs>
   );
 }
