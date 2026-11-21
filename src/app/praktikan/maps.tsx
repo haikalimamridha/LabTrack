@@ -7,6 +7,7 @@ import {
     ViewAnnotation,
 } from "@maplibre/maplibre-react-native";
 import * as Location from "expo-location";
+import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
     ActivityIndicator,
@@ -32,6 +33,7 @@ const INITIAL_CENTER: [number, number] = [
 
 export default function MapsScreen() {
   const cameraRef = useRef<any>(null);
+  const router = useRouter();
 
   const [labs, setLabs] = useState<Laboratorium[]>([]);
   const [selectedLab, setSelectedLab] =
@@ -189,26 +191,39 @@ export default function MapsScreen() {
         )}
       </Map>
 
-      {/* Header */}
-      <View style={styles.header}>
+        {/* Header */}
+        <View style={styles.header}>
+        <Pressable
+            style={styles.backButton}
+            onPress={() => router.back()}
+        >
+            <Ionicons
+            name="arrow-back"
+            size={22}
+            color="#FFFFFF"
+            />
+        </Pressable>
+
         <View style={styles.headerIcon}>
-          <Ionicons
+            <Ionicons
             name="map"
             size={22}
             color="#FFFFFF"
-          />
+            />
         </View>
 
         <View style={styles.headerText}>
-          <Text style={styles.headerTitle}>
+            <Text style={styles.headerTitle}>
             Peta Kampus
-          </Text>
+            </Text>
 
-          <Text style={styles.headerSubtitle}>
-            Ketuk marker untuk melihat informasi laboratorium
-          </Text>
+            <Text style={styles.headerSubtitle}>
+            {loadingLabs
+                ? "Memuat lokasi laboratorium..."
+                : `${labs.length} laboratorium terdaftar`}
+            </Text>
         </View>
-      </View>
+        </View>
 
       {/* Tombol kontrol peta */}
       <View style={styles.mapControls}>
@@ -546,4 +561,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
   },
+  backButton: {
+    width: 20,
+    height: 44,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 8,
+    },
 });
