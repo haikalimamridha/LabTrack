@@ -1,9 +1,11 @@
+
 import { useAuth } from "@/context/AuthContext";
 import {
   Feather,
   Ionicons,
   MaterialCommunityIcons,
 } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -35,7 +37,6 @@ export default function Index() {
 
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
-  // Logout
   const handleLogout = async () => {
     try {
       setShowProfileMenu(false);
@@ -109,15 +110,20 @@ export default function Index() {
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
-        bounces={true}
-        alwaysBounceVertical={true}
+        bounces
+        alwaysBounceVertical
         overScrollMode="always"
-        decelerationRate="normal"
       >
         {/* HEADER */}
-        <View style={styles.headerBanner}>
+        <LinearGradient
+          colors={["#7928CA", "#512DA8", "#29215C"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.headerBanner}
+        >
+          <View style={styles.headerDecoration} />
+
           <View style={styles.headerRow}>
-            {/* Avatar dan menu logout */}
             <View style={styles.avatarWrapper}>
               <TouchableOpacity
                 style={styles.avatarCircle}
@@ -151,11 +157,8 @@ export default function Index() {
               )}
             </View>
 
-            {/* Informasi pengguna */}
             <View style={styles.headerTextCol}>
-              <Text style={styles.helloText}>
-                Hello!
-              </Text>
+              <Text style={styles.helloText}>Hello!</Text>
 
               <Text
                 style={styles.userName}
@@ -163,9 +166,12 @@ export default function Index() {
               >
                 {nama}
               </Text>
+
+              <Text style={styles.welcomeText}>
+                Selamat datang di LabTrack
+              </Text>
             </View>
 
-            {/* Notifikasi */}
             <TouchableOpacity
               style={styles.notifButton}
               activeOpacity={0.8}
@@ -174,24 +180,30 @@ export default function Index() {
               }
             >
               <Ionicons
-                name="notifications"
-                size={24}
+                name="notifications-outline"
+                size={23}
                 color="#FFFFFF"
               />
-
               <View style={styles.notifDot} />
             </TouchableOpacity>
           </View>
-        </View>
+        </LinearGradient>
 
         {/* BODY */}
         <View style={styles.body}>
           {/* RINGKASAN */}
-          <View style={styles.summaryCard}>
+          <LinearGradient
+            colors={["#39325E", "#292542", "#25213C"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.summaryCard}
+          >
             <View style={styles.cardHeaderRow}>
-              <Text style={styles.cardMutedTitle}>
-                Ringkasan
-              </Text>
+              <View>
+                <Text style={styles.cardMutedTitle}>
+                  Ringkasan Presensi
+                </Text>
+              </View>
 
               <TouchableOpacity
                 activeOpacity={0.75}
@@ -200,64 +212,80 @@ export default function Index() {
                 }
               >
                 <Text style={styles.purpleLink}>
-                  Jadwal Saya
+                  Jadwal Saya →
                 </Text>
               </TouchableOpacity>
             </View>
 
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>
-                Total Sesi
-              </Text>
+            <View style={styles.summaryStats}>
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>
+                  {totalSesi}
+                </Text>
+                <Text style={styles.statLabel}>
+                  Total Sesi
+                </Text>
+              </View>
 
-              <Text style={styles.summaryValue}>
-                {totalSesi}
-              </Text>
+              <View style={styles.statDivider} />
+
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>
+                  {sudahHadir}
+                </Text>
+                <Text style={styles.statLabel}>
+                  Sudah Hadir
+                </Text>
+              </View>
+
+              <View style={styles.statDivider} />
+
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>
+                  {belumHadir}
+                </Text>
+                <Text style={styles.statLabel}>
+                  Belum Hadir
+                </Text>
+              </View>
             </View>
-
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>
-                Sudah Hadir
-              </Text>
-
-              <Text style={styles.summaryValue}>
-                {sudahHadir}
-              </Text>
-            </View>
-
-            <View
-              style={[
-                styles.summaryRow,
-                { marginBottom: 0 },
-              ]}
-            >
-              <Text style={styles.summaryLabel}>
-                Belum Hadir
-              </Text>
-
-              <Text style={styles.summaryValue}>
-                {belumHadir}
-              </Text>
-            </View>
-          </View>
+          </LinearGradient>
 
           {/* MENU DASHBOARD */}
-          <View style={styles.menuCard}>
+          <LinearGradient
+            colors={["#39325E", "#292542"]}
+            style={styles.menuCard}
+          >
+            <View style={styles.sectionHeader}>
+              <Text style={styles.cardMutedTitle}>
+                Menu Utama
+              </Text>
+            </View>
+
             <View style={styles.menuGrid}>
-              {menuItems.map((item) => (
+              {menuItems.map((item, index) => (
                 <TouchableOpacity
                   key={item.label}
                   style={styles.menuBox}
                   onPress={item.onPress}
-                  activeOpacity={0.85}
+                  activeOpacity={0.8}
                 >
-                  <View style={styles.menuWhiteCircle}>
+                  <LinearGradient
+                    colors={
+                      index % 2 === 0
+                        ? ["#7651C9", "#49358B"]
+                        : ["#5367B8", "#39447F"]
+                    }
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.menuIconCircle}
+                  >
                     <MaterialCommunityIcons
                       name={item.icon}
-                      size={21}
-                      color="#4A4665"
+                      size={23}
+                      color="#FFFFFF"
                     />
-                  </View>
+                  </LinearGradient>
 
                   <Text style={styles.menuLabel}>
                     {item.label}
@@ -265,14 +293,19 @@ export default function Index() {
                 </TouchableOpacity>
               ))}
             </View>
-          </View>
+          </LinearGradient>
 
           {/* SESI TERDEKAT */}
-          <View style={styles.nearestCard}>
+          <LinearGradient
+            colors={["#39325E", "#292542", "#25213C"]}
+            style={styles.nearestCard}
+          >
             <View style={styles.cardHeaderRow}>
-              <Text style={styles.cardMutedTitle}>
-                Sesi Terdekat
-              </Text>
+              <View>
+                <Text style={styles.cardMutedTitle}>
+                  Sesi Terdekat
+                </Text>
+              </View>
 
               <TouchableOpacity
                 activeOpacity={0.75}
@@ -281,31 +314,34 @@ export default function Index() {
                 }
               >
                 <Text style={styles.purpleLink}>
-                  Lihat Semua
+                  Lihat Semua →
                 </Text>
               </TouchableOpacity>
             </View>
 
             {loading ? (
               <View style={styles.emptyBox}>
-                <ActivityIndicator color="#9623D6" />
+                <ActivityIndicator color="#B58AFF" />
               </View>
             ) : error ? (
               <View style={styles.emptyBox}>
                 <Text style={styles.emptyTitle}>
                   Gagal memuat sesi
                 </Text>
-
                 <Text style={styles.emptyText}>
                   {error}
                 </Text>
               </View>
             ) : sesiTerdekat.length === 0 ? (
               <View style={styles.emptyBox}>
+                <Ionicons
+                  name="calendar-outline"
+                  size={30}
+                  color="#77718F"
+                />
                 <Text style={styles.emptyTitle}>
                   Belum Ada Jadwal
                 </Text>
-
                 <Text style={styles.emptyText}>
                   Kamu belum memiliki jadwal praktikum
                   mendatang.
@@ -327,9 +363,11 @@ export default function Index() {
                       {item.kode || `Kelas ${item.kelas}`}
                     </Text>
 
-                    <Text style={styles.sessionStatus}>
-                      {item.status}
-                    </Text>
+                    <View style={styles.statusBadge}>
+                      <Text style={styles.sessionStatus}>
+                        {item.status}
+                      </Text>
+                    </View>
                   </View>
 
                   <Text
@@ -339,15 +377,42 @@ export default function Index() {
                     {item.mataPraktikum}
                   </Text>
 
-                  <Text style={styles.sessionMeta}>
-                    {item.hari},{" "}
-                    {formatTanggal(item.tanggal)} ·{" "}
-                    {item.waktu} · {item.ruangan}
-                  </Text>
+                  <View style={styles.sessionMetaRow}>
+                    <Ionicons
+                      name="calendar-outline"
+                      size={13}
+                      color="#AAA4C5"
+                    />
+                    <Text style={styles.sessionMeta}>
+                      {item.hari},{" "}
+                      {formatTanggal(item.tanggal)}
+                    </Text>
+                  </View>
+
+                  <View style={styles.sessionMetaRow}>
+                    <Ionicons
+                      name="time-outline"
+                      size={13}
+                      color="#AAA4C5"
+                    />
+                    <Text style={styles.sessionMeta}>
+                      {item.waktu}
+                    </Text>
+
+                    <Ionicons
+                      name="location-outline"
+                      size={13}
+                      color="#AAA4C5"
+                      style={{ marginLeft: 8 }}
+                    />
+                    <Text style={styles.sessionMeta}>
+                      {item.ruangan}
+                    </Text>
+                  </View>
                 </View>
               ))
             )}
-          </View>
+          </LinearGradient>
         </View>
       </ScrollView>
     </View>
@@ -357,20 +422,32 @@ export default function Index() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#1E1B3A",
+    backgroundColor: "#1E1B35",
   },
 
   scrollContent: {
-    paddingTop: 20,
-    paddingBottom: 140,
+    paddingTop: 0,
+    paddingBottom: 180,
   },
 
   // Header
   headerBanner: {
-    backgroundColor: "#9623D6",
-    paddingTop: 52,
-    paddingBottom: 62,
+    paddingTop: 58,
+    paddingBottom: 78,
     paddingHorizontal: 22,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    overflow: "visible",
+  },
+
+  headerDecoration: {
+    position: "absolute",
+    width: 190,
+    height: 190,
+    borderRadius: 95,
+    backgroundColor: "rgba(255,255,255,0.06)",
+    right: -55,
+    top: -55,
   },
 
   headerRow: {
@@ -385,12 +462,12 @@ const styles = StyleSheet.create({
   },
 
   avatarCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: "#25A9C9",
-    borderWidth: 2,
-    borderColor: "rgba(255,255,255,0.35)",
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: "rgba(255,255,255,0.18)",
+    borderWidth: 1.5,
+    borderColor: "rgba(255,255,255,0.45)",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -403,11 +480,11 @@ const styles = StyleSheet.create({
 
   profileMenu: {
     position: "absolute",
-    top: 56,
+    top: 58,
     left: 0,
-    backgroundColor: "#2F2B44",
+    backgroundColor: "#302B49",
     borderWidth: 1,
-    borderColor: "#4A4566",
+    borderColor: "#51496E",
     borderRadius: 12,
     padding: 6,
     minWidth: 130,
@@ -425,7 +502,7 @@ const styles = StyleSheet.create({
   },
 
   logoutText: {
-    color: "#FF6B7E",
+    color: "#FF8494",
     fontSize: 13,
     fontWeight: "600",
   },
@@ -435,92 +512,121 @@ const styles = StyleSheet.create({
   },
 
   helloText: {
-    color: "#F3E5FF",
+    color: "#E4D8FF",
     fontSize: 13,
     fontWeight: "500",
-    marginBottom: 2,
+    marginBottom: 3,
   },
 
   userName: {
     color: "#FFFFFF",
-    fontSize: 22,
+    fontSize: 21,
     fontWeight: "700",
     letterSpacing: 0.2,
   },
 
+  welcomeText: {
+    color: "#D2C4F0",
+    fontSize: 11,
+    marginTop: 4,
+  },
+
   notifButton: {
     position: "relative",
-    padding: 6,
+    padding: 9,
+    backgroundColor: "rgba(255,255,255,0.13)",
+    borderRadius: 13,
   },
 
   notifDot: {
     position: "absolute",
-    top: 6,
-    right: 7,
+    top: 7,
+    right: 8,
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#3B82F6",
+    backgroundColor: "#FF718D",
+    borderWidth: 1,
+    borderColor: "#FFFFFF",
   },
 
   // Body
   body: {
     paddingHorizontal: 20,
+    marginTop: -42,
   },
 
-  // Summary
-  summaryCard: {
-    backgroundColor: "#2F2C44",
-    borderRadius: 18,
-    padding: 20,
-    marginTop: -40,
-    marginBottom: 18,
-    elevation: 4,
-  },
-
+  // Card header
   cardHeaderRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 16,
+    marginBottom: 19,
   },
 
   cardMutedTitle: {
-    color: "#8E8AA3",
-    fontSize: 13,
-    fontWeight: "500",
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "700",
   },
 
   purpleLink: {
-    color: "#9623D6",
-    fontSize: 13,
+    color: "#C5A3FF",
+    fontSize: 12,
     fontWeight: "600",
   },
 
-  summaryRow: {
+  // Summary
+  summaryCard: {
+    borderRadius: 22,
+    padding: 20,
+    marginBottom: 18,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+    elevation: 5,
+  },
+
+  summaryStats: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 14,
+    justifyContent: "space-between",
+    paddingTop: 5,
   },
 
-  summaryLabel: {
-    color: "#FFFFFF",
-    fontSize: 15,
-    fontWeight: "600",
+  statItem: {
+    flex: 1,
+    alignItems: "center",
   },
 
-  summaryValue: {
+  statValue: {
     color: "#FFFFFF",
-    fontSize: 15,
-    fontWeight: "600",
+    fontSize: 27,
+    fontWeight: "700",
+  },
+
+  statLabel: {
+    color: "#B8B1D0",
+    fontSize: 10,
+    marginTop: 5,
+    textAlign: "center",
+  },
+
+  statDivider: {
+    width: 1,
+    height: 37,
+    backgroundColor: "rgba(255,255,255,0.15)",
   },
 
   // Menu
   menuCard: {
-    backgroundColor: "#2F2C44",
-    borderRadius: 18,
-    padding: 18,
+    borderRadius: 22,
+    padding: 20,
+    marginBottom: 18,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.07)",
+  },
+
+  sectionHeader: {
     marginBottom: 18,
   },
 
@@ -529,66 +635,78 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     justifyContent: "flex-start",
     columnGap: 12,
-    rowGap: 14,
+    rowGap: 13,
   },
 
   menuBox: {
     width: "30%",
     aspectRatio: 1,
-    backgroundColor: "#4A4665",
-    borderRadius: 18,
+    backgroundColor: "rgba(255,255,255,0.055)",
+    borderRadius: 17,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.07)",
     alignItems: "center",
     justifyContent: "center",
     padding: 8,
   },
 
-  menuWhiteCircle: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: "#FFFFFF",
+  menuIconCircle: {
+    width: 43,
+    height: 43,
+    borderRadius: 15,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 7,
+    marginBottom: 9,
   },
 
   menuLabel: {
-    color: "#E2DFEE",
+    color: "#F0EDF9",
     fontSize: 12,
-    fontWeight: "500",
+    fontWeight: "600",
   },
 
   // Nearest session
   nearestCard: {
-    backgroundColor: "#2F2C44",
-    borderRadius: 18,
+    borderRadius: 22,
     padding: 20,
     minHeight: 190,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+    elevation: 5,
   },
 
   sessionItem: {
-    backgroundColor: "#3A3654",
-    borderRadius: 12,
-    padding: 13,
-    marginBottom: 10,
+    backgroundColor: "rgba(255,255,255,0.055)",
+    borderRadius: 15,
+    padding: 15,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.07)",
   },
 
   sessionTopRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 6,
+    marginBottom: 9,
   },
 
   sessionCode: {
-    color: "#B56DF0",
+    color: "#C4A4FF",
     fontSize: 11,
     fontWeight: "700",
   },
 
+  statusBadge: {
+    backgroundColor: "rgba(181,138,255,0.15)",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 20,
+  },
+
   sessionStatus: {
-    color: "#D5C2FF",
-    fontSize: 11,
+    color: "#D9C5FF",
+    fontSize: 10,
     fontWeight: "600",
   },
 
@@ -596,12 +714,19 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 14,
     fontWeight: "700",
-    marginBottom: 3,
+    marginBottom: 11,
+  },
+
+  sessionMetaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 5,
   },
 
   sessionMeta: {
-    color: "#B8B4C8",
-    fontSize: 11,
+    color: "#AAA4C5",
+    fontSize: 10,
   },
 
   emptyBox: {
@@ -614,12 +739,22 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 14,
     fontWeight: "600",
-    marginBottom: 4,
+    marginTop: 8,
+    marginBottom: 5,
   },
 
   emptyText: {
-    color: "#8E8AA3",
+    color: "#AAA4C5",
     fontSize: 12,
     textAlign: "center",
+  },
+
+  footerText: {
+    color: "#716B8D",
+    fontSize: 9,
+    fontWeight: "600",
+    letterSpacing: 1.5,
+    textAlign: "center",
+    marginTop: 25,
   },
 });
