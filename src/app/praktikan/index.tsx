@@ -145,7 +145,6 @@ export default function Index() {
                 size={23}
                 color="#FFFFFF"
               />
-              <View style={styles.notifDot} />
             </TouchableOpacity>
           </View>
         </LinearGradient>
@@ -472,18 +471,6 @@ const styles = StyleSheet.create({
     padding: 9,
     backgroundColor: "rgba(255,255,255,0.13)",
     borderRadius: 13,
-  },
-
-  notifDot: {
-    position: "absolute",
-    top: 7,
-    right: 8,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "#FF718D",
-    borderWidth: 1,
-    borderColor: "#FFFFFF",
   },
 
   // Body
