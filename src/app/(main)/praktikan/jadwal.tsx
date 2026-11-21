@@ -1,7 +1,18 @@
+
 import { useJadwal } from "@/hooks/useJadwal";
-import { Feather, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+
+import AppCard from "@/components/ui/appCard";
+import AppSectionTitle from "@/components/ui/appSectionTitle";
+
+import {
+  Feather,
+  Ionicons,
+  MaterialCommunityIcons,
+} from "@expo/vector-icons";
+
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
+
 import {
   ActivityIndicator,
   Pressable,
@@ -10,13 +21,14 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 
 type FilterMode = "Semua" | "Hari Ini" | "Kelas";
 
 export default function JadwalScreen() {
   const router = useRouter();
+
   const {
     jadwal: jadwalTampil,
     loading,
@@ -25,7 +37,9 @@ export default function JadwalScreen() {
   } = useJadwal();
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedFilter, setSelectedFilter] = useState<FilterMode>("Semua");
+  const [selectedFilter, setSelectedFilter] =
+    useState<FilterMode>("Semua");
+
   const [sortByHari, setSortByHari] = useState(false);
 
   const hariNamaHariIni = useMemo(() => {
@@ -38,6 +52,7 @@ export default function JadwalScreen() {
       "Jumat",
       "Sabtu",
     ];
+
     return namaHari[new Date().getDay()];
   }, []);
 
@@ -47,12 +62,14 @@ export default function JadwalScreen() {
     if (selectedFilter === "Hari Ini") {
       list = list.filter(
         (item) =>
-          item.hari?.toLowerCase().trim() === hariNamaHariIni.toLowerCase()
+          item.hari?.toLowerCase().trim() ===
+          hariNamaHariIni.toLowerCase()
       );
     }
 
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
+
       list = list.filter(
         (item) =>
           item.mataPraktikum?.toLowerCase().includes(q) ||
@@ -74,6 +91,7 @@ export default function JadwalScreen() {
         sabtu: 6,
         minggu: 7,
       };
+
       list.sort(
         (a, b) =>
           (urutanHari[a.hari?.toLowerCase().trim() ?? ""] ?? 99) -
@@ -82,11 +100,23 @@ export default function JadwalScreen() {
     }
 
     return list;
-  }, [jadwalTampil, searchQuery, selectedFilter, sortByHari, hariNamaHariIni]);
+  }, [
+    jadwalTampil,
+    searchQuery,
+    selectedFilter,
+    sortByHari,
+    hariNamaHariIni,
+  ]);
 
-  const filterChips: { label: string; value: FilterMode }[] = [
+  const filterChips: {
+    label: string;
+    value: FilterMode;
+  }[] = [
     { label: "Semua", value: "Semua" },
-    { label: `Hari Ini (${hariNamaHariIni})`, value: "Hari Ini" },
+    {
+      label: `Hari Ini (${hariNamaHariIni})`,
+      value: "Hari Ini",
+    },
     { label: "Kelas Saya", value: "Kelas" },
   ];
 
@@ -96,11 +126,12 @@ export default function JadwalScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
-        bounces={true}
-        alwaysBounceVertical={true}
+        bounces
+        alwaysBounceVertical
         overScrollMode="always"
         decelerationRate="normal"
       >
+        {/* BACK BUTTON */}
         <Pressable
           style={styles.backButton}
           onPress={() => {
@@ -111,12 +142,20 @@ export default function JadwalScreen() {
             }
           }}
         >
-          <Ionicons name="arrow-back" size={23} color="#FFFFFF" />
+          <Ionicons
+            name="arrow-back"
+            size={23}
+            color="#FFFFFF"
+          />
         </Pressable>
+
         {/* HEADER */}
         <View style={styles.headerRow}>
           <View>
-            <Text style={styles.headerTitle}>Jadwal</Text>
+            <Text style={styles.headerTitle}>
+              Jadwal
+            </Text>
+
             {!loading && !error && (
               <Text style={styles.headerSubtitle}>
                 {jadwalTampil.length} jadwal praktikum tersedia
@@ -125,36 +164,51 @@ export default function JadwalScreen() {
           </View>
 
           <View style={styles.countPill}>
-            <Text style={styles.countPillText}>{jadwalTampil.length}</Text>
+            <Text style={styles.countPillText}>
+              {jadwalTampil.length}
+            </Text>
           </View>
         </View>
 
-        {/* SEARCH BAR + FILTER BUTTON */}
-        <View style={styles.searchRow}>
-          <View style={styles.searchBox}>
-            <Feather name="search" size={18} color="#9C98B2" />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Cari mata praktikum, asisten, ruang..."
-              placeholderTextColor="#8E8AA3"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-            {searchQuery.length > 0 && (
-              <TouchableOpacity
-                onPress={() => setSearchQuery("")}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              >
-                <Feather name="x" size={16} color="#9C98B2" />
-              </TouchableOpacity>
-            )}
-          </View>
+        {/* SEARCH */}
+        <View style={styles.searchBox}>
+          <Feather
+            name="search"
+            size={18}
+            color="#9C98B2"
+          />
+
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Cari mata praktikum, asisten, ruang..."
+            placeholderTextColor="#8E8AA3"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+
+          {searchQuery.length > 0 && (
+            <TouchableOpacity
+              onPress={() => setSearchQuery("")}
+              hitSlop={{
+                top: 8,
+                bottom: 8,
+                left: 8,
+                right: 8,
+              }}
+            >
+              <Feather
+                name="x"
+                size={16}
+                color="#9C98B2"
+              />
+            </TouchableOpacity>
+          )}
         </View>
 
-        {/* SECTION & FILTER CHIPS */}
-        <Text style={styles.sectionTitle}>Jadwal Praktikum</Text>
+        {/* FILTER SECTION */}
+        <AppSectionTitle title="Jadwal Praktikum" />
 
         <ScrollView
           horizontal
@@ -163,16 +217,26 @@ export default function JadwalScreen() {
           style={styles.chipsScroll}
         >
           {filterChips.map((chip) => {
-            const active = selectedFilter === chip.value;
+            const active =
+              selectedFilter === chip.value;
+
             return (
               <TouchableOpacity
                 key={chip.value}
-                style={[styles.chip, active && styles.chipActive]}
-                onPress={() => setSelectedFilter(chip.value)}
+                style={[
+                  styles.chip,
+                  active && styles.chipActive,
+                ]}
+                onPress={() =>
+                  setSelectedFilter(chip.value)
+                }
                 activeOpacity={0.85}
               >
                 <Text
-                  style={[styles.chipText, active && styles.chipTextActive]}
+                  style={[
+                    styles.chipText,
+                    active && styles.chipTextActive,
+                  ]}
                 >
                   {chip.label}
                 </Text>
@@ -183,12 +247,18 @@ export default function JadwalScreen() {
 
         {/* CONTENT STATES */}
         {loading ? (
-          <View style={styles.stateCard}>
-            <ActivityIndicator color="#9623D6" size="large" />
-            <Text style={styles.stateText}>Memuat jadwal praktikum...</Text>
-          </View>
+          <AppCard style={styles.stateCard}>
+            <ActivityIndicator
+              color="#B58AFF"
+              size="large"
+            />
+
+            <Text style={styles.stateText}>
+              Memuat jadwal praktikum...
+            </Text>
+          </AppCard>
         ) : error ? (
-          <View style={styles.stateCard}>
+          <AppCard style={styles.stateCard}>
             <View style={styles.stateIcon}>
               <MaterialCommunityIcons
                 name="alert-circle-outline"
@@ -196,11 +266,17 @@ export default function JadwalScreen() {
                 color="#FF6B7E"
               />
             </View>
-            <Text style={styles.emptyTitle}>Gagal memuat jadwal</Text>
-            <Text style={styles.stateText}>{error}</Text>
-          </View>
+
+            <Text style={styles.emptyTitle}>
+              Gagal memuat jadwal
+            </Text>
+
+            <Text style={styles.stateText}>
+              {error}
+            </Text>
+          </AppCard>
         ) : filteredJadwal.length === 0 ? (
-          <View style={styles.stateCard}>
+          <AppCard style={styles.stateCard}>
             <View style={styles.stateIcon}>
               <MaterialCommunityIcons
                 name="calendar-blank-outline"
@@ -208,42 +284,66 @@ export default function JadwalScreen() {
                 color="#B56DF0"
               />
             </View>
-            <Text style={styles.emptyTitle}>Tidak ada jadwal</Text>
+
+            <Text style={styles.emptyTitle}>
+              Tidak ada jadwal
+            </Text>
+
             <Text style={styles.stateText}>
               {tanpaKelas
                 ? "Akunmu belum terdaftar di kelas mana pun."
-                : searchQuery.trim() || selectedFilter !== "Semua"
+                : searchQuery.trim() ||
+                    selectedFilter !== "Semua"
                 ? "Tidak ada jadwal yang cocok dengan filter atau pencarian."
                 : "Belum ada jadwal untuk kelasmu."}
             </Text>
-          </View>
+          </AppCard>
         ) : (
-          /* COMPACT HORIZONTAL SCHEDULE CARDS */
+          /* SCHEDULE LIST */
           <View style={styles.listContainer}>
             {filteredJadwal.map((item, index) => (
-              <View key={item.id} style={styles.card}>
-                {/* Left Visual Tile */}
+              <AppCard
+                key={item.id}
+                style={styles.scheduleCard}
+              >
+                {/* LEFT TILE */}
                 <View style={styles.cardThumb}>
-                  <Text style={styles.thumbLabel}>KELAS</Text>
-                  <Text style={styles.thumbCode} numberOfLines={1}>
+                  <Text style={styles.thumbLabel}>
+                    KELAS
+                  </Text>
+
+                  <Text
+                    style={styles.thumbCode}
+                    numberOfLines={1}
+                  >
                     {item.kelas || "-"}
                   </Text>
+
                   <Text style={styles.thumbIndex}>
                     #{String(index + 1).padStart(2, "0")}
                   </Text>
                 </View>
 
-                {/* Right Info */}
+                {/* RIGHT INFO */}
                 <View style={styles.cardBody}>
-                  <View style={styles.cardTopRow}>
-                    <Text style={styles.subject} numberOfLines={2}>
-                      {item.mataPraktikum}
-                    </Text>
-                  </View>
+                  <Text
+                    style={styles.subject}
+                    numberOfLines={2}
+                  >
+                    {item.mataPraktikum}
+                  </Text>
 
                   <View style={styles.assistantRow}>
-                    <Feather name="user" size={12} color="#9C98B2" />
-                    <Text style={styles.assistantText} numberOfLines={1}>
+                    <Feather
+                      name="user"
+                      size={12}
+                      color="#9C98B2"
+                    />
+
+                    <Text
+                      style={styles.assistantText}
+                      numberOfLines={1}
+                    >
                       {item.asisten}
                     </Text>
                   </View>
@@ -252,12 +352,16 @@ export default function JadwalScreen() {
                     <Text style={styles.metaPrimary}>
                       {item.hari} · {item.waktu}
                     </Text>
-                    <Text style={styles.metaSecondary} numberOfLines={1}>
+
+                    <Text
+                      style={styles.metaSecondary}
+                      numberOfLines={1}
+                    >
                       {item.ruangan}
                     </Text>
                   </View>
                 </View>
-              </View>
+              </AppCard>
             ))}
           </View>
         )}
@@ -269,53 +373,51 @@ export default function JadwalScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#1E1B3A",
+    backgroundColor: "#1E1B35",
   },
+
   scrollContent: {
     paddingHorizontal: 20,
     paddingTop: 48,
     paddingBottom: 115,
   },
 
-  /* Header */
+  // Header
   headerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 18,
   },
+
   headerTitle: {
     color: "#FFFFFF",
     fontSize: 28,
     fontWeight: "700",
     letterSpacing: 0.2,
   },
+
   headerSubtitle: {
     color: "#9C98B2",
     fontSize: 12,
     marginTop: 2,
   },
+
   countPill: {
     backgroundColor: "#2F2B4A",
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 6,
   },
+
   countPillText: {
     color: "#D5C2FF",
     fontSize: 13,
     fontWeight: "700",
   },
 
-  /* Search + Filter */
-  searchRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    marginBottom: 22,
-  },
+  // Search
   searchBox: {
-    flex: 1,
     height: 48,
     backgroundColor: "#2F2C44",
     borderRadius: 14,
@@ -323,69 +425,60 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
+    marginBottom: 22,
   },
+
   searchInput: {
     flex: 1,
     color: "#FFFFFF",
     fontSize: 13,
   },
-  filterIconBtn: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
-    backgroundColor: "#2F2C44",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  filterIconBtnActive: {
-    backgroundColor: "#9623D6",
-  },
 
-  /* Section & Chips */
-  sectionTitle: {
-    color: "#FFFFFF",
-    fontSize: 18,
-    fontWeight: "700",
-    marginBottom: 12,
-  },
+  // Filter
   chipsScroll: {
     marginHorizontal: -20,
     marginBottom: 18,
   },
+
   chipsRow: {
     paddingHorizontal: 20,
     gap: 10,
   },
+
   chip: {
     backgroundColor: "#4A4665",
     paddingHorizontal: 18,
     paddingVertical: 8,
     borderRadius: 999,
   },
+
   chipActive: {
-    backgroundColor: "#4F46E5",
+    backgroundColor: "#625FF0",
   },
+
   chipText: {
     color: "#E2DFEE",
     fontSize: 12,
     fontWeight: "600",
   },
+
   chipTextActive: {
     color: "#FFFFFF",
   },
 
-  /* List & Compact Card */
+  // Schedule list
   listContainer: {
     gap: 12,
   },
-  card: {
-    backgroundColor: "#2F2C44",
-    borderRadius: 16,
-    padding: 12,
+
+  scheduleCard: {
     flexDirection: "row",
     alignItems: "center",
     gap: 14,
+    padding: 12,
+    borderRadius: 16,
   },
+
   cardThumb: {
     width: 72,
     height: 76,
@@ -395,6 +488,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: 6,
   },
+
   thumbLabel: {
     color: "#A6A2BA",
     fontSize: 9,
@@ -415,49 +509,44 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: "600",
   },
+
   cardBody: {
     flex: 1,
   },
-  cardTopRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 8,
-    marginBottom: 4,
-  },
+
   subject: {
-    flex: 1,
     color: "#FFFFFF",
     fontSize: 15,
     fontWeight: "700",
+    marginBottom: 4,
   },
-  classTag: {
-    color: "#D1D0DA",
-    fontSize: 11,
-    fontWeight: "600",
-  },
+
   assistantRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
     marginBottom: 6,
   },
+
   assistantText: {
     flex: 1,
     color: "#A6A2BA",
     fontSize: 12,
   },
+
   metaRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     gap: 8,
   },
+
   metaPrimary: {
     color: "#E5E3EC",
     fontSize: 12,
     fontWeight: "600",
   },
+
   metaSecondary: {
     flex: 1,
     color: "#A6A2BA",
@@ -466,15 +555,14 @@ const styles = StyleSheet.create({
     textAlign: "right",
   },
 
-  /* Loading / Error / Empty */
+  // Loading / Error / Empty
   stateCard: {
-    backgroundColor: "#2F2C44",
-    borderRadius: 16,
-    padding: 28,
     alignItems: "center",
     justifyContent: "center",
     minHeight: 180,
+    padding: 28,
   },
+
   stateIcon: {
     width: 52,
     height: 52,
@@ -484,6 +572,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 12,
   },
+
   emptyTitle: {
     color: "#FFFFFF",
     fontSize: 15,
@@ -491,6 +580,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     textAlign: "center",
   },
+
   stateText: {
     color: "#9C98B2",
     fontSize: 12,
@@ -498,6 +588,8 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     marginTop: 8,
   },
+
+  // Back button
   backButton: {
     width: 42,
     height: 42,
