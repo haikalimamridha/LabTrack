@@ -1,21 +1,18 @@
 
 import { useAuth } from "@/context/AuthContext";
 import {
-  Feather,
   Ionicons,
-  MaterialCommunityIcons,
+  MaterialCommunityIcons
 } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 
 import { usePresensi } from "../../context/PresensiContext";
@@ -26,7 +23,7 @@ import {
 
 export default function Index() {
   const router = useRouter();
-  const { profile, logout } = useAuth();
+  const { profile } = useAuth();
 
   const {
     daftarSesi,
@@ -34,19 +31,6 @@ export default function Index() {
     error,
     sudahPresensi,
   } = usePresensi();
-
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
-
-  const handleLogout = async () => {
-    try {
-      setShowProfileMenu(false);
-      await logout();
-      router.replace("/login");
-    } catch (err) {
-      console.error("Gagal logout:", err);
-      Alert.alert("Gagal", "Tidak dapat melakukan logout.");
-    }
-  };
 
   // Data profil
   const nama = profile?.nama ?? "Praktikan";
@@ -127,34 +111,15 @@ export default function Index() {
             <View style={styles.avatarWrapper}>
               <TouchableOpacity
                 style={styles.avatarCircle}
-                onPress={() =>
-                  setShowProfileMenu(!showProfileMenu)
-                }
+                onPress={() => router.push("/praktikan/profile")}
                 activeOpacity={0.85}
               >
-                <Text style={styles.avatarText}>
-                  {inisial || "P"}
-                </Text>
+                <Ionicons
+                  name="person"
+                  size={25}
+                  color="#FFFFFF"
+                />
               </TouchableOpacity>
-
-              {showProfileMenu && (
-                <View style={styles.profileMenu}>
-                  <TouchableOpacity
-                    style={styles.logoutButton}
-                    onPress={handleLogout}
-                    activeOpacity={0.8}
-                  >
-                    <Feather
-                      name="log-out"
-                      size={16}
-                      color="#FF6B7E"
-                    />
-                    <Text style={styles.logoutText}>
-                      Logout
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              )}
             </View>
 
             <View style={styles.headerTextCol}>
@@ -165,10 +130,6 @@ export default function Index() {
                 numberOfLines={1}
               >
                 {nama}
-              </Text>
-
-              <Text style={styles.welcomeText}>
-                Selamat datang di LabTrack
               </Text>
             </View>
 
@@ -488,21 +449,6 @@ const styles = StyleSheet.create({
     zIndex: 200,
   },
 
-  logoutButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-  },
-
-  logoutText: {
-    color: "#FF8494",
-    fontSize: 13,
-    fontWeight: "600",
-  },
-
   headerTextCol: {
     flex: 1,
   },
@@ -519,12 +465,6 @@ const styles = StyleSheet.create({
     fontSize: 21,
     fontWeight: "700",
     letterSpacing: 0.2,
-  },
-
-  welcomeText: {
-    color: "#D2C4F0",
-    fontSize: 11,
-    marginTop: 4,
   },
 
   notifButton: {
