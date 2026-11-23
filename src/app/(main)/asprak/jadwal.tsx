@@ -129,7 +129,6 @@ function Chip({
     >
       {aktif && (
         <MaterialCommunityIcons
-          name="check-circle"
           size={14}
           color="#FFFFFF"
         />
@@ -197,6 +196,7 @@ export default function JadwalScreen() {
   const [form, setForm] = useState<Form>(FORM_KOSONG);
   const [formError, setFormError] = useState<string | null>(null);
   const [menyimpan, setMenyimpan] = useState(false);
+  const [dropdownHariTampil, setDropdownHariTampil] = useState(false);
 
   // Pembuatan sesi
   const [jadwalSesi, setJadwalSesi] = useState<Jadwal | null>(null);
@@ -693,17 +693,21 @@ export default function JadwalScreen() {
       {/* MODAL TAMBAH / UBAH JADWAL */}
       {/* ================================================================ */}
 
+
+      {/* MODAL FORM JADWAL */}
       <Modal
         visible={formTampil}
         transparent
         animationType="slide"
+        statusBarTranslucent
         onRequestClose={() => setFormTampil(false)}
       >
         <KeyboardAvoidingView
           style={styles.modalOverlay}
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={0}
         >
-          <View style={styles.modalBox}>
+          <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <View>
                 <Text style={styles.modalTitle}>
@@ -721,7 +725,7 @@ export default function JadwalScreen() {
               >
                 <MaterialCommunityIcons
                   name="close"
-                  size={21}
+                  size={23}
                   color="#FFFFFF"
                 />
               </TouchableOpacity>
@@ -738,7 +742,7 @@ export default function JadwalScreen() {
               )}
 
               {/* KELAS */}
-              <Text style={styles.fieldLabel}>Pilih Kelas</Text>
+              <Text style={styles.inputLabel}>Pilih Kelas *</Text>
               <View style={styles.chipRow}>
                 {daftarKelas.map((k) => (
                   <Chip
@@ -759,7 +763,7 @@ export default function JadwalScreen() {
               )}
 
               {/* MATA PRAKTIKUM */}
-              <Text style={styles.fieldLabel}>Mata Praktikum</Text>
+              <Text style={styles.inputLabel}>Mata Praktikum *</Text>
               <View style={styles.chipRow}>
                 {daftarMk.map((m) => (
                   <Chip
@@ -780,7 +784,7 @@ export default function JadwalScreen() {
               )}
 
               {/* LABORATORIUM */}
-              <Text style={styles.fieldLabel}>Pilih Laboratorium</Text>
+              <Text style={styles.inputLabel}>Pilih Laboratorium *</Text>
 
               {labLoading ? (
                 <View style={styles.labLoading}>
@@ -816,22 +820,21 @@ export default function JadwalScreen() {
               {form.labId !== "" && (
                 <View style={styles.labInfoBox}>
                   {(() => {
-                    const lab = daftarLab.find((l) => l.id === form.labId);
+                    const lab = daftarLab.find(
+                      (l) => l.id === form.labId
+                    );
 
                     if (!lab) return null;
 
                     return (
                       <>
-                        <MaterialCommunityIcons
-                          name="map-marker-check"
-                          size={19}
-                          color="#69D9A3"
-                        />
                         <View style={{ flex: 1 }}>
-                          <Text style={styles.labInfoName}>{lab.nama}</Text>
+                          <Text style={styles.labInfoName}>
+                            {lab.nama}
+                          </Text>
                           <Text style={styles.labInfoDetail}>
-                            {lab.gedung} · Lantai {lab.lantai} · Radius presensi{" "}
-                            {lab.radiusPresensiMeter} meter
+                            Gedung {lab.gedung} · Lantai {lab.lantai} ·
+                            Radius presensi {lab.radiusPresensiMeter} meter
                           </Text>
                         </View>
                       </>
@@ -841,35 +844,46 @@ export default function JadwalScreen() {
               )}
 
               {/* HARI */}
-              <Text style={styles.fieldLabel}>Hari Praktikum</Text>
-              <View style={styles.chipRow}>
-                {HARI.map((h) => (
-                  <Chip
-                    key={h}
-                    label={h}
-                    aktif={form.hari === h}
-                    onPress={() => setForm({ ...form, hari: h })}
-                  />
-                ))}
-              </View>
+              <Text style={styles.inputLabel}>Hari Praktikum *</Text>
+
+              <TouchableOpacity
+                style={styles.dropdownButton}
+                onPress={() => setDropdownHariTampil(true)}
+                activeOpacity={0.8}
+              >
+                <Text
+                  style={[
+                    styles.dropdownText,
+                    !form.hari && styles.dropdownPlaceholder,
+                  ]}
+                >
+                  {form.hari || "Pilih hari praktikum"}
+                </Text>
+
+                <MaterialCommunityIcons
+                  name="chevron-down"
+                  size={24}
+                  color="#B99AFF"
+                />
+              </TouchableOpacity>
 
               {/* WAKTU */}
               <FormInput
                 label="Waktu Praktikum"
                 value={form.waktu}
-                onChangeText={(t) => setForm({ ...form, waktu: t })}
+                onChangeText={(t) =>
+                  setForm({ ...form, waktu: t })
+                }
                 placeholder="09.00 - 11.00"
               />
-
-              <Text style={styles.helperText}>
-                Gunakan format jam seperti 09.00 - 11.00.
-              </Text>
 
               {/* ASISTEN */}
               <FormInput
                 label="Nama Asisten"
                 value={form.asisten}
-                onChangeText={(t) => setForm({ ...form, asisten: t })}
+                onChangeText={(t) =>
+                  setForm({ ...form, asisten: t })
+                }
                 placeholder="Masukkan nama asisten"
               />
 
@@ -926,6 +940,67 @@ export default function JadwalScreen() {
           </View>
         </KeyboardAvoidingView>
       </Modal>
+
+      {/* DROPDOWN HARI */}
+      <Modal
+        visible={dropdownHariTampil}
+        transparent
+        animationType="fade"
+        statusBarTranslucent
+        onRequestClose={() => setDropdownHariTampil(false)}
+      >
+        <TouchableOpacity
+          style={styles.dropdownOverlay}
+          activeOpacity={1}
+          onPress={() => setDropdownHariTampil(false)}
+        >
+          <TouchableOpacity
+            style={styles.dropdownModal}
+            activeOpacity={1}
+            onPress={() => {}}
+          >
+            <Text style={styles.dropdownTitle}>
+              Pilih Hari Praktikum
+            </Text>
+
+            {HARI.map((hari) => {
+              const terpilih = form.hari === hari;
+
+              return (
+                <TouchableOpacity
+                  key={hari}
+                  style={[
+                    styles.dropdownItem,
+                    terpilih && styles.dropdownItemActive,
+                  ]}
+                  onPress={() => {
+                    setForm({ ...form, hari });
+                    setDropdownHariTampil(false);
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.dropdownItemText,
+                      terpilih && styles.dropdownItemTextActive,
+                    ]}
+                  >
+                    {hari}
+                  </Text>
+
+                  {terpilih && (
+                    <MaterialCommunityIcons
+                      name="check"
+                      size={20}
+                      color="#B99AFF"
+                    />
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+
 
       {/* ================================================================ */}
       {/* MODAL BUAT SESI */}
@@ -1450,10 +1525,19 @@ const styles = StyleSheet.create({
   // Modal
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.72)",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 18,
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    justifyContent: "flex-end",
+  },
+
+  modalContent: {
+    backgroundColor: "#25213D",
+    borderTopLeftRadius: 25,
+    borderTopRightRadius: 25,
+    paddingHorizontal: 21,
+    paddingTop: 22,
+    paddingBottom: 45,
+    maxHeight: "90%",
+    flexShrink: 1,
   },
 
   modalBox: {
@@ -1471,13 +1555,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 16,
+    marginBottom: 22,
   },
 
   modalTitle: {
     color: "#FFFFFF",
     fontSize: 19,
-    fontWeight: "800",
+    fontWeight: "700",
   },
 
   modalSubtitle: {
@@ -1778,5 +1862,82 @@ const styles = StyleSheet.create({
     color: "#B8B0D0",
     fontSize: 10,
     marginTop: 4,
+  },
+  inputLabel: {
+    color: "#DDD6EF",
+    fontSize: 12,
+    fontWeight: "700",
+    marginBottom: 8,
+    marginTop: 13,
+  },
+  dropdownButton: {
+    backgroundColor: "#302A4D",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#494166",
+    paddingHorizontal: 15,
+    height: 52,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+
+  dropdownText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "500",
+  },
+
+  dropdownPlaceholder: {
+    color: "#9993AE",
+    fontWeight: "400",
+  },
+
+  dropdownOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.7)",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 30,
+  },
+
+  dropdownModal: {
+    width: "100%",
+    backgroundColor: "#25213D",
+    borderRadius: 20,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: "#494166",
+  },
+
+  dropdownTitle: {
+    color: "#FFFFFF",
+    fontSize: 17,
+    fontWeight: "700",
+    marginBottom: 14,
+  },
+
+  dropdownItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    marginBottom: 4,
+  },
+
+  dropdownItemActive: {
+    backgroundColor: "#49358B",
+  },
+
+  dropdownItemText: {
+    color: "#D8D2E8",
+    fontSize: 14,
+  },
+
+  dropdownItemTextActive: {
+    color: "#FFFFFF",
+    fontWeight: "700",
   },
 });
