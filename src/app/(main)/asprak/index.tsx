@@ -160,19 +160,20 @@ export default function AsistenDashboard() {
           <View style={styles.headerRow}>
             <TouchableOpacity
               style={styles.avatarCircle}
-              onPress={() =>
-                router.push("/profile")
-              }
+              onPress={() => router.push("/profile")}
               activeOpacity={0.85}
             >
-              <Text style={styles.avatarText}>
-                {inisial || "A"}
-              </Text>
+              <Ionicons
+                name="person"
+                size={25}
+                color="#FFFFFF"
+              />
             </TouchableOpacity>
+
 
             <View style={styles.headerTextCol}>
               <Text style={styles.helloText}>
-                Hello, Asisten!
+                Halo, Asisten!
               </Text>
 
               <Text
