@@ -1,4 +1,5 @@
 
+import { useAuth } from "@/context/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
 import {
   Camera,
@@ -39,6 +40,15 @@ const INITIAL_CENTER: [number, number] = [
 export default function MapsScreen() {
   const cameraRef = useRef<any>(null);
   const router = useRouter();
+  const { profile } = useAuth();
+
+  const handleBack = () => {
+    if (profile?.role === "asprak") {
+      router.replace("/asprak");
+    } else {
+      router.replace("/praktikan");
+    }
+  };
 
   const [labs, setLabs] = useState<Laboratorium[]>([]);
   const [selectedLab, setSelectedLab] =
@@ -206,16 +216,16 @@ export default function MapsScreen() {
 
         {/* Header */}
         <View style={styles.header}>
-        <Pressable
+          <Pressable
             style={styles.backButton}
-            onPress={() => router.back()}
-        >
+            onPress={handleBack}
+          >
             <Ionicons
-            name="arrow-back"
-            size={22}
-            color="#FFFFFF"
+              name="arrow-back"
+              size={22}
+              color="#FFFFFF"
             />
-        </Pressable>
+          </Pressable>
 
         <View style={styles.headerIcon}>
             <Ionicons
