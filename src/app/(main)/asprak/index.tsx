@@ -183,39 +183,19 @@ export default function AsistenDashboard() {
               </Text>
             </View>
 
-            <View style={styles.profileMenuContainer}>
-              <TouchableOpacity
-                style={styles.notifButton}
-                onPress={() =>
-                  setShowProfileMenu(!showProfileMenu)
-                }
-                activeOpacity={0.8}
-              >
-                <Ionicons
-                  name="ellipsis-vertical"
-                  size={22}
-                  color="#FFFFFF"
-                />
-              </TouchableOpacity>
-
-              {showProfileMenu && (
-                <View style={styles.profileMenu}>
-                  <TouchableOpacity
-                    style={styles.logoutButton}
-                    onPress={handleLogout}
-                  >
-                    <Ionicons
-                      name="log-out-outline"
-                      size={17}
-                      color="#EF6464"
-                    />
-                    <Text style={styles.logoutText}>
-                      Logout
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-            </View>
+            <TouchableOpacity
+              style={styles.notifButton}
+              activeOpacity={0.8}
+              onPress={() =>
+                router.push("/asprak/jadwal")
+              }
+            >
+              <Ionicons
+                name="notifications-outline"
+                size={23}
+                color="#FFFFFF"
+              />
+            </TouchableOpacity>
           </View>
         </LinearGradient>
 
