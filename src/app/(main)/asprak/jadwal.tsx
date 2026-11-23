@@ -1021,6 +1021,7 @@ export default function JadwalScreen() {
       </Modal>
 
 
+
       {/* ================================================================ */}
       {/* MODAL BUAT SESI */}
       {/* ================================================================ */}
@@ -1029,10 +1030,13 @@ export default function JadwalScreen() {
         visible={jadwalSesi !== null}
         transparent
         animationType="slide"
-        onRequestClose={() => setJadwalSesi(null)}
+        onRequestClose={() => {
+          if (!membuat) setJadwalSesi(null);
+        }}
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalBox}>
+            {/* Header */}
             <View style={styles.modalHeader}>
               <View style={styles.sessionModalIcon}>
                 <MaterialCommunityIcons
@@ -1055,24 +1059,31 @@ export default function JadwalScreen() {
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.modalTitle}>Buat Sesi Praktikum</Text>
-
-            <Text style={styles.modalSubtitle}>
-              Pilih tanggal pertemuan untuk membuat sesi.
+            {/* Title */}
+            <Text style={styles.modalTitle}>
+              Buat Sesi Praktikum
             </Text>
 
+            <Text style={styles.modalSubtitle}>
+              Pilih tanggal pertemuan untuk membuat sesi praktikum.
+            </Text>
+
+            {/* Informasi Jadwal */}
             <View style={styles.sessionInfo}>
               <Text style={styles.sessionSubject}>
                 {jadwalSesi?.mataPraktikum}
               </Text>
 
-              <Text style={styles.sessionClass}>
-                Kelas {jadwalSesi?.kelas}
-              </Text>
-
-              <Text style={styles.sessionClass}>
-                Kelas {jadwalSesi?.kelas}
-              </Text>
+              <View style={styles.sessionClassRow}>
+                <MaterialCommunityIcons
+                  name="account-group-outline"
+                  size={16}
+                  color="#A9A2C7"
+                />
+                <Text style={styles.sessionClass}>
+                  Kelas {jadwalSesi?.kelas}
+                </Text>
+              </View>
 
               <View style={styles.sessionLabInfo}>
                 <MaterialCommunityIcons
@@ -1081,12 +1092,11 @@ export default function JadwalScreen() {
                   color="#69D9A3"
                 />
 
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.sessionLabName}>
-                    {daftarLab.find((lab) => lab.id === jadwalSesi?.labId)?.nama ??
-                      "Laboratorium tidak tersedia"}
-                  </Text>
-                </View>
+                <Text style={styles.sessionLabName}>
+                  {daftarLab.find(
+                    (lab) => lab.id === jadwalSesi?.labId
+                  )?.nama ?? "Laboratorium tidak tersedia"}
+                </Text>
               </View>
 
               <View style={styles.sessionDetails}>
@@ -1114,73 +1124,86 @@ export default function JadwalScreen() {
               </View>
             </View>
 
+            {/* Pilihan Tanggal */}
             <Text style={styles.fieldLabel}>
               Pilih Tanggal Pertemuan
             </Text>
 
             <View style={styles.dateList}>
-              {jadwalSesi &&
-                tanggalHari(jadwalSesi.hari).map((t) => {
-                  const ada = sudahAda(jadwalSesi.id, t);
+              <ScrollView
+                showsVerticalScrollIndicator={false}
+                nestedScrollEnabled
+              >
+                {jadwalSesi &&
+                  tanggalHari(jadwalSesi.hari).map((t) => {
+                    const ada = sudahAda(jadwalSesi.id, t);
 
-                  return (
-                    <TouchableOpacity
-                      key={t}
-                      style={[
-                        styles.dateItem,
-                        ada && styles.dateItemDisabled,
-                      ]}
-                      disabled={ada || membuat}
-                      activeOpacity={0.8}
-                      onPress={() => buatSesiDari(jadwalSesi, t)}
-                    >
-                      <View style={styles.dateIcon}>
-                        <MaterialCommunityIcons
-                          name={ada ? "check-circle" : "calendar"}
-                          size={20}
-                          color={ada ? "#69D9A3" : "#B99AFF"}
-                        />
-                      </View>
+                    return (
+                      <TouchableOpacity
+                        key={t}
+                        style={[
+                          styles.dateItem,
+                          ada && styles.dateItemDisabled,
+                        ]}
+                        disabled={ada || membuat}
+                        activeOpacity={0.8}
+                        onPress={() => buatSesiDari(jadwalSesi, t)}
+                      >
+                        <View style={styles.dateIcon}>
+                          <MaterialCommunityIcons
+                            name={ada ? "check-circle" : "calendar"}
+                            size={20}
+                            color={ada ? "#69D9A3" : "#B99AFF"}
+                          />
+                        </View>
 
-                      <View style={styles.dateInfo}>
-                        <Text style={styles.dateText}>
-                          {formatTanggal(t)}
-                        </Text>
+                        <View style={styles.dateInfo}>
+                          <Text style={styles.dateText}>
+                            {formatTanggal(t)}
+                          </Text>
 
-                        <Text style={styles.dateStatus}>
-                          {ada ? "Sesi sudah dibuat" : "Belum ada sesi"}
-                        </Text>
-                      </View>
+                          <Text style={styles.dateStatus}>
+                            {ada
+                              ? "Sesi sudah dibuat"
+                              : "Belum ada sesi"}
+                          </Text>
+                        </View>
 
-                      {membuat && !ada ? (
-                        <ActivityIndicator color="#B99AFF" />
-                      ) : (
-                        <MaterialCommunityIcons
-                          name={ada ? "check" : "chevron-right"}
-                          size={20}
-                          color={ada ? "#69D9A3" : "#A9A2C7"}
-                        />
-                      )}
-                    </TouchableOpacity>
-                  );
-                })}
+                        {membuat && !ada ? (
+                          <ActivityIndicator color="#B99AFF" />
+                        ) : (
+                          <MaterialCommunityIcons
+                            name={ada ? "check" : "chevron-right"}
+                            size={20}
+                            color={ada ? "#69D9A3" : "#A9A2C7"}
+                          />
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })}
+              </ScrollView>
             </View>
 
+            {/* Helper */}
             <Text style={styles.helperText}>
-              Sesi langsung dibuat saat tanggal dipilih. Tanggal dengan tanda
-              centang sudah memiliki sesi.
+              Sesi akan langsung dibuat setelah tanggal dipilih.
+              Tanggal dengan tanda centang sudah memiliki sesi.
             </Text>
 
+            {/* Footer */}
             <TouchableOpacity
               style={styles.closeModalButton}
               disabled={membuat}
               onPress={() => setJadwalSesi(null)}
             >
-              <Text style={styles.cancelButtonText}>Tutup</Text>
+              <Text style={styles.cancelButtonText}>
+                Tutup
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
+
     </View>
   );
 }
@@ -1201,7 +1224,7 @@ const styles = StyleSheet.create({
 
   // Header
   header: {
-    paddingTop: 55,
+    paddingTop: 35,
     paddingBottom: 30,
     paddingHorizontal: 22,
     borderBottomLeftRadius: 28,
@@ -1773,11 +1796,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
 
-  // Pilihan tanggal
-  dateList: {
-    gap: 9,
-  },
-
   dateItem: {
     flexDirection: "row",
     alignItems: "center",
@@ -1959,4 +1977,19 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontWeight: "700",
   },
+
+
+  sessionClassRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+    marginTop: 7,
+  },
+
+  dateList: {
+    maxHeight: 220,
+    marginTop: 10,
+  },
+
 });
+
