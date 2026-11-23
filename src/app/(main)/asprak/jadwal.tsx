@@ -268,9 +268,12 @@ export default function JadwalScreen() {
             hari: item.hari,
             waktuMulai: item.waktuMulai,
             waktuSelesai: item.waktuSelesai,
-            asisten: item.asisten,
+            asisten: item.asisten || profile?.nama || "",
           }
-        : FORM_KOSONG
+        : {
+            ...FORM_KOSONG,
+            asisten: profile?.nama ?? "",
+          }
     );
 
     setFormTampil(true);
