@@ -60,7 +60,8 @@ export type SesiInput = {
   labId: string; 
   tanggal: string;
   hari: string;
-  waktu: string;
+  waktuMulai: string;
+  waktuSelesai: string;
 };
 
 export type Jadwal = {
@@ -72,7 +73,8 @@ export type Jadwal = {
   kelas: string;
   labId: string; 
   hari: string;
-  waktu: string;
+  waktuMulai: string;
+  waktuSelesai: string;
   asisten: string;
 };
 
@@ -135,7 +137,8 @@ function toJadwal(id: string, d: Data): Jadwal {
     kelas: d.kelas ?? "",
     labId: d.labId ?? "",
     hari: d.hari ?? "",
-    waktu: d.waktu ?? "",
+    waktuMulai: d.waktu ?? "",
+    waktuSelesai: d.waktu ?? "",
     asisten: d.asisten ?? "",
   };
 }

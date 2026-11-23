@@ -365,7 +365,7 @@ export default function JadwalScreen() {
 
                   <View style={styles.metaRow}>
                     <Text style={styles.metaPrimary}>
-                      {item.hari} · {item.waktu}
+                      {item.hari} · {item.waktuMulai} - {item.waktuSelesai}
                     </Text>
 
                     <Text

@@ -1,4 +1,5 @@
 import BackButton from "@/components/ui/backButton";
+import TimePicker from "@/components/ui/timePicker";
 import {
   listenLaboratorium,
   type Laboratorium,
@@ -88,7 +89,8 @@ type Form = {
   mataPraktikumId: string;
   labId: string;
   hari: string;
-  waktu: string;
+  waktuMulai: string;
+  waktuSelesai: string;
   asisten: string;
 };
 
@@ -97,7 +99,8 @@ const FORM_KOSONG: Form = {
   mataPraktikumId: "",
   labId: "",
   hari: "",
-  waktu: "",
+  waktuMulai: "",
+  waktuSelesai: "",
   asisten: "",
 };
 
@@ -263,7 +266,8 @@ export default function JadwalScreen() {
             mataPraktikumId: item.mataPraktikumId,
             labId: item.labId ?? "",
             hari: item.hari,
-            waktu: item.waktu,
+            waktuMulai: item.waktuMulai,
+            waktuSelesai: item.waktuSelesai,
             asisten: item.asisten,
           }
         : FORM_KOSONG
@@ -280,7 +284,8 @@ export default function JadwalScreen() {
     const mk = daftarMk.find((m) => m.id === form.mataPraktikumId);
     const lab = daftarLab.find((l) => l.id === form.labId);
 
-    const waktu = form.waktu.trim();
+    const waktuMulai = form.waktuMulai.trim();
+    const waktuSelesai = form.waktuSelesai.trim();
     const asisten = form.asisten.trim();
 
     let pesan: string | null = null;
@@ -289,10 +294,6 @@ export default function JadwalScreen() {
     else if (!mk) pesan = "Pilih mata praktikum terlebih dahulu.";
     else if (!lab) pesan = "Pilih laboratorium terlebih dahulu.";
     else if (!HARI.includes(form.hari)) pesan = "Pilih hari terlebih dahulu.";
-    else if (!waktuValid(waktu)) {
-      pesan =
-        "Format waktu harus seperti 09.00 - 11.00 (selesai setelah mulai).";
-    }
     else if (!asisten) pesan = "Nama asisten wajib diisi.";
 
     if (pesan || !kelas || !mk || !lab) {
@@ -308,7 +309,8 @@ export default function JadwalScreen() {
       kode: "",
       kelas: kelas.kode,
       hari: form.hari,
-      waktu,
+      waktuMulai,
+      waktuSelesai,
       asisten,
     };
 
@@ -404,7 +406,8 @@ export default function JadwalScreen() {
         labId: item.labId,
         tanggal,
         hari: item.hari,
-        waktu: item.waktu,
+        waktuMulai: item.waktuMulai,
+        waktuSelesai: item.waktuSelesai,
       });
 
       if (hasil.ok) {
@@ -566,7 +569,7 @@ export default function JadwalScreen() {
                     />
                     <View style={styles.infoContent}>
                       <Text style={styles.infoLabel}>Waktu</Text>
-                      <Text style={styles.infoValue}>{item.waktu}</Text>
+                      <Text style={styles.infoValue}>{item.waktuMulai} - {item.waktuSelesai}</Text>
                     </View>
                   </View>
 
@@ -868,13 +871,26 @@ export default function JadwalScreen() {
               </TouchableOpacity>
 
               {/* WAKTU */}
-              <FormInput
-                label="Waktu Praktikum"
-                value={form.waktu}
-                onChangeText={(t) =>
-                  setForm({ ...form, waktu: t })
+              <Text style={styles.inputLabel}>Waktu Mulai *</Text>
+              <TimePicker
+                label="Waktu Mulai"
+                type="mulai"
+                value={form.waktuMulai}
+                endTime={form.waktuSelesai}
+                onChange={(value) =>
+                  setForm({ ...form, waktuMulai: value })
                 }
-                placeholder="09.00 - 11.00"
+              />
+
+              <Text style={styles.inputLabel}>Waktu Selesai *</Text>
+              <TimePicker
+                label="Waktu Selesai"
+                type="selesai"
+                value={form.waktuSelesai}
+                startTime={form.waktuMulai}
+                onChange={(value) =>
+                  setForm({ ...form, waktuSelesai: value })
+                }
               />
 
               {/* ASISTEN */}
@@ -1089,7 +1105,7 @@ export default function JadwalScreen() {
                     color="#B99AFF"
                   />
                   <Text style={styles.sessionDetailText}>
-                    {jadwalSesi?.waktu}
+                    {jadwalSesi?.waktuMulai} - {jadwalSesi?.waktuSelesai}
                   </Text>
                 </View>
               </View>

@@ -2,14 +2,14 @@ import { useEffect, useState } from "react";
 
 import { useAuth } from "@/context/AuthContext";
 import {
-    HARI,
-    pesanError,
-    subscribeJadwal,
-    type Jadwal,
+  HARI,
+  pesanError,
+  subscribeJadwal,
+  type Jadwal,
 } from "@/services/sessionService";
 
 const urutkan = (a: Jadwal, b: Jadwal) =>
-  HARI.indexOf(a.hari) - HARI.indexOf(b.hari) || a.waktu.localeCompare(b.waktu);
+  HARI.indexOf(a.hari) - HARI.indexOf(b.hari) || a.waktuMulai.localeCompare(b.waktuMulai);
 
 /**
  * Jadwal real-time.
