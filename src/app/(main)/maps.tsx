@@ -595,21 +595,6 @@ export default function MapsScreen() {
               </Text>
             )}
           </View>
-
-          <Pressable
-            style={styles.directionButton}
-            onPress={() => focusLab(selectedLab)}
-          >
-            <Ionicons
-              name="navigate"
-              size={18}
-              color="#FFFFFF"
-            />
-
-            <Text style={styles.directionText}>
-              Lihat lokasi
-            </Text>
-          </Pressable>
         </View>
       )}
     </View>
@@ -724,7 +709,7 @@ const styles = StyleSheet.create({
   // Kartu informasi
   infoCard: {
     position: "absolute",
-    bottom: 24,
+    bottom: 40,
     left: 16,
     right: 16,
     backgroundColor: "#2A2545",
