@@ -43,7 +43,8 @@ export type Sesi = {
   labId: string; 
   tanggal: string; // YYYY-MM-DD
   hari: string;
-  waktu: string;
+  waktuMulai: string;
+  waktuSelesai: string;
   status: StatusSesi; // label UI
   statusDb: StatusDb; // nilai asli di database
   openedAt: Date | null;
@@ -119,7 +120,8 @@ function toSesi(id: string, d: Data): Sesi {
     tanggal: d.tanggal ?? "",
     hari: d.hari ?? "",
     labId: d.labId ?? "",
-    waktu: d.waktu ?? "",
+    waktuMulai: d.waktuMulai ?? "",
+    waktuSelesai: d.waktuSelesai ?? "",
     status: LABEL_STATUS[statusDb] ?? "Belum Dibuka",
     statusDb,
     openedAt: toDate(d.openedAt),
@@ -188,14 +190,18 @@ export const HARI = [
 ];
 
 /** Waktu mulai sesi (ms) dari tanggal "YYYY-MM-DD" dan waktu "09.00 - 11.00". */
-export function waktuMulaiSesi(s: { tanggal: string; waktu: string }): number {
-  const [y, m, d] = s.tanggal.split("-").map(Number);
-  const [jam, menit] = s.waktu.split("-")[0].trim().split(".").map(Number);
-  if (!y || !m || !d || Number.isNaN(jam) || Number.isNaN(menit)) {
-    return Number.MAX_SAFE_INTEGER;
-  }
-  return new Date(y, m - 1, d, jam, menit).getTime();
-}
+export const waktuMulaiSesi = (item: Sesi) => {
+  const [tahun, bulan, hari] = item.tanggal.split("-").map(Number);
+  const [jam, menit] = item.waktuMulai.split(":").map(Number);
+
+  return new Date(
+    tahun,
+    bulan - 1,
+    hari,
+    jam,
+    menit
+  ).getTime();
+};
 
 const pad2 = (n: number) => String(n).padStart(2, "0");
 
@@ -259,6 +265,28 @@ export function subscribeJadwal(
   );
 }
 
+/**
+ * Listener jadwal berdasarkan laboratorium.
+ */
+export function subscribeJadwalLab(
+  labId: string,
+  cb: (data: Jadwal[]) => void,
+  onError: (e: Error) => void,
+): Unsubscribe {
+  const q = query(
+    collection(firestore, "schedules"),
+    where("labId", "==", labId),
+  );
+
+  return onSnapshot(
+    q,
+    (snap) => {
+      cb(snap.docs.map((d) => toJadwal(d.id, d.data())));
+    },
+    onError,
+  );
+}
+
 export const buatJadwal = (input: JadwalInput) =>
   addDoc(collection(firestore, "schedules"), {
     ...input,
@@ -291,6 +319,28 @@ export function subscribeSesi(
           .map((d) => toSesi(d.id, d.data()))
           .sort((a, b) => b.tanggal.localeCompare(a.tanggal)),
       ),
+    onError,
+  );
+}
+
+/**
+ * Listener sesi berdasarkan laboratorium.
+ */
+export function subscribeSesiLab(
+  labId: string,
+  cb: (data: Sesi[]) => void,
+  onError: (e: Error) => void,
+): Unsubscribe {
+  const q = query(
+    collection(firestore, "sessions"),
+    where("labId", "==", labId),
+  );
+
+  return onSnapshot(
+    q,
+    (snap) => {
+      cb(snap.docs.map((d) => toSesi(d.id, d.data())));
+    },
     onError,
   );
 }

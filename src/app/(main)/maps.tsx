@@ -9,7 +9,7 @@ import {
 } from "@maplibre/maplibre-react-native";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -18,6 +18,15 @@ import {
   Text,
   View,
 } from "react-native";
+
+import {
+  HARI,
+  formatTanggal,
+  subscribeJadwalLab,
+  subscribeSesiLab,
+  type Jadwal,
+  type Sesi,
+} from "@/services/sessionService";
 
 import {
   listenLaboratorium,
@@ -53,6 +62,139 @@ export default function MapsScreen() {
   const [labs, setLabs] = useState<Laboratorium[]>([]);
   const [selectedLab, setSelectedLab] =
     useState<Laboratorium | null>(null);
+
+  const [jadwalLab, setJadwalLab] = useState<Jadwal[]>([]);
+  const [sesiLab, setSesiLab] = useState<Sesi[]>([]);
+  const [waktuSekarang, setWaktuSekarang] = useState(new Date());
+
+  // Memantau jadwal dan sesi laboratorium yang dipilih.
+  useEffect(() => {
+    if (!selectedLab) {
+      setJadwalLab([]);
+      setSesiLab([]);
+      return;
+    }
+
+    const unsubscribeJadwal = subscribeJadwalLab(
+      selectedLab.id,
+      setJadwalLab,
+      (error) => console.error("Listener jadwal lab:", error),
+    );
+
+    const unsubscribeSesi = subscribeSesiLab(
+      selectedLab.id,
+      setSesiLab,
+      (error) => console.error("Listener sesi lab:", error),
+    );
+
+    return () => {
+      unsubscribeJadwal();
+      unsubscribeSesi();
+    };
+  }, [selectedLab?.id]);
+
+  // Memperbarui waktu agar praktikum berikutnya selalu dihitung berdasarkan waktu terbaru.
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setWaktuSekarang(new Date());
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const tanggalHariIni = (date: Date) => {
+    const tahun = date.getFullYear();
+    const bulan = String(date.getMonth() + 1).padStart(2, "0");
+    const tanggal = String(date.getDate()).padStart(2, "0");
+
+    return `${tahun}-${bulan}-${tanggal}`;
+  };
+
+  const menitDariWaktu = (waktu: string) => {
+    const [jam, menit] = waktu.split(":").map(Number);
+    return jam * 60 + menit;
+  };
+
+  // Praktikum yang sedang berlangsung.
+  const praktikumBerlangsung = useMemo(() => {
+    const hariIni = tanggalHariIni(waktuSekarang);
+
+    return sesiLab.find(
+      (sesi) =>
+        sesi.tanggal === hariIni &&
+        sesi.statusDb === "open",
+    ) ?? null;
+  }, [sesiLab, waktuSekarang]);
+
+  // Mencari jadwal praktikum berikutnya dalam 7 hari ke depan.
+  const praktikumBerikutnya = useMemo(() => {
+    const sekarang = waktuSekarang;
+    const hariIni = HARI[(sekarang.getDay() + 6) % 7];
+    const menitSekarang =
+      sekarang.getHours() * 60 + sekarang.getMinutes();
+
+    const kandidat: {
+      jadwal: Jadwal;
+      tanggal: string;
+      sesi: Sesi | undefined;
+      waktu: number;
+    }[] = [];
+
+    for (const jadwal of jadwalLab) {
+      const indeksHari = HARI.indexOf(jadwal.hari);
+
+      if (indeksHari < 0) continue;
+
+      let selisihHari =
+        (indeksHari - HARI.indexOf(hariIni) + 7) % 7;
+
+      let tanggal = new Date(sekarang);
+      tanggal.setHours(0, 0, 0, 0);
+      tanggal.setDate(tanggal.getDate() + selisihHari);
+
+      let isoTanggal = tanggalHariIni(tanggal);
+      let waktuMulai = menitDariWaktu(jadwal.waktuMulai);
+
+      let sesi = sesiLab.find(
+        (item) =>
+          item.scheduleId === jadwal.id &&
+          item.tanggal === isoTanggal,
+      );
+
+      // Jika jadwal hari ini sudah lewat dan sesi sudah selesai,
+      // cari pertemuan minggu berikutnya.
+      if (
+        selisihHari === 0 &&
+        waktuMulai <= menitSekarang &&
+        (!sesi || sesi.statusDb === "closed")
+      ) {
+        tanggal.setDate(tanggal.getDate() + 7);
+        isoTanggal = tanggalHariIni(tanggal);
+
+        sesi = sesiLab.find(
+          (item) =>
+            item.scheduleId === jadwal.id &&
+            item.tanggal === isoTanggal,
+        );
+
+        selisihHari = 7;
+      }
+
+      // Sesi yang sudah selesai tidak ditampilkan sebagai berikutnya.
+      if (sesi?.statusDb === "closed") continue;
+
+      kandidat.push({
+        jadwal,
+        tanggal: isoTanggal,
+        sesi,
+        waktu: selisihHari * 1440 + waktuMulai,
+      });
+    }
+
+    kandidat.sort((a, b) => a.waktu - b.waktu);
+
+    return kandidat[0] ?? null;
+  }, [jadwalLab, sesiLab, waktuSekarang]);
 
   const [loadingLabs, setLoadingLabs] = useState(true);
   const [loadingLocation, setLoadingLocation] = useState(false);
@@ -370,6 +512,90 @@ export default function MapsScreen() {
             </View>
           </View>
 
+          {/* PRAKTIKUM SEDANG BERLANGSUNG */}
+          <View style={styles.praktikumSection}>
+            <Text style={styles.praktikumSectionTitle}>
+              Praktikum Sedang Berlangsung
+            </Text>
+
+            {praktikumBerlangsung ? (
+              <View style={styles.praktikumItem}>
+                <View style={styles.praktikumHeader}>
+                  <Text style={styles.praktikumName}>
+                    {praktikumBerlangsung.mataPraktikum}
+                  </Text>
+
+                  <View style={[styles.statusBadge, styles.statusOpen]}>
+                    <Text style={styles.statusText}>
+                      Berlangsung
+                    </Text>
+                  </View>
+                </View>
+
+                <Text style={styles.praktikumMeta}>
+                  Kelas {praktikumBerlangsung.kelas}
+                </Text>
+
+                <Text style={styles.praktikumMeta}>
+                  {praktikumBerlangsung.waktuMulai} -{" "}
+                  {praktikumBerlangsung.waktuSelesai}
+                </Text>
+              </View>
+            ) : (
+              <Text style={styles.emptyPraktikum}>
+                Tidak ada praktikum yang sedang berlangsung.
+              </Text>
+            )}
+          </View>
+
+          {/* PRAKTIKUM BERIKUTNYA */}
+          <View style={styles.praktikumSection}>
+            <Text style={styles.praktikumSectionTitle}>
+              Praktikum Berikutnya
+            </Text>
+
+            {praktikumBerikutnya ? (
+              <View style={styles.praktikumItem}>
+                <View style={styles.praktikumHeader}>
+                  <Text style={styles.praktikumName}>
+                    {praktikumBerikutnya.jadwal.mataPraktikum}
+                  </Text>
+
+                  <View
+                    style={[
+                      styles.statusBadge,
+                      praktikumBerikutnya.sesi?.statusDb === "open"
+                        ? styles.statusOpen
+                        : styles.statusDraft,
+                    ]}
+                  >
+                    <Text style={styles.statusText}>
+                      {praktikumBerikutnya.sesi?.status ??
+                        "Sesi Belum Dibuat"}
+                    </Text>
+                  </View>
+                </View>
+
+                <Text style={styles.praktikumMeta}>
+                  Kelas {praktikumBerikutnya.jadwal.kelas}
+                </Text>
+
+                <Text style={styles.praktikumMeta}>
+                  {formatTanggal(praktikumBerikutnya.tanggal)}
+                </Text>
+
+                <Text style={styles.praktikumMeta}>
+                  {praktikumBerikutnya.jadwal.waktuMulai} -{" "}
+                  {praktikumBerikutnya.jadwal.waktuSelesai}
+                </Text>
+              </View>
+            ) : (
+              <Text style={styles.emptyPraktikum}>
+                Belum ada jadwal praktikum berikutnya.
+              </Text>
+            )}
+          </View>
+
           <Pressable
             style={styles.directionButton}
             onPress={() => focusLab(selectedLab)}
@@ -602,5 +828,69 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginRight: 8,
-    },
+  },
+
+  praktikumSection: {
+    marginTop: 18,
+  },
+
+  praktikumSectionTitle: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "700",
+    marginBottom: 10,
+  },
+
+  praktikumItem: {
+    backgroundColor: "#302A4D",
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 8,
+  },
+
+  praktikumHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+  },
+
+  praktikumName: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "700",
+    flex: 1,
+  },
+
+  praktikumMeta: {
+    color: "#B9B2CE",
+    fontSize: 12,
+    marginTop: 6,
+  },
+
+  statusBadge: {
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderRadius: 20,
+  },
+
+  statusOpen: {
+    backgroundColor: "#245C45",
+  },
+
+  statusDraft: {
+    backgroundColor: "#59451F",
+  },
+
+  statusText: {
+    color: "#FFFFFF",
+    fontSize: 10,
+    fontWeight: "600",
+  },
+
+  emptyPraktikum: {
+    color: "#A9A1BE",
+    fontSize: 12,
+    paddingVertical: 8,
+  },
 });

@@ -415,7 +415,7 @@ export default function AsistenDashboard() {
                       />
 
                       <Text style={styles.sessionMeta}>
-                        {item.waktu}
+                        {item.waktuMulai} - {item.waktuSelesai}
                       </Text>
 
                       <Ionicons

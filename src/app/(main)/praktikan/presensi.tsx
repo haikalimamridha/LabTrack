@@ -20,7 +20,7 @@ import { formatTanggal, type Sesi } from "@/services/sessionService";
 type Toast = { pesan: string; ok: boolean } | null;
 type StatusFilter = "Semua" | "Sedang Berlangsung" | "Belum Dibuka" | "Selesai";
 
-export default function PresensiScreen() {
+export default function PresensiScreen(){
   const router = useRouter();
   const {
     daftarSesi,
@@ -352,7 +352,7 @@ export default function PresensiScreen() {
                         size={15}
                         color="#9C98B2"
                       />
-                      <Text style={styles.metaText}>{item.waktu}</Text>
+                      <Text style={styles.metaText}>{item.waktuMulai} - {item.waktuSelesai}</Text>
                     </View>
 
                     <View style={styles.metaRow}>

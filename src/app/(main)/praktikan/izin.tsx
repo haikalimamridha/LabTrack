@@ -81,7 +81,8 @@ export default function IzinPraktikanScreen() {
             scheduleId: data.scheduleId ?? null,
             tanggal: data.tanggal ?? '',
             hari: data.hari ?? '',
-            waktu: data.waktu ?? '',
+            waktuMulai: data.waktuMulai ?? '',
+            waktuSelesai: data.waktuSelesai ?? '',
             status: statusLabel,
             statusDb,
             openedAt: data.openedAt?.toDate?.() ?? null,
@@ -494,7 +495,7 @@ export default function IzinPraktikanScreen() {
                           </View>
                         </View>
                         <Text style={styles.sessionOptionSub}>
-                          {s.hari}, {formatTanggal(s.tanggal)} · {s.waktu}
+                          {s.hari}, {formatTanggal(s.tanggal)} · {s.waktuMulai} - {s.waktuSelesai}
                         </Text>
                       </TouchableOpacity>
                     );

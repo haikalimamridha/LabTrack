@@ -132,7 +132,7 @@ export default function RiwayatScreen() {
 
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Jadwal sesi</Text>
-              <Text style={styles.infoValue}>{item.sesi.waktu}</Text>
+              <Text style={styles.infoValue}>{item.sesi.waktuMulai} - {item.sesi.waktuSelesai}</Text>
             </View>
 
             <View style={[styles.infoRow, { marginBottom: 0 }]}>
