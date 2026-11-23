@@ -8,6 +8,10 @@ export default function AsprakLayout() {
       <Stack
         screenOptions={{
           headerShown: false,
+          animation: "slide_from_right",
+          animationDuration: 280,
+          gestureEnabled: true,
+          fullScreenGestureEnabled: true,
         }}
       >
         <Stack.Screen name="index" />
