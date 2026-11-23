@@ -137,8 +137,8 @@ function toJadwal(id: string, d: Data): Jadwal {
     kelas: d.kelas ?? "",
     labId: d.labId ?? "",
     hari: d.hari ?? "",
-    waktuMulai: d.waktu ?? "",
-    waktuSelesai: d.waktu ?? "",
+    waktuMulai: d.waktuMulai ?? "",
+    waktuSelesai: d.waktuSelesai ?? "",
     asisten: d.asisten ?? "",
   };
 }
