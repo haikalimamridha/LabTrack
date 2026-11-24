@@ -188,8 +188,9 @@ export async function ajukanIzinPraktikum(
       kode: sesi.kode || '',
       kelas: sesi.kelas || '',
       tanggalSesi: sesi.tanggal || '',
-      waktuSesi: sesi.waktu || '',
-      ruangan: sesi.ruangan || '',
+      waktuMulai: sesi.waktuMulai || '',
+      waktuSelesai: sesi.waktuSelesai || '',
+      labId: sesi.labId || '',
 
       uid: profile.uid,
       nama: profile.nama,

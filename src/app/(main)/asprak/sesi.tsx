@@ -18,6 +18,9 @@ import {
   View,
 } from "react-native";
 
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+
 const filters = ["Semua", "Sedang Berlangsung", "Belum Dibuka", "Selesai"];
 
 export default function SesiScreen() {
@@ -44,8 +47,8 @@ export default function SesiScreen() {
   const bukaUbah = (item: Sesi) => {
     setSesiUbah(item);
     setFormTanggal(item.tanggal);
-    setFormWaktu(item.waktu);
-    setFormRuangan(item.ruangan);
+    setFormWaktu(`${item.waktuMulai} - ${item.waktuSelesai}`);
+    setFormRuangan(item.labId);
     setFormError(null);
   };
 
@@ -91,8 +94,6 @@ export default function SesiScreen() {
     setFormError(null);
     const hasil = await ubahSesi(sesiUbah.id, {
       tanggal: formTanggal,
-      waktu,
-      ruangan,
     });
     setMenyimpan(false);
 
@@ -213,12 +214,12 @@ export default function SesiScreen() {
 
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>Waktu</Text>
-                <Text style={styles.detailValue}>{item.waktu}</Text>
+                <Text style={styles.detailValue}>{item.waktuMulai} - {item.waktuSelesai}</Text>
               </View>
 
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>Ruangan</Text>
-                <Text style={styles.detailValue}>{item.ruangan}</Text>
+                <Text style={styles.detailValue}>{item.labId}</Text>
               </View>
 
               {/* Tombol Buka Sesi */}

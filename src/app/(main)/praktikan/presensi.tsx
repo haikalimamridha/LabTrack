@@ -17,6 +17,12 @@ import { usePresensi } from "@/context/PresensiContext";
 import { formatJam } from "@/data/sesi";
 import { formatTanggal, type Sesi } from "@/services/sessionService";
 
+import {
+  cekLokasiKampus,
+  konfigurasiGeofence,
+  type ValidasiLokasi,
+} from "@/services/locationService";
+
 type Toast = { pesan: string; ok: boolean } | null;
 type StatusFilter = "Semua" | "Sedang Berlangsung" | "Belum Dibuka" | "Selesai";
 
@@ -39,6 +45,9 @@ export default function PresensiScreen(){
   const [mengirim, setMengirim] = useState(false);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("Semua");
   const [daftarLab, setDaftarLab] = useState<Laboratorium[]>([]);
+  const [hasilLokasi, setHasilLokasi] = useState<ValidasiLokasi | null>(null);
+  const [mengecekLokasi, setMengecekLokasi] = useState(false);
+  const [errorLokasi, setErrorLokasi] = useState<string | null>(null);
   
   useEffect(() => {
     const unsubscribe = listenLaboratorium(
@@ -69,6 +78,29 @@ export default function PresensiScreen(){
     timerRef.current = setTimeout(() => {
       setToast(null);
     }, 2500);
+  };
+
+  const handleCekLokasi = async () => {
+    if (mengecekLokasi) return;
+
+    setMengecekLokasi(true);
+    setHasilLokasi(null);
+    setErrorLokasi(null);
+
+    try {
+      const response = await cekLokasiKampus();
+
+      if (!response.berhasil || !response.hasil) {
+        setErrorLokasi(response.error ?? "Gagal mendapatkan lokasi.");
+        return;
+      }
+
+      setHasilLokasi(response.hasil);
+    } catch {
+      setErrorLokasi("Terjadi kesalahan saat mengecek lokasi.");
+    } finally {
+      setMengecekLokasi(false);
+    }
   };
 
   const konfirmasi = async () => {
@@ -388,7 +420,11 @@ export default function PresensiScreen(){
                     ]}
                     activeOpacity={0.85}
                     disabled={!tombol.aktif}
-                    onPress={() => setSesiDipilih(item)}
+                    onPress={() => { 
+                      setSesiDipilih(item); 
+                      setHasilLokasi(null);
+                      setErrorLokasi(null);
+                    }}
                   >
                     <MaterialCommunityIcons
                       name={tombol.icon}
@@ -460,23 +496,137 @@ export default function PresensiScreen(){
               </Text>
             </View>
 
-            <Text style={styles.modalHint}>
-              Waktu kehadiran akan dicatat saat kamu menekan Konfirmasi.
+            {sesiDipilih && (
+              <View style={styles.modeInfo}>
+                <Text style={styles.modeText}>
+                  {sesiDipilih.modePraktikum === "online"
+                    ? "PRAKTIKUM ONLINE"
+                    : "PRAKTIKUM OFFLINE"}
+                </Text>
+              </View>
+            )}
+            {/* Pengecekan Lokasi */}
+            <View style={styles.locationBox}>
+            <Text style={styles.locationTitle}>
+              Verifikasi Lokasi
             </Text>
+            
+            <Text style={styles.locationSubtitle}>
+              Pastikan kamu berada di area FSM sebelum melakukan presensi.
+            </Text>
+            
+            <View style={styles.locationInfoRow}>
+              <Text style={styles.locationLabel}>Batas area FSM</Text>
+              <Text style={styles.locationValue}>
+                {konfigurasiGeofence.radiusMeter} meter
+              </Text>
+            </View>
+            
+            {hasilLokasi && (
+              <>
+                <View style={styles.locationInfoRow}>
+                  <Text style={styles.locationLabel}>Jarak dari pusat FSM</Text>
+                  <Text style={styles.locationValue}>
+                    {Math.round(hasilLokasi.jarakMeter)} meter
+                  </Text>
+                </View>
+                
+                <View style={styles.locationInfoRow}>
+                  <Text style={styles.locationLabel}>GPS Accuracy</Text>
+                  <Text style={styles.locationValue}>
+                    ±{Math.round(hasilLokasi.accuracyMeter)} meter
+                  </Text>
+                </View>
+                
+                <View style={styles.locationInfoRow}>
+                  <Text style={styles.locationLabel}>Status lokasi</Text>
+                  <Text
+                  style={[
+                    styles.locationStatus,
+                    hasilLokasi.status === "valid"
+                    ? styles.locationValid
+                    : styles.locationInvalid,
+                  ]}
+                  >
+                    {hasilLokasi.status === "valid"
+                    ? "Dalam batas"
+                    : hasilLokasi.status === "retry_accuracy"
+                    ? "GPS kurang akurat"
+                    : hasilLokasi.status === "retry_borderline"
+                    ? "Dekat batas"
+                    : "Di luar batas"}
+                  </Text>
+                </View>
+                
+                <Text style={styles.locationMessage}>
+                  {hasilLokasi.pesan}
+                </Text>
+              </>
+            )}
+            
+            {errorLokasi && (
+              <Text style={styles.locationError}>
+                {errorLokasi}
+              </Text>
+            )}
+            
+            <TouchableOpacity
+              style={styles.checkLocationButton}
+              onPress={handleCekLokasi}
+              disabled={mengecekLokasi}
+              activeOpacity={0.85}
+            >
+              {mengecekLokasi ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
+                <MaterialCommunityIcons
+                  name="map-marker-check-outline"
+                  size={18}
+                  color="#FFFFFF"
+                />
+              )}
+              
+              <Text style={styles.checkLocationButtonText}>
+                {mengecekLokasi
+                ? "Mengambil lokasi..."
+                : hasilLokasi
+                ? "Cek Lokasi Ulang"
+                : "Cek Lokasi"}
+              </Text>
+           </TouchableOpacity>
+          </View>
+          
+          <Text style={styles.modalHint}>
+            Untuk praktikum offline, presensi hanya dapat dilakukan setelah lokasi berhasil diverifikasi berada dalam area FSM. 
+          </Text>
 
             <View style={styles.modalActions}>
               <TouchableOpacity
                 style={[styles.modalButton, styles.modalCancel]}
-                onPress={() => setSesiDipilih(null)}
+                onPress={() => {
+                  setSesiDipilih(null);
+                  setHasilLokasi(null);
+                  setErrorLokasi(null);
+                }}
                 disabled={mengirim}
               >
                 <Text style={styles.modalCancelText}>Batal</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.modalButton, styles.modalConfirm]}
+                style={[
+                  styles.modalButton,
+                  styles.modalConfirm,
+                  sesiDipilih?.modePraktikum === "offline" &&
+                    (!hasilLokasi || hasilLokasi.status !== "valid") &&
+                    styles.buttonNonaktif,
+                ]}
                 onPress={konfirmasi}
-                disabled={mengirim}
+                disabled={
+                  mengirim ||
+                  (sesiDipilih?.modePraktikum === "offline" &&
+                    (!hasilLokasi || hasilLokasi.status !== "valid"))
+                }
               >
                 {mengirim ? (
                   <ActivityIndicator color="#FFFFFF" size="small" />
@@ -906,5 +1056,103 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 18,
+  },
+  locationBox: {
+    backgroundColor: "#3A3654",
+    borderRadius: 14,
+    padding: 14,
+    marginTop: 14,
+    marginBottom: 12,
+  },
+
+  locationTitle: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "700",
+    marginBottom: 5,
+  },
+
+  locationSubtitle: {
+    color: "#B8B4C8",
+    fontSize: 11,
+    lineHeight: 17,
+    marginBottom: 12,
+  },
+
+  locationInfoRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 10,
+    marginVertical: 5,
+  },
+
+  locationLabel: {
+    color: "#B8B4C8",
+    fontSize: 12,
+    flex: 1,
+  },
+
+  locationValue: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+
+  locationStatus: {
+    fontSize: 12,
+    fontWeight: "700",
+  },
+
+  locationValid: {
+    color: "#6EE7B7",
+  },
+
+  locationInvalid: {
+    color: "#FF9CA8",
+  },
+
+  locationMessage: {
+    color: "#D8D5E6",
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: 10,
+  },
+
+  locationError: {
+    color: "#FF9CA8",
+    fontSize: 12,
+    marginTop: 10,
+  },
+
+  checkLocationButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: "#514276",
+    borderRadius: 10,
+    paddingVertical: 12,
+    marginTop: 12,
+  },
+
+  checkLocationButtonText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  modeInfo: {
+    alignSelf: "flex-start",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: "#3A3654",
+    marginBottom: 12,
+  },
+
+  modeText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#FFFFFF",
   },
 });

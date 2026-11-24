@@ -204,6 +204,8 @@ export default function JadwalScreen() {
   // Pembuatan sesi
   const [jadwalSesi, setJadwalSesi] = useState<Jadwal | null>(null);
   const [membuat, setMembuat] = useState(false);
+  const [modePraktikum, setModePraktikum] = useState<"offline" | "online">("offline");
+  const [tanggalDipilih, setTanggalDipilih] = useState<string | null>(null);
 
   // Memuat pilihan kelas dan mata praktikum
   useEffect(() => {
@@ -411,10 +413,13 @@ export default function JadwalScreen() {
         hari: item.hari,
         waktuMulai: item.waktuMulai,
         waktuSelesai: item.waktuSelesai,
+        modePraktikum,
       });
 
       if (hasil.ok) {
         setJadwalSesi(null);
+        setTanggalDipilih(null);
+        setModePraktikum("offline");
 
         Alert.alert(
           "Berhasil",
@@ -1144,16 +1149,29 @@ export default function JadwalScreen() {
                         style={[
                           styles.dateItem,
                           ada && styles.dateItemDisabled,
+                          tanggalDipilih === t && styles.dateItemSelected,
                         ]}
                         disabled={ada || membuat}
                         activeOpacity={0.8}
-                        onPress={() => buatSesiDari(jadwalSesi, t)}
+                        onPress={() => setTanggalDipilih(t)}
                       >
                         <View style={styles.dateIcon}>
                           <MaterialCommunityIcons
-                            name={ada ? "check-circle" : "calendar"}
+                            name={
+                              ada
+                              ? "check-circle"
+                              : tanggalDipilih === t
+                              ? "check-circle"
+                              : "calendar"
+                            }
                             size={20}
-                            color={ada ? "#69D9A3" : "#B99AFF"}
+                            color={
+                              ada
+                              ? "#69D9A3"
+                              : tanggalDipilih === t
+                              ? "#D8B4FE"
+                              : "#B99AFF"
+                            }
                           />
                         </View>
 
@@ -1181,6 +1199,56 @@ export default function JadwalScreen() {
                       </TouchableOpacity>
                     );
                   })}
+                  {/* Mode Praktikum */}
+                  <View style={{ marginTop: 16 }}>
+                    <Text style={{ color: "#DDD6EF", fontSize: 12, fontWeight: "600" }}>Mode Praktikum</Text>
+
+                    <View style={{ flexDirection: "row", gap: 12, marginTop: 10 }}>
+                      <TouchableOpacity
+                        onPress={() => setModePraktikum("offline")}
+                        style={{
+                          flex: 1,
+                          padding: 14,
+                          borderRadius: 12,
+                          borderWidth: 1,
+                          borderColor: modePraktikum === "offline" ? "#B99AFF" : "#444",
+                          backgroundColor: modePraktikum === "offline" ? "#40315E" : "transparent",
+                          alignItems: "center",
+                        }}
+                      >
+                        <Text
+                          style={{
+                            color: modePraktikum === "offline" ? "#D8B4FE" : "#FFF",
+                            fontWeight: "600",
+                          }}
+                        >
+                          Offline
+                        </Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        onPress={() => setModePraktikum("online")}
+                        style={{
+                          flex: 1,
+                          padding: 14,
+                          borderRadius: 12,
+                          borderWidth: 1,
+                          borderColor: modePraktikum === "online" ? "#B99AFF" : "#444",
+                          backgroundColor: modePraktikum === "online" ? "#40315E" : "transparent",
+                          alignItems: "center",
+                        }}
+                      >
+                        <Text
+                          style={{
+                            color: modePraktikum === "online" ? "#D8B4FE" : "#FFF",
+                            fontWeight: "600",
+                          }}
+                        >
+                          Online
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
               </ScrollView>
             </View>
 
@@ -1191,15 +1259,45 @@ export default function JadwalScreen() {
             </Text>
 
             {/* Footer */}
-            <TouchableOpacity
-              style={styles.closeModalButton}
-              disabled={membuat}
-              onPress={() => setJadwalSesi(null)}
-            >
-              <Text style={styles.cancelButtonText}>
-                Tutup
-              </Text>
-            </TouchableOpacity>
+            <View style={{ gap: 10, marginTop: 16 }}>
+              <TouchableOpacity
+                style={[
+                  styles.closeModalButton,
+                  {
+                    backgroundColor: tanggalDipilih ? "#7651C9" : "#403957",
+                    opacity: tanggalDipilih ? 1 : 0.5,
+                  },
+                ]}
+                disabled={membuat || !tanggalDipilih}
+                onPress={() => {
+                  if (jadwalSesi && tanggalDipilih) {
+                    buatSesiDari(jadwalSesi, tanggalDipilih);
+                  }
+                }}
+              >
+                {membuat ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.cancelButtonText}>
+                    Buat Sesi
+                  </Text>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.closeModalButton}
+                disabled={membuat}
+                onPress={() => {
+                  setJadwalSesi(null);
+                  setTanggalDipilih(null);
+                  setModePraktikum("offline");
+                }}
+              >
+                <Text style={styles.cancelButtonText}>
+                  Tutup
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
@@ -1978,7 +2076,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
 
-
   sessionClassRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -1989,6 +2086,11 @@ const styles = StyleSheet.create({
   dateList: {
     maxHeight: 220,
     marginTop: 10,
+  },
+  dateItemSelected: {
+    borderColor: "#B99AFF",
+    borderWidth: 2,
+    backgroundColor: "#40315E",
   },
 
 });

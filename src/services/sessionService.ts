@@ -23,6 +23,7 @@ import type { UserProfile } from "@/context/AuthContext";
 // di UI dipetakan ke label Indonesia agar layar yang sudah ada tidak berubah.
 export type StatusDb = "draft" | "open" | "closed";
 export type StatusSesi = "Belum Dibuka" | "Sedang Berlangsung" | "Selesai";
+export type ModePraktikum = "online" | "offline";
 
 const LABEL_STATUS: Record<StatusDb, StatusSesi> = {
   draft: "Belum Dibuka",
@@ -49,6 +50,8 @@ export type Sesi = {
   statusDb: StatusDb; // nilai asli di database
   openedAt: Date | null;
   closedAt: Date | null;
+  modePraktikum: ModePraktikum;
+  radiusPresensi: number;
 };
 
 export type SesiInput = {
@@ -63,6 +66,8 @@ export type SesiInput = {
   hari: string;
   waktuMulai: string;
   waktuSelesai: string;
+  modePraktikum?: ModePraktikum;
+  radiusPresensi?: number;
 };
 
 export type Jadwal = {
@@ -126,6 +131,8 @@ function toSesi(id: string, d: Data): Sesi {
     statusDb,
     openedAt: toDate(d.openedAt),
     closedAt: toDate(d.closedAt),
+    modePraktikum: d.modePraktikum ?? "offline",
+    radiusPresensi: d.radiusPresensi ?? 100,
   };
 }
 
@@ -350,6 +357,8 @@ export const buatSesi = (input: SesiInput) =>
     ...input,
     kode: input.kode ?? "",
     scheduleId: input.scheduleId ?? null,
+    modePraktikum: input.modePraktikum ?? "offline",
+    radiusPresensi: input.radiusPresensi ?? 100,
     status: "draft" satisfies StatusDb,
     createdAt: serverTimestamp(),
   });
