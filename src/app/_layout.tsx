@@ -1,5 +1,6 @@
 
 import { AuthProvider } from "@/context/AuthContext";
+import { NotificationProvider } from "@/context/NotificationContext";
 import { Stack } from "expo-router";
 import {
   SafeAreaProvider,
@@ -10,24 +11,26 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <AuthProvider>
-        <SafeAreaView
-          style={{ flex: 1, backgroundColor: "#25292e" }}
-          edges={["top"]}
-        >
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="index" />
-            <Stack.Screen name="login" />
-            <Stack.Screen name="register" />
-            <Stack.Screen name="forgot-password" />
+        <NotificationProvider>
+          <SafeAreaView
+            style={{ flex: 1, backgroundColor: "#25292e" }}
+            edges={["top"]}
+          >
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="index" />
+              <Stack.Screen name="login" />
+              <Stack.Screen name="register" />
+              <Stack.Screen name="forgot-password" />
 
-            <Stack.Screen
-              name="(main)"
-              options={{
-                animation: "fade",
-              }}
-            />
-          </Stack>
-        </SafeAreaView>
+              <Stack.Screen
+                name="(main)"
+                options={{
+                  animation: "fade",
+                }}
+              />
+            </Stack>
+          </SafeAreaView>
+        </NotificationProvider>
       </AuthProvider>
     </SafeAreaProvider>
   );
