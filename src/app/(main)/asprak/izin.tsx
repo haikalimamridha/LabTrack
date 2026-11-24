@@ -1,4 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import Feather from '@expo/vector-icons/Feather';
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -11,10 +15,8 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import Feather from '@expo/vector-icons/Feather';
-import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
+import BackButton from '@/components/ui/backButton';
 import { useAuth } from '@/context/AuthContext';
 import {
   putuskanIzin,
@@ -137,13 +139,16 @@ export default function IzinAsprakScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
-        <View style={styles.header}>
+        {/* HEADER */}
+        <LinearGradient
+          colors={["#7928CA", "#512DA8", "#29215C"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.header}
+        >
+          <BackButton />
           <Text style={styles.title}>Pemeriksaan Izin</Text>
-          <Text style={styles.subtitle}>
-            Verifikasi permohonan izin ketidakhadiran praktikan dengan bantuan AI.
-          </Text>
-        </View>
+        </LinearGradient>
 
         {/* Ringkasan Status */}
         <View style={styles.summaryCard}>
@@ -198,8 +203,12 @@ export default function IzinAsprakScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Tabs Filter */}
-        <View style={styles.tabContainer}>
+        {/* TABS FILTER */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.tabContainer}
+        >
           {(
             [
               { id: 'pending', label: 'Menunggu Review' },
@@ -209,21 +218,26 @@ export default function IzinAsprakScreen() {
             ] as const
           ).map((tab) => {
             const aktif = filter === tab.id;
+
             return (
               <TouchableOpacity
                 key={tab.id}
+                activeOpacity={0.8}
                 style={[styles.tabButton, aktif && styles.tabButtonActive]}
                 onPress={() => setFilter(tab.id)}
               >
                 <Text
-                  style={[styles.tabButtonText, aktif && styles.tabButtonTextActive]}
+                  style={[
+                    styles.tabButtonText,
+                    aktif && styles.tabButtonTextActive,
+                  ]}
                 >
                   {tab.label}
                 </Text>
               </TouchableOpacity>
             );
           })}
-        </View>
+        </ScrollView>
 
         {/* List Izin */}
         {loading ? (
@@ -253,7 +267,7 @@ export default function IzinAsprakScreen() {
                 >
                   {/* Header Card: Mahasiswa & Status */}
                   <View style={styles.cardHeader}>
-                    <View>
+                    <View style={{ flex: 1, marginRight: 10 }}>
                       <Text style={styles.namaPraktikan}>{item.nama}</Text>
                       <Text style={styles.nimPraktikan}>
                         NIM: {item.nim} · Kelas {item.kelas || '-'}
@@ -312,7 +326,11 @@ export default function IzinAsprakScreen() {
                         Hasil Analisis Sentimen EDOM:
                       </Text>
                       <View style={styles.aiPill}>
-                        <Text style={styles.aiPillText}> {item.sentimenAi ? item.sentimenAi.toUpperCase() : 'Tidak tersedia'}</Text>
+                        <Text style={styles.aiPillText}>
+                          {item.sentimenAi
+                            ? item.sentimenAi.toUpperCase()
+                            : 'TIDAK TERSEDIA'}
+                        </Text>
                       </View>
                     </View>
                     {item.penjelasanAi ? (
@@ -399,7 +417,10 @@ export default function IzinAsprakScreen() {
             </View>
 
             {selectedIzin && (
-              <ScrollView showsVerticalScrollIndicator={false}>
+              <ScrollView 
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+              >
                 <Text style={styles.modalSub}>
                   Praktikan:{' '}
                   <Text style={{ color: '#ffffff', fontWeight: '600' }}>
@@ -485,296 +506,541 @@ export default function IzinAsprakScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#25292e' },
-  scrollContent: { padding: 20, paddingBottom: 40 },
-  header: { marginBottom: 18 },
-  title: { fontSize: 24, fontWeight: '700', color: '#ffffff' },
-  subtitle: { fontSize: 13, color: '#a0a0a5', marginTop: 4 },
+  container: {
+    flex: 1,
+    backgroundColor: '#1E1B35',
+  },
 
+  scrollContent: {
+    paddingBottom: 35,
+  },
+
+  // HEADER
+
+  header: {
+    paddingTop: 35,
+    paddingBottom: 30,
+    paddingHorizontal: 22,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+  },
+
+  headerIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 15,
+    backgroundColor: '#302A4D',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: '#49415F',
+  },
+
+  title: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+
+  subtitle: {
+    fontSize: 13,
+    color: '#A9A2C7',
+    marginTop: 6,
+    lineHeight: 20,
+  },
+
+  // SUMMARY
   summaryCard: {
-    backgroundColor: '#1e2124',
-    borderRadius: 12,
-    padding: 14,
+    backgroundColor: '#302A4D',
+    borderRadius: 16,
+    padding: 12,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginHorizontal: 18,
+    marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#333740',
+    borderColor: '#453B64',
   },
+
   summaryItem: {
     flex: 1,
     alignItems: 'center',
-    paddingVertical: 4,
-    borderRadius: 8,
+    paddingVertical: 9,
+    borderRadius: 10,
   },
-  summaryActive: { backgroundColor: '#2a2e36' },
-  summaryNumber: { fontSize: 18, fontWeight: '700', color: '#ffffff' },
-  summaryLabel: { fontSize: 11, color: '#a0a0a5', marginTop: 4 },
-  summaryDivider: { width: 1, height: 26, backgroundColor: '#333740' },
 
+  summaryActive: {
+    backgroundColor: '#453B64',
+  },
+
+  summaryNumber: {
+    fontSize: 19,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+
+  summaryLabel: {
+    fontSize: 10,
+    color: '#A9A2C7',
+    marginTop: 5,
+    textAlign: 'center',
+  },
+
+  summaryDivider: {
+    width: 1,
+    height: 30,
+    backgroundColor: '#49415F',
+  },
+
+  // FILTER TABS
   tabContainer: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 18,
-    flexWrap: 'wrap',
+    paddingHorizontal: 18,
+    paddingBottom: 18,
+    gap: 9,
   },
+
   tabButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-    backgroundColor: '#1e2124',
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderRadius: 10,
+    backgroundColor: '#302A4D',
     borderWidth: 1,
-    borderColor: '#333740',
+    borderColor: '#453B64',
   },
+
   tabButtonActive: {
-    backgroundColor: '#625ff0',
-    borderColor: '#625ff0',
+    backgroundColor: '#49358B',
+    borderColor: '#7651C9',
   },
-  tabButtonText: { fontSize: 12, color: '#a0a0a5', fontWeight: '600' },
-  tabButtonTextActive: { color: '#ffffff' },
 
-  loadingContainer: { padding: 40, alignItems: 'center' },
-  loadingText: { color: '#a0a0a5', marginTop: 12, fontSize: 13 },
+  tabButtonText: {
+    fontSize: 12,
+    color: '#A9A2C7',
+    fontWeight: '600',
+  },
 
-  emptyContainer: {
-    padding: 36,
+  tabButtonTextActive: {
+    color: '#FFFFFF',
+  },
+
+  // LOADING
+  loadingContainer: {
+    padding: 45,
     alignItems: 'center',
-    backgroundColor: '#1e2124',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#333740',
   },
+
+  loadingText: {
+    color: '#A9A2C7',
+    marginTop: 12,
+    fontSize: 13,
+  },
+
+  // EMPTY STATE
+  emptyContainer: {
+    padding: 35,
+    alignItems: 'center',
+    backgroundColor: '#302A4D',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#453B64',
+    marginHorizontal: 18,
+  },
+
   emptyTitle: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#ffffff',
-    marginTop: 12,
-  },
-  emptyText: {
-    fontSize: 13,
-    color: '#a0a0a5',
-    textAlign: 'center',
-    marginTop: 6,
-    lineHeight: 18,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginTop: 14,
   },
 
+  emptyText: {
+    fontSize: 13,
+    color: '#A9A2C7',
+    textAlign: 'center',
+    marginTop: 7,
+    lineHeight: 20,
+  },
+
+  // GRID
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 16,
+    gap: 12,
+    marginHorizontal: 18,
   },
+
+  // CARD
   card: {
-    backgroundColor: '#1e2124',
-    borderRadius: 12,
+    backgroundColor: '#302A4D',
+    borderRadius: 16,
     padding: 16,
+    marginHorizontal: 18,
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: '#333740',
+    borderColor: '#453B64',
   },
-  cardWide: { width: '48%' },
+
+  cardWide: {
+    width: '48%',
+    marginHorizontal: 0,
+    marginBottom: 0,
+  },
 
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
   },
-  namaPraktikan: { fontSize: 16, fontWeight: '700', color: '#ffffff' },
-  nimPraktikan: { fontSize: 12, color: '#a0a0a5', marginTop: 2 },
 
+  namaPraktikan: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+
+  nimPraktikan: {
+    fontSize: 11,
+    color: '#A9A2C7',
+    marginTop: 5,
+  },
+
+  // STATUS
   statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingHorizontal: 9,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+
+  statusBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+  },
+
+  divider: {
+    height: 1,
+    backgroundColor: '#49415F',
+    marginVertical: 14,
+  },
+
+  // SESSION
+  sessionBox: {
+    backgroundColor: '#25213D',
+    padding: 12,
+    borderRadius: 11,
+    marginBottom: 13,
+    borderWidth: 1,
+    borderColor: '#453B64',
+  },
+
+  sessionTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 8,
+  },
+
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+  },
+
+  infoText: {
+    fontSize: 12,
+    color: '#A9A2C7',
+  },
+
+  // REASON
+  reasonSection: {
+    marginBottom: 14,
+  },
+
+  reasonLabel: {
+    fontSize: 11,
+    color: '#B99AFF',
+    fontWeight: '700',
+    marginBottom: 5,
+  },
+
+  reasonText: {
+    fontSize: 13,
+    color: '#E5E0F5',
+    fontStyle: 'italic',
+    lineHeight: 20,
+  },
+
+  // AI ANALYSIS
+  aiBadgeContainer: {
+    backgroundColor: '#282445',
+    padding: 12,
+    borderRadius: 11,
+    borderWidth: 1,
+    borderColor: '#59468B',
+    marginBottom: 13,
+  },
+
+  aiHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 7,
+  },
+
+  aiHeaderTitle: {
+    fontSize: 11,
+    color: '#D2C4FF',
+    fontWeight: '700',
+    flexShrink: 1,
+  },
+
+  aiPill: {
+    backgroundColor: '#49358B',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
   },
-  statusBadgeText: { fontSize: 11, fontWeight: '600' },
 
-  divider: { height: 1, backgroundColor: '#333740', marginVertical: 10 },
-
-  sessionBox: {
-    backgroundColor: '#262930',
-    padding: 10,
-    borderRadius: 8,
-    marginBottom: 10,
+  aiPillText: {
+    fontSize: 10,
+    color: '#FFFFFF',
+    fontWeight: '700',
   },
-  sessionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#ffffff',
-    marginBottom: 4,
-  },
-  infoRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  infoText: { fontSize: 12, color: '#a0a0a5' },
 
-  reasonSection: { marginBottom: 10 },
-  reasonLabel: { fontSize: 11, color: '#a0a0a5', fontWeight: '600' },
-  reasonText: {
-    fontSize: 13,
-    color: '#e4e4e7',
-    fontStyle: 'italic',
-    marginTop: 2,
+  aiExplanation: {
+    fontSize: 12,
+    color: '#BDB2E8',
+    marginTop: 9,
     lineHeight: 18,
   },
 
-  aiBadgeContainer: {
-    backgroundColor: '#282745',
-    padding: 10,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#4338ca',
-    marginBottom: 12,
-  },
-  aiHeader: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  aiHeaderTitle: { fontSize: 11, color: '#c7d2fe', fontWeight: '600' },
-  aiPill: {
-    backgroundColor: '#4338ca',
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  aiPillText: { fontSize: 11, color: '#ffffff', fontWeight: '700' },
-  aiExplanation: {
-    fontSize: 11,
-    color: '#a5b4fc',
-    marginTop: 4,
-    lineHeight: 15,
-  },
   aiDisclaimer: {
     fontSize: 10,
-    color: '#818cf8',
-    marginTop: 4,
+    color: '#9385C5',
+    marginTop: 9,
     fontStyle: 'italic',
+    lineHeight: 15,
   },
 
+  // ASSISTANT NOTE
   noteSection: {
-    backgroundColor: '#262930',
-    padding: 10,
-    borderRadius: 8,
-    marginBottom: 12,
+    backgroundColor: '#25213D',
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 13,
     borderLeftWidth: 3,
-    borderLeftColor: '#625ff0',
+    borderLeftColor: '#7651C9',
   },
-  noteLabel: { fontSize: 11, color: '#a0a0a5', fontWeight: '600' },
-  noteText: { fontSize: 12, color: '#ffffff', marginTop: 2 },
 
-  actionRow: { flexDirection: 'row', gap: 10, marginTop: 4 },
+  noteLabel: {
+    fontSize: 11,
+    color: '#B99AFF',
+    fontWeight: '700',
+  },
+
+  noteText: {
+    fontSize: 12,
+    color: '#E5E0F5',
+    marginTop: 6,
+    lineHeight: 18,
+  },
+
+  // ACTION BUTTONS
+  actionRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 5,
+  },
+
   btnTolak: {
     flex: 1,
-    backgroundColor: '#dc2626',
+    backgroundColor: '#9F343F',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 10,
-    borderRadius: 8,
-    gap: 6,
+    paddingVertical: 12,
+    borderRadius: 10,
+    gap: 7,
   },
-  btnTolakText: { color: '#ffffff', fontSize: 13, fontWeight: '600' },
+
+  btnTolakText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+
   btnTerima: {
     flex: 1.3,
-    backgroundColor: '#16a34a',
+    backgroundColor: '#287A58',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 10,
-    borderRadius: 8,
-    gap: 6,
+    paddingVertical: 12,
+    borderRadius: 10,
+    gap: 7,
   },
-  btnTerimaText: { color: '#ffffff', fontSize: 13, fontWeight: '600' },
+
+  btnTerimaText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '700',
+  },
 
   btnUbah: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 6,
-    gap: 6,
+    paddingVertical: 11,
+    gap: 7,
+    borderRadius: 9,
+    backgroundColor: '#25213D',
+    borderWidth: 1,
+    borderColor: '#49415F',
   },
-  btnUbahText: { fontSize: 12, color: '#a0a0a5' },
 
-  // Modal
+  btnUbahText: {
+    fontSize: 12,
+    color: '#BDB2E8',
+    fontWeight: '600',
+  },
+
+  // MODAL
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    backgroundColor: 'rgba(10, 8, 25, 0.82)',
     justifyContent: 'center',
     padding: 20,
   },
+
   modalContent: {
-    backgroundColor: '#1e2124',
-    borderRadius: 16,
+    backgroundColor: '#25213D',
+    borderRadius: 20,
     padding: 20,
     borderWidth: 1,
-    borderColor: '#333740',
+    borderColor: '#49415F',
+    maxHeight: '85%',
   },
+
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 14,
+    marginBottom: 18,
   },
-  modalTitle: { fontSize: 18, fontWeight: '700', color: '#ffffff' },
-  modalSub: { fontSize: 12, color: '#a0a0a5', marginBottom: 4 },
+
+  modalTitle: {
+    fontSize: 19,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+
+  modalSub: {
+    fontSize: 12,
+    color: '#A9A2C7',
+    marginBottom: 7,
+    lineHeight: 18,
+  },
 
   modalAlasanBox: {
-    backgroundColor: '#262930',
-    padding: 10,
-    borderRadius: 8,
-    marginVertical: 10,
+    backgroundColor: '#302A4D',
+    padding: 13,
+    borderRadius: 11,
+    marginVertical: 13,
+    borderWidth: 1,
+    borderColor: '#453B64',
   },
-  modalAlasanLabel: { fontSize: 11, color: '#a0a0a5' },
+
+  modalAlasanLabel: {
+    fontSize: 11,
+    color: '#B99AFF',
+    fontWeight: '700',
+  },
+
   modalAlasanText: {
-    fontSize: 12,
-    color: '#e4e4e7',
+    fontSize: 13,
+    color: '#E5E0F5',
     fontStyle: 'italic',
-    marginTop: 2,
+    marginTop: 6,
+    lineHeight: 19,
   },
-  modalAiText: { fontSize: 11, color: '#c7d2fe', marginTop: 4 },
+
+  modalAiText: {
+    fontSize: 11,
+    color: '#A9A2C7',
+    marginTop: 10,
+  },
 
   fieldLabel: {
     fontSize: 12,
-    color: '#e4e4e7',
-    fontWeight: '600',
-    marginBottom: 6,
-  },
-  modalTextArea: {
-    backgroundColor: '#2a2e36',
-    borderRadius: 8,
-    padding: 10,
-    color: '#ffffff',
-    fontSize: 13,
-    borderWidth: 1,
-    borderColor: '#3f3f46',
-    textAlignVertical: 'top',
-    minHeight: 70,
-    marginBottom: 10,
-  },
-  infoSyncText: {
-    fontSize: 11,
-    color: '#4ade80',
-    marginBottom: 12,
-    lineHeight: 15,
+    color: '#E5E0F5',
+    fontWeight: '700',
+    marginBottom: 8,
   },
 
-  modalActionButtons: { flexDirection: 'row', gap: 10, marginTop: 6 },
+  modalTextArea: {
+    backgroundColor: '#302A4D',
+    borderRadius: 11,
+    padding: 13,
+    color: '#FFFFFF',
+    fontSize: 13,
+    borderWidth: 1,
+    borderColor: '#49415F',
+    textAlignVertical: 'top',
+    minHeight: 90,
+    marginBottom: 12,
+  },
+
+  infoSyncText: {
+    fontSize: 11,
+    color: '#69D9A3',
+    marginBottom: 13,
+    lineHeight: 17,
+  },
+
+  modalActionButtons: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 8,
+    marginBottom: 5,
+  },
+
   btnModalBatal: {
     flex: 1,
-    paddingVertical: 12,
+    paddingVertical: 13,
     alignItems: 'center',
-    borderRadius: 8,
-    backgroundColor: '#2a2e36',
+    borderRadius: 10,
+    backgroundColor: '#393250',
+    borderWidth: 1,
+    borderColor: '#49415F',
   },
-  btnModalBatalText: { color: '#ffffff', fontSize: 13, fontWeight: '600' },
-  btnModalKonfirmasi: {
-    flex: 1.5,
-    paddingVertical: 12,
-    alignItems: 'center',
-    borderRadius: 8,
-  },
-  btnModalKonfirmasiText: {
-    color: '#ffffff',
+
+  btnModalBatalText: {
+    color: '#FFFFFF',
     fontSize: 13,
     fontWeight: '600',
   },
-  bgTerima: { backgroundColor: '#16a34a' },
-  bgTolak: { backgroundColor: '#dc2626' },
+
+  btnModalKonfirmasi: {
+    flex: 1.5,
+    paddingVertical: 13,
+    alignItems: 'center',
+    borderRadius: 10,
+  },
+
+  btnModalKonfirmasiText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+
+  bgTerima: {
+    backgroundColor: '#287A58',
+  },
+
+  bgTolak: {
+    backgroundColor: '#9F343F',
+  },
 });
