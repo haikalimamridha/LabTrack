@@ -1,5 +1,5 @@
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -28,6 +28,7 @@ type StatusFilter = "Semua" | "Sedang Berlangsung" | "Belum Dibuka" | "Selesai";
 
 export default function PresensiScreen(){
   const router = useRouter();
+  const { sessionId } = useLocalSearchParams<{ sessionId?: string }>();
   const {
     daftarSesi,
     riwayat,
@@ -61,6 +62,31 @@ export default function PresensiScreen(){
 
     return unsubscribe;
   }, []);
+
+  useEffect(() => {
+    if (loading || !sessionId) return;
+
+    const sesi = daftarSesi.find((item) => item.id === sessionId);
+
+    if (!sesi) {
+      tampilkanToast("Sesi tidak ditemukan.", false);
+      return;
+    }
+
+    if (sudahPresensi(sesi.id)) {
+      tampilkanToast("Anda sudah melakukan presensi pada sesi ini.", false);
+      return;
+    }
+
+    if (sesi.status !== "Sedang Berlangsung") {
+      tampilkanToast("Sesi ini belum dibuka atau sudah selesai.", false);
+      return;
+    }
+
+    setSesiDipilih(sesi);
+    setHasilLokasi(null);
+    setErrorLokasi(null);
+  }, [sessionId, loading, daftarSesi, sudahPresensi]);
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
