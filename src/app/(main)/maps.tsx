@@ -13,10 +13,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  BackHandler,
   Pressable,
   StyleSheet,
   Text,
-  View,
+  View
 } from "react-native";
 
 import {
@@ -58,6 +59,18 @@ export default function MapsScreen() {
       router.replace("/praktikan");
     }
   };
+  // Menangani tombol Back fisik Android
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => {
+        handleBack();
+        return true;
+      },
+    );
+
+    return () => backHandler.remove();
+  }, [profile?.role]);
 
   const [labs, setLabs] = useState<Laboratorium[]>([]);
   const [selectedLab, setSelectedLab] =
