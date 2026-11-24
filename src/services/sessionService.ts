@@ -46,6 +46,8 @@ export type Sesi = {
   hari: string;
   waktuMulai: string;
   waktuSelesai: string;
+  waktu?: string; // Kompatibilitas tampilan ("09.00 - 11.00")
+  ruangan?: string; // Kompatibilitas nama ruangan/lab
   status: StatusSesi; // label UI
   statusDb: StatusDb; // nilai asli di database
   openedAt: Date | null;
@@ -68,6 +70,8 @@ export type SesiInput = {
   waktuSelesai: string;
   modePraktikum?: ModePraktikum;
   radiusPresensi?: number;
+  waktu?: string;
+  ruangan?: string;
 };
 
 export type Jadwal = {
@@ -114,6 +118,10 @@ const toDate = (v: unknown): Date | null =>
 
 function toSesi(id: string, d: Data): Sesi {
   const statusDb = (d.status as StatusDb) ?? "draft";
+  const waktuMulai = d.waktuMulai ?? (d.waktu ? d.waktu.split(" - ")[0] : "");
+  const waktuSelesai = d.waktuSelesai ?? (d.waktu ? d.waktu.split(" - ")[1] : "");
+  const waktu = d.waktu ?? (waktuMulai && waktuSelesai ? `${waktuMulai} - ${waktuSelesai}` : "");
+
   return {
     id,
     kelasId: d.kelasId ?? "",
@@ -125,8 +133,10 @@ function toSesi(id: string, d: Data): Sesi {
     tanggal: d.tanggal ?? "",
     hari: d.hari ?? "",
     labId: d.labId ?? "",
-    waktuMulai: d.waktuMulai ?? "",
-    waktuSelesai: d.waktuSelesai ?? "",
+    waktuMulai,
+    waktuSelesai,
+    waktu,
+    ruangan: d.ruangan ?? "",
     status: LABEL_STATUS[statusDb] ?? "Belum Dibuka",
     statusDb,
     openedAt: toDate(d.openedAt),
