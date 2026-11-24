@@ -5,6 +5,7 @@ import {
   tanggalHari,
   type Sesi,
 } from "@/services/sessionService";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
 import {
@@ -414,10 +415,6 @@ export default function SesiScreen() {
               {/* Informasi praktikum */}
               <Text style={styles.subject}>{item.mataPraktikum}</Text>
 
-              <Text style={styles.classText}>
-                Kelas {item.kelas}
-              </Text>
-
               <View style={styles.divider} />
 
               {/* Detail sesi */}
@@ -457,6 +454,40 @@ export default function SesiScreen() {
                 </TouchableOpacity>
               )}
 
+              {/* ACTION */}
+              <View style={styles.actionRow}>
+                {item.statusDb === "draft" && (
+                  <TouchableOpacity
+                    style={styles.editButton}
+                    activeOpacity={0.8}
+                    onPress={() => bukaUbah(item)}
+                  >
+                    <MaterialCommunityIcons
+                      name="pencil-outline"
+                      size={17}
+                      color="#B99AFF"
+                    />
+                    <Text style={styles.editButtonText}>Ubah</Text>
+                  </TouchableOpacity>
+                )}
+
+                <TouchableOpacity
+                  style={[
+                    styles.deleteButton,
+                    item.statusDb !== "draft" && styles.deleteFull,
+                  ]}
+                  activeOpacity={0.8}
+                  onPress={() => konfirmasiHapus(item)}
+                >
+                  <MaterialCommunityIcons
+                    name="trash-can-outline"
+                    size={17}
+                    color="#F18A8A"
+                  />
+                  <Text style={styles.deleteButtonText}>Hapus</Text>
+                </TouchableOpacity>
+              </View>
+
               {/* Tombol Tutup */}
               {item.statusDb === "open" && (
                 <TouchableOpacity
@@ -464,43 +495,19 @@ export default function SesiScreen() {
                   activeOpacity={0.8}
                   onPress={() => konfirmasiTutup(item)}
                 >
-                  <Text style={styles.closeSessionButtonText}>
-                    Tutup Sesi Praktikum
-                  </Text>
+                  <LinearGradient
+                    colors={["#c95151", "#8b3535"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.openSessionGradient}
+                  >
+                    <Text style={styles.closeSessionButtonText}>
+                      Tutup Sesi Praktikum
+                    </Text>
+                  </LinearGradient>
                 </TouchableOpacity>
               )}
 
-              {/* Ubah dan Hapus */}
-              <View style={styles.cardActions}>
-                {item.statusDb === "draft" && (
-                  <TouchableOpacity
-                    style={[
-                      styles.cardActionButton,
-                      styles.cardActionEdit,
-                    ]}
-                    activeOpacity={0.8}
-                    onPress={() => bukaUbah(item)}
-                  >
-                    <Text style={styles.cardActionEditText}>
-                      Ubah Sesi
-                    </Text>
-                  </TouchableOpacity>
-                )}
-
-                <TouchableOpacity
-                  style={[
-                    styles.cardActionButton,
-                    styles.cardActionDelete,
-                    item.statusDb !== "draft" && styles.deleteFull,
-                  ]}
-                  activeOpacity={0.8}
-                  onPress={() => konfirmasiHapus(item)}
-                >
-                  <Text style={styles.cardActionDeleteText}>
-                    Hapus
-                  </Text>
-                </TouchableOpacity>
-              </View>
             </View>
           ))
         ) : (
@@ -946,11 +953,9 @@ const styles = StyleSheet.create({
   },
 
   closeSessionButton: {
-    backgroundColor: "#8F303D",
-    borderRadius: 11,
-    paddingVertical: 13,
-    alignItems: "center",
-    marginTop: 4,
+    borderRadius: 12,
+    overflow: "hidden",
+    marginTop: 8,
   },
 
   closeSessionButtonText: {
@@ -1234,5 +1239,46 @@ const styles = StyleSheet.create({
     gap: 9,
     paddingVertical: 13,
     paddingHorizontal: 12,
+  },
+
+  // Aksi
+  actionRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 11,
+  },
+
+  editButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 7,
+    backgroundColor: "rgba(185,154,255,0.12)",
+    borderRadius: 11,
+    paddingVertical: 11,
+  },
+
+  editButtonText: {
+    color: "#B99AFF",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+
+  deleteButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 7,
+    backgroundColor: "rgba(241,138,138,0.10)",
+    borderRadius: 11,
+    paddingVertical: 11,
+  },
+
+  deleteButtonText: {
+    color: "#F18A8A",
+    fontSize: 12,
+    fontWeight: "700",
   },
 });
