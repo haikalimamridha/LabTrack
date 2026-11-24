@@ -48,7 +48,7 @@ export default function CustomTabBar() {
   };
 
   const handleQR = () => {
-    router.navigate("/praktikan/presensi");
+    router.navigate("/praktikan/scan-qr");
   };
 
   return (

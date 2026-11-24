@@ -20,6 +20,7 @@ import {
 
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import QRCode from "react-native-qrcode-svg";
 
 const filters = ["Semua", "Sedang Berlangsung", "Belum Dibuka", "Selesai"];
 
@@ -35,6 +36,7 @@ export default function SesiScreen() {
   } = useSesi();
 
   const [filterAktif, setFilterAktif] = useState("Semua");
+  const [sesiQR, setSesiQR] = useState<Sesi | null>(null);
 
   // Ubah sesi
   const [sesiUbah, setSesiUbah] = useState<Sesi | null>(null);
@@ -259,6 +261,15 @@ export default function SesiScreen() {
               {/* Tombol Tutup Sesi */}
               {item.status === "Sedang Berlangsung" && (
                 <>
+                  {/* Tombol Tampilkan QR */}
+                  <TouchableOpacity
+                    style={styles.qrButton}
+                    activeOpacity={0.8}
+                    onPress={() => setSesiQR(item)}
+                  >
+                    <Text style={styles.qrButtonText}>Tampilkan QR Presensi</Text>
+                  </TouchableOpacity>
+
                   <TouchableOpacity
                     style={styles.closeSessionButton}
                     activeOpacity={0.8}
@@ -428,6 +439,51 @@ export default function SesiScreen() {
                 </TouchableOpacity>
               </View>
             </ScrollView>
+          </View>
+        </View>
+      </Modal>
+      {/* Modal QR Presensi */}
+      <Modal
+        visible={sesiQR !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setSesiQR(null)}
+      >
+        <View style={styles.qrOverlay}>
+          <View style={styles.qrBox}>
+            <Text style={styles.qrTitle}>QR Presensi</Text>
+
+            <Text style={styles.qrSubject}>
+              {sesiQR?.mataPraktikum}
+            </Text>
+
+            <Text style={styles.qrClass}>
+              Kelas {sesiQR?.kelas}
+            </Text>
+
+            {sesiQR && (
+              <View style={styles.qrContainer}>
+                <QRCode
+                  value={sesiQR.id}
+                  size={220}
+                />
+              </View>
+            )}
+
+            <Text style={styles.qrHint}>
+              Praktikan dapat memindai QR Code ini
+              untuk melakukan presensi.
+            </Text>
+
+            <TouchableOpacity
+              style={styles.qrCloseButton}
+              activeOpacity={0.8}
+              onPress={() => setSesiQR(null)}
+            >
+              <Text style={styles.qrCloseButtonText}>
+                Tutup
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -769,4 +825,90 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "bold",
   },
+
+  qrButton: {
+    backgroundColor: "#164E63",
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: "center",
+    marginTop: 8,
+  },
+
+  qrButtonText: {
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontWeight: "bold",
+  },
+
+  qrOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.65)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+  },
+
+  qrBox: {
+    width: "100%",
+    maxWidth: 400,
+    backgroundColor: "#343941",
+    borderRadius: 16,
+    padding: 24,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#454B55",
+  },
+
+  qrTitle: {
+    color: "#FFFFFF",
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+
+  qrSubject: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+
+  qrClass: {
+    color: "#A5A2FF",
+    fontSize: 13,
+    fontWeight: "600",
+    marginTop: 6,
+    marginBottom: 20,
+  },
+
+  qrContainer: {
+    backgroundColor: "#FFFFFF",
+    padding: 16,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  qrHint: {
+    color: "#B8BCC4",
+    fontSize: 12,
+    textAlign: "center",
+    lineHeight: 18,
+    marginTop: 18,
+  },
+
+  qrCloseButton: {
+    width: "100%",
+    backgroundColor: "#625ff0",
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: "center",
+    marginTop: 20,
+  },
+
+  qrCloseButtonText: {
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontWeight: "bold",
+  }, 
 });
