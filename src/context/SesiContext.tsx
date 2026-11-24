@@ -22,6 +22,10 @@ import {
   type Sesi,
   type SesiInput,
 } from "../services/sessionService";
+import {
+  notifikasiJadwalBerubah,
+  notifikasiSesiDibuka,
+} from "../services/notificationService";
 import { useAuth } from "./AuthContext";
 
 type SesiContextType = {
@@ -89,6 +93,7 @@ export function SesiProvider({ children }: { children: ReactNode }) {
     return stop;
   }, [uid, role]);
 
+  // FR-12: Buka sesi + kirim notifikasi ke praktikan kelas
   const bukaSesi = async (id: string): Promise<Hasil> => {
     const sesi = daftarSesi.find((s) => s.id === id);
     if (!sesi) return { ok: false, pesan: "Sesi tidak ditemukan." };
@@ -97,7 +102,12 @@ export function SesiProvider({ children }: { children: ReactNode }) {
         ok: false,
         pesan: 'Hanya sesi "Belum Dibuka" yang dapat dibuka.',
       };
-    return jalankan(() => bukaSesiDb(id), "Sesi dibuka.");
+    const hasil = await jalankan(() => bukaSesiDb(id), "Sesi dibuka.");
+    if (hasil.ok) {
+      // Fire-and-forget: gagal kirim notifikasi tidak batalkan aksi
+      void notifikasiSesiDibuka(sesi.kelasId, sesi.mataPraktikum, id);
+    }
+    return hasil;
   };
 
   const tutupSesi = async (id: string): Promise<Hasil> => {
@@ -114,8 +124,15 @@ export function SesiProvider({ children }: { children: ReactNode }) {
   const tambahSesi = (input: SesiInput) =>
     jalankan(() => buatSesi(input), "Sesi ditambahkan.");
 
-  const ubahSesi = (id: string, input: Partial<SesiInput>) =>
-    jalankan(() => ubahSesiDb(id, input), "Sesi diperbarui.");
+  // FR-13: Ubah sesi + kirim notifikasi jadwal berubah
+  const ubahSesi = async (id: string, input: Partial<SesiInput>): Promise<Hasil> => {
+    const sesi = daftarSesi.find((s) => s.id === id);
+    const hasil = await jalankan(() => ubahSesiDb(id, input), "Sesi diperbarui.");
+    if (hasil.ok && sesi) {
+      void notifikasiJadwalBerubah(sesi.kelasId, sesi.mataPraktikum, id);
+    }
+    return hasil;
+  };
 
   const hapusSesi = (id: string) =>
     jalankan(() => hapusSesiDb(id), "Sesi dihapus.");

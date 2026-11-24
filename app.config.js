@@ -7,4 +7,8 @@ module.exports = {
     googleServicesFile:
       process.env.GOOGLE_SERVICES_JSON || './google-services.json',
   },
+  plugins: [
+    ...(expo.plugins ?? []),
+    "@react-native-firebase/messaging",
+  ],
 };
