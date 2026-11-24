@@ -9,6 +9,7 @@
     "@react-native-firebase/app": "26.4.1",
     "@react-native-firebase/auth": "26.4.1",
     "@react-native-firebase/firestore": "26.4.1",
+    "@react-native-firebase/messaging": "26.4.1",
     "expo": "~58.0.24",
     "expo-constants": "~58.0.13",
     "expo-dev-client": "~58.0.19",

@@ -41,6 +41,7 @@ import {
   type Jadwal,
   type JadwalInput,
 } from "@/services/sessionService";
+import { notifikasiJadwalBerubah } from "@/services/notificationService";
 
 // ---------------------------------------------------------------------------
 // Helper
@@ -323,6 +324,8 @@ export default function JadwalScreen() {
     try {
       if (editId) {
         await ubahJadwal(editId, input);
+        // FR-13: Kirim notifikasi saat jadwal berubah
+        void notifikasiJadwalBerubah(input.kelasId, input.mataPraktikum);
       } else {
         await buatJadwal(input);
       }

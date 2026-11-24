@@ -1,5 +1,7 @@
 
 import { useAuth } from "@/context/AuthContext";
+import { usePermissions } from "@/hooks/usePermissions";
+import { useNotification } from "@/context/NotificationContext";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -16,6 +18,8 @@ import {
 export default function ProfileScreen() {
   const router = useRouter();
   const { profile, logout, loading } = useAuth();
+  const { status: statusIzin, mintaIzinLokasi, mintaIzinNotifikasi, cekSemua } = usePermissions();
+  const { izinDiberikan, mintaIzinDanSimpanToken, pesanError: errorNotif } = useNotification();
 
   const nama = profile?.nama ?? "Pengguna";
   const inisial = nama
@@ -252,6 +256,82 @@ export default function ProfileScreen() {
                 </Text>
               </View>
             </View>
+          </LinearGradient>
+
+          {/* IZIN & NOTIFIKASI (FR-15, FR-16, FR-17) */}
+          <LinearGradient
+            colors={["#39325E", "#292542"]}
+            style={styles.card}
+          >
+            <View style={styles.sectionHeader}>
+              <View>
+                <Text style={styles.sectionTitle}>
+                  Izin & Notifikasi Perangkat
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.accountRow}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                <MaterialCommunityIcons name="bell-ring-outline" size={18} color="#C5A3FF" />
+                <Text style={styles.accountLabel}>Push Notifikasi</Text>
+              </View>
+              <TouchableOpacity
+                onPress={async () => {
+                  await mintaIzinNotifikasi();
+                  await mintaIzinDanSimpanToken();
+                }}
+                style={[
+                  styles.activeBadge,
+                  { backgroundColor: izinDiberikan ? "rgba(34, 197, 94, 0.2)" : "rgba(239, 68, 68, 0.2)" },
+                ]}
+              >
+                <Text style={[styles.activeText, { color: izinDiberikan ? "#4ADE80" : "#F87171" }]}>
+                  {izinDiberikan ? "Aktif" : "Minta Izin"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.accountRow}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                <MaterialCommunityIcons name="crosshairs-gps" size={18} color="#C5A3FF" />
+                <Text style={styles.accountLabel}>Akses Lokasi (GPS)</Text>
+              </View>
+              <TouchableOpacity
+                onPress={async () => {
+                  await mintaIzinLokasi();
+                }}
+                style={[
+                  styles.activeBadge,
+                  {
+                    backgroundColor:
+                      statusIzin.lokasi === "granted"
+                        ? "rgba(34, 197, 94, 0.2)"
+                        : "rgba(245, 158, 11, 0.2)",
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.activeText,
+                    {
+                      color:
+                        statusIzin.lokasi === "granted"
+                          ? "#4ADE80"
+                          : "#FBBF24",
+                    },
+                  ]}
+                >
+                  {statusIzin.lokasi === "granted" ? "Diizinkan" : "Periksa Izin"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {errorNotif && (
+              <Text style={{ color: "#F87171", fontSize: 12, marginTop: 8 }}>
+                {errorNotif}
+              </Text>
+            )}
           </LinearGradient>
 
           {/* LOGOUT */}

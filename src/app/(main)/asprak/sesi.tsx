@@ -44,8 +44,8 @@ export default function SesiScreen() {
   const bukaUbah = (item: Sesi) => {
     setSesiUbah(item);
     setFormTanggal(item.tanggal);
-    setFormWaktu(item.waktu);
-    setFormRuangan(item.ruangan);
+    setFormWaktu(item.waktu ?? "");
+    setFormRuangan(item.ruangan ?? "");
     setFormError(null);
   };
 

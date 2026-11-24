@@ -15,6 +15,7 @@ import {
 import { firestore } from '@/config/firebase';
 import type { UserProfile } from '@/context/AuthContext';
 import { klasifikasiAlasanIzin } from './aiService';
+import { notifikasiKeputusanIzin } from './notificationService';
 import type { Sesi } from './sessionService';
 
 // ---------------------------------------------------------------------------
@@ -401,6 +402,14 @@ export async function putuskanIzin(
         updatedAt: serverTimestamp(),
       });
     });
+
+    // FR-14: Kirim notifikasi ke praktikan pengaju saat izin diterima atau ditolak
+    void notifikasiKeputusanIzin(
+      izin.uid,
+      izin.mataPraktikum,
+      keputusan,
+      izin.id,
+    );
 
     return {
       ok: true,

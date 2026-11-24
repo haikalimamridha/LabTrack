@@ -1,0 +1,179 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------------------------------------------------------------
+    // Fungsi bantu
+    // ---------------------------------------------------------------
+    function signedIn() {
+      return request.auth != null;
+    }
+    function myProfile() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    function isAsprak() {
+      return signedIn() && myProfile().role == 'asprak';
+    }
+    function sesiData(sesiId) {
+      return get(/databases/$(database)/documents/sessions/$(sesiId)).data;
+    }
+
+    // ---------------------------------------------------------------
+    // users (Haikal)
+    // ---------------------------------------------------------------
+    match /users/{userId} {
+
+      // Profil sendiri, atau asprak (dibutuhkan untuk daftar peserta di rekap).
+      allow read: if signedIn()
+                  && (request.auth.uid == userId || isAsprak());
+
+      // Pengguna hanya boleh membuat profil dengan role praktikan.
+      allow create: if request.auth != null
+                    && request.auth.uid == userId
+                    && request.resource.data.uid == userId
+                    && request.resource.data.role == 'praktikan';
+
+      // Pengguna tidak boleh mengubah role miliknya sendiri.
+      allow update: if request.auth != null
+                    && request.auth.uid == userId
+                    && request.resource.data.role == resource.data.role;
+
+      // Pengguna tidak boleh menghapus profil.
+      allow delete: if false;
+    }
+
+    // ---------------------------------------------------------------
+    // kelas: dibaca saat registrasi, sebelum login
+    // ---------------------------------------------------------------
+    match /kelas/{kelasId} {
+      allow read: if true;
+    }
+
+    // ---------------------------------------------------------------
+    // Laboratorium (FR-06, FR-18)
+    // Hanya asisten yang bisa menambah, mengubah, dan menghapus lab.
+    // ---------------------------------------------------------------
+    match /laboratorium/{labId} {
+      allow read: if signedIn();
+      allow write: if isAsprak();
+    }
+
+    match /labs/{labId} {
+      allow read: if signedIn();
+      allow write: if isAsprak();
+    }
+
+    // ---------------------------------------------------------------
+    // mataPraktikum
+    // ---------------------------------------------------------------
+    match /mataPraktikum/{id} {
+      allow read: if signedIn();
+      allow write: if isAsprak();
+    }
+
+    // ---------------------------------------------------------------
+    // Jadwal
+    // ---------------------------------------------------------------
+    match /schedules/{id} {
+      allow read: if isAsprak()
+        || (signedIn() && resource.data.kelasId == myProfile().kelasId);
+      allow create, update, delete: if isAsprak();
+    }
+
+    // ---------------------------------------------------------------
+    // Sesi
+    // ---------------------------------------------------------------
+    match /sessions/{id} {
+      allow read: if isAsprak()
+        || (signedIn() && resource.data.kelasId == myProfile().kelasId);
+      allow create, update: if isAsprak()
+        && request.resource.data.status in ['draft', 'open', 'closed'];
+      allow delete: if isAsprak();
+    }
+
+    // ---------------------------------------------------------------
+    // Presensi (FR-04, FR-18). ID dokumen = sesiId_uid
+    // Validasi status sesi open & pencegahan presensi ganda
+    // ---------------------------------------------------------------
+    match /attendance/{id} {
+      // Baca satu dokumen (listener tombol presensi). Dipisah dari "list"
+      // karena dokumen yang belum ada tidak punya resource.data.
+      allow get: if isAsprak()
+        || (signedIn() && id.matches('.*_' + request.auth.uid));
+
+      // Query (rekap asprak / riwayat praktikan)
+      allow list: if isAsprak()
+        || (signedIn() && resource.data.uid == request.auth.uid);
+
+      // Praktikan: hanya untuk dirinya, sesi sedang open, dan sesi di kelasnya.
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(
+             ['sessionId', 'kelasId', 'mataPraktikumId', 'uid', 'nama', 'nim', 'status', 'createdAt'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.status == 'hadir'
+        && request.resource.data.createdAt == request.time
+        && id == request.resource.data.sessionId + '_' + request.auth.uid
+        && sesiData(request.resource.data.sessionId).status == 'open'
+        && sesiData(request.resource.data.sessionId).kelasId == myProfile().kelasId
+        && request.resource.data.kelasId == sesiData(request.resource.data.sessionId).kelasId;
+
+      // Asprak (mis. mencatat izin yang disetujui, koordinasi dengan Levi).
+      allow create: if isAsprak();
+
+      // Praktikan tidak boleh mengubah/menghapus -> presensi ganda otomatis ditolak.
+      allow update, delete: if isAsprak();
+    }
+
+    // ---------------------------------------------------------------
+    // Pengajuan Izin dan AI (Levi) - FR-07, FR-08, FR-09, FR-10, FR-11
+    // ---------------------------------------------------------------
+    match /izin/{izinId} {
+      // Baca detail izin tunggal
+      allow get: if isAsprak()
+        || (signedIn() && resource.data.uid == request.auth.uid);
+
+      // Query daftar permohonan izin (rekap asprak / riwayat izin praktikan)
+      allow list: if isAsprak()
+        || (signedIn() && resource.data.uid == request.auth.uid);
+
+      // Praktikan: hanya boleh mengajukan untuk akunnya sendiri dengan status awal 'pending'
+      // dan sesi praktikum harus sesuai dengan kelas praktikan
+      allow create: if isAsprak() || (
+        signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.alasan is string
+        && request.resource.data.alasan.size() >= 5
+        && sesiData(request.resource.data.sesiId).kelasId == myProfile().kelasId
+      );
+
+      // Hanya Asisten (Asprak) yang berhak menerima / menolak permohonan izin
+      allow update: if isAsprak()
+        && request.resource.data.status in ['pending', 'disetujui', 'ditolak'];
+
+      // Praktikan hanya boleh membatalkan izin miliknya sendiri yang masih berstatus 'pending'
+      allow delete: if isAsprak() || (
+        signedIn()
+        && resource.data.uid == request.auth.uid
+        && resource.data.status == 'pending'
+      );
+    }
+
+    // ---------------------------------------------------------------
+    // Token Notifikasi FCM (Levi) - FR-15, FR-18
+    // Token notifikasi hanya boleh dibaca dan ditulis oleh pemiliknya sendiri.
+    // ---------------------------------------------------------------
+    match /notificationTokens/{userId} {
+      allow read, write: if signedIn() && request.auth.uid == userId;
+    }
+
+    // ---------------------------------------------------------------
+    // Antrean Push Notification (Levi) - FR-12, FR-13, FR-14
+    // ---------------------------------------------------------------
+    match /notificationQueue/{queueId} {
+      allow create: if signedIn();
+      allow read, update, delete: if isAsprak();
+    }
+  }
+}
